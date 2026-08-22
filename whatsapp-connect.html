@@ -16,7 +16,7 @@
 <body>
   <div class="card">
     <h1>Conectar WhatsApp Business</h1>
-    <p class="muted">Use o cadastro incorporado oficial da Meta para autorizar a conta do WhatsApp Business. Esta tela não desconecta o aplicativo do celular por conta própria; a Meta mostrará as opções disponíveis para o número durante o fluxo.</p>
+    <p class="muted">Use o cadastro incorporado oficial da Meta para autorizar a conta do WhatsApp Business em modo de coexistência. O objetivo é manter o mesmo número no WhatsApp Business App do celular e também na Cloud API.</p>
 
     <div class="grid">
       <div>
@@ -97,7 +97,7 @@
         return;
       }
 
-      setStatus('Abrindo a autorização oficial da Meta...');
+      setStatus('Abrindo a autorização oficial da Meta em modo de coexistência...');
       FB.login(function(response) {
         if (response && response.authResponse && response.authResponse.code) {
           sessionStorage.setItem('help_whatsapp_embedded_signup_code', response.authResponse.code);
@@ -111,7 +111,7 @@
         override_default_response_type: true,
         extras: {
           setup: {},
-          featureType: '',
+          featureType: 'whatsapp_business_app_onboarding',
           sessionInfoVersion: '3'
         }
       });
