@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conectar WhatsApp - Help Soluções</title>
+  <style>
+    body{font-family:Inter,Arial,sans-serif;background:#0b1220;color:#e5e7eb;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{width:min(760px,100%);background:#111827;border:1px solid #263244;border-radius:18px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+    h1{margin:0 0 8px;font-size:28px}.muted{color:#94a3b8;line-height:1.55}.grid{display:grid;grid-template-columns:1fr;gap:14px;margin:22px 0}
+    label{font-weight:600;font-size:14px}input{width:100%;box-sizing:border-box;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:10px;padding:12px 14px;font-size:15px}
+    button,a.btn{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:pointer;text-decoration:none}
+    .primary{background:#16a34a;color:white}.secondary{background:#1f2937;color:#e5e7eb;border:1px solid #374151}.actions{display:flex;gap:10px;flex-wrap:wrap}.status{margin-top:22px;padding:16px;border-radius:12px;background:#0f172a;border:1px solid #334155;white-space:pre-wrap;word-break:break-word}.ok{border-color:#166534}.warn{border-color:#92400e}.small{font-size:13px;color:#94a3b8}.result{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.result div{background:#0b1220;border:1px solid #263244;border-radius:10px;padding:12px}.result strong{display:block;font-size:12px;color:#94a3b8;margin-bottom:5px}.hidden{display:none}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Conectar WhatsApp Business</h1>
+    <p class="muted">Use o cadastro incorporado oficial da Meta para autorizar a conta do WhatsApp Business. Esta tela não desconecta o aplicativo do celular por conta própria; a Meta mostrará as opções disponíveis para o número durante o fluxo.</p>
+
+    <div class="grid">
+      <div>
+        <label for="configId">Configuration ID da Meta</label>
+        <input id="configId" autocomplete="off" placeholder="Cole aqui a Identificação da configuração">
+        <div class="small" style="margin-top:7px">Esse ID não é senha nem token de acesso. Ele identifica a configuração de Embedded Signup criada no Meta for Developers.</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="primary" id="connectBtn" onclick="launchWhatsAppSignup()">Conectar WhatsApp Business</button>
+      <a class="btn secondary" href="/">Voltar ao CRM</a>
+    </div>
+
+    <div id="status" class="status">Aguardando configuração.</div>
+    <div id="result" class="result hidden">
+      <div><strong>WhatsApp Business Account ID</strong><span id="wabaId">-</span></div>
+      <div><strong>Phone Number ID</strong><span id="phoneId">-</span></div>
+    </div>
+  </div>
+
+  <script>
+    const META_APP_ID = '1951643642143705';
+    const statusEl = document.getElementById('status');
+    const configInput = document.getElementById('configId');
+    const savedConfig = localStorage.getItem('help_whatsapp_configuration_id');
+    if (savedConfig) configInput.value = savedConfig;
+
+    function setStatus(text, type='') {
+      statusEl.textContent = text;
+      statusEl.className = 'status ' + type;
+    }
+
+    window.fbAsyncInit = function() {
+      FB.init({ appId: META_APP_ID, autoLogAppEvents: true, xfbml: false, version: 'v26.0' });
+      setStatus('SDK da Meta carregado. Cole o Configuration ID e clique em Conectar.', 'ok');
+    };
+
+    (function(d, s, id){
+      if (d.getElementById(id)) return;
+      const js = d.createElement(s); js.id = id; js.async = true; js.defer = true;
+      js.src = 'https://connect.facebook.net/pt_BR/sdk.js';
+      d.head.appendChild(js);
+    }(document, 'script', 'facebook-jssdk'));
+
+    window.addEventListener('message', function(event) {
+      if (event.origin !== 'https://www.facebook.com' && event.origin !== 'https://web.facebook.com') return;
+      let data = event.data;
+      try { if (typeof data === 'string') data = JSON.parse(data); } catch (_) { return; }
+      if (!data || data.type !== 'WA_EMBEDDED_SIGNUP') return;
+
+      if (data.event === 'FINISH') {
+        const wabaId = data.data && data.data.waba_id ? data.data.waba_id : '-';
+        const phoneId = data.data && data.data.phone_number_id ? data.data.phone_number_id : '-';
+        document.getElementById('wabaId').textContent = wabaId;
+        document.getElementById('phoneId').textContent = phoneId;
+        document.getElementById('result').classList.remove('hidden');
+        localStorage.setItem('help_whatsapp_waba_id', wabaId);
+        localStorage.setItem('help_whatsapp_phone_number_id', phoneId);
+        setStatus('Autorização concluída na Meta. IDs recebidos com sucesso. O próximo passo é configurar o token de acesso no servidor.', 'ok');
+      } else if (data.event === 'CANCEL') {
+        setStatus('O cadastro foi cancelado antes da conclusão.', 'warn');
+      } else if (data.event === 'ERROR') {
+        setStatus('A Meta retornou um erro no cadastro incorporado: ' + JSON.stringify(data.data || {}), 'warn');
+      }
+    });
+
+    function launchWhatsAppSignup() {
+      const configId = configInput.value.trim();
+      if (!configId) {
+        setStatus('Cole primeiro a Identificação da configuração criada na Meta.', 'warn');
+        configInput.focus();
+        return;
+      }
+      localStorage.setItem('help_whatsapp_configuration_id', configId);
+      if (!window.FB) {
+        setStatus('O SDK da Meta ainda está carregando. Aguarde alguns segundos e tente novamente.', 'warn');
+        return;
+      }
+
+      setStatus('Abrindo a autorização oficial da Meta...');
+      FB.login(function(response) {
+        if (response && response.authResponse && response.authResponse.code) {
+          sessionStorage.setItem('help_whatsapp_embedded_signup_code', response.authResponse.code);
+          setStatus('Autorização recebida. Aguarde a conclusão do fluxo do WhatsApp na janela da Meta.', 'ok');
+        } else if (!response || response.status !== 'connected') {
+          setStatus('A autorização não foi concluída. Tente novamente e finalize todas as etapas da janela da Meta.', 'warn');
+        }
+      }, {
+        config_id: configId,
+        response_type: 'code',
+        override_default_response_type: true,
+        extras: {
+          setup: {},
+          featureType: '',
+          sessionInfoVersion: '3'
+        }
+      });
+    }
+  </script>
+</body>
+</html>
