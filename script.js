@@ -1757,7 +1757,17 @@ async function converterLeadCliente(){
     function fecharNotificacoes(){const panel=document.getElementById('notificationPanel');if(panel)panel.classList.add('hidden')}
     function marcarNotificacaoLida(id){const lista=getNotificacoes().filter(n=>n.id!==id);salvarNotificacoes(lista);renderizarNotificacoes()}
     function marcarTodasLidas(){salvarNotificacoes([]);renderizarNotificacoes()}
-    document.addEventListener('keydown',function(e){if(e.key==='Escape')fecharModalLead()});
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+      modal.addEventListener('click', function (event) {
+        if (event.target === modal) fecharModais();
+      });
+    });
+    document.addEventListener('keydown',function(e){
+      if(e.key==='Escape'){
+        fecharModais();
+        fecharModalLead();
+      }
+    });
     document.addEventListener('click',function(e){const wrap=document.querySelector('.notification-wrap');if(wrap&&!wrap.contains(e.target))fecharNotificacoes()});
 
     // Ao abrir a página, verifica se já existe login ativo e restaura os dados salvos
