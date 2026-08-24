@@ -28,12 +28,14 @@ function finalizarInterfaceDinamica() {
 }
 
 async function salvarChamadoNaNuvem(chamado) {
-  const { error } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from('chamados')
-    .insert(chamado);
+    .insert(chamado)
+    .select('id, abertura_em, fechamento_em')
+    .single();
 
   if (error) throw error;
-  return true;
+  return data;
 }
 
 async function atualizarChamadoNaNuvem(protocolo, alteracoes) {
@@ -337,6 +339,7 @@ async function carregarChamadosDaNuvem() {
   tbody.innerHTML = '';
   (data || []).forEach(adicionarChamadoNuvemNaTabela);
   filtrarChamados();
+  atualizarOpcoesDossie();
   finalizarInterfaceDinamica();
 }
 
@@ -1004,8 +1007,9 @@ async function carregarChamadosDaNuvem() {
         const fechamentoStr = status === 'Resolvido' ? agoraStr : '';
 
         // Primeiro salva no Supabase. Se falhar, o chamado não é criado somente localmente.
+        let chamadoCriado;
         try {
-          await salvarChamadoNaNuvem({
+          chamadoCriado = await salvarChamadoNaNuvem({
             protocolo: protocoloStr,
             cliente,
             unidade,
@@ -1029,10 +1033,13 @@ async function carregarChamadosDaNuvem() {
           return;
         }
 
+        novaLinha.dataset.idNuvem = chamadoCriado.id;
         novaLinha.setAttribute('data-erro', erro);
         novaLinha.setAttribute('data-resolucao', resolucao);
         novaLinha.setAttribute('data-abertura', aberturaStr);
+        novaLinha.setAttribute('data-abertura-iso', chamadoCriado.abertura_em || '');
         if (fechamentoStr) novaLinha.setAttribute('data-fechamento', fechamentoStr);
+        if (chamadoCriado.fechamento_em) novaLinha.setAttribute('data-fechamento-iso', chamadoCriado.fechamento_em);
 
         const tdProtocolo = document.createElement('td');
         const linkProtocolo = document.createElement('a'); linkProtocolo.className = 'protocolo'; linkProtocolo.textContent = protocoloStr;
@@ -1081,6 +1088,7 @@ async function carregarChamadosDaNuvem() {
       fecharModais();
       atualizarMetricas();
       salvarEstado();
+      atualizarOpcoesDossie();
       finalizarInterfaceDinamica();
     }
 
@@ -1525,6 +1533,7 @@ async function carregarChamadosDaNuvem() {
         .sort((a, b) => b[1] - a[1])
         .map(([cliente, horas]) => [cliente, formatarHoras(horas), 'R$ ' + (horas * valorHora).toFixed(2).replace('.', ',')]);
       preencherTabela('tabelaRelFinanceiro', linhasFinanceiro);
+      atualizarOpcoesDossie();
     }
 
     function filtrarChamados() {
@@ -1579,6 +1588,178 @@ async function carregarChamadosDaNuvem() {
       ${conteudo}<div class="footer">Help Soluções Tecnológicas • Relatório operacional</div>
       <script>window.onload=()=>setTimeout(()=>window.print(),250)<\/script></body></html>`);
       janela.document.close();
+    }
+
+    // ---- Dossiê detalhado do chamado ----
+    let dossieChamadoAtual = null;
+
+    function escaparHtml(valor) {
+      return String(valor ?? '').replace(/[&<>'"]/g, caractere => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      })[caractere]);
+    }
+
+    function atualizarOpcoesDossie() {
+      const select = document.getElementById('dossieChamadoSelect');
+      if (!select) return;
+      const selecionado = select.value;
+      const chamados = [...document.querySelectorAll('#tabelaChamados tbody tr')]
+        .map(linha => ({
+          id: linha.dataset.idNuvem || '',
+          protocolo: linha.querySelector('td')?.innerText.trim() || '',
+          cliente: linha.querySelectorAll('td')[2]?.innerText.trim() || ''
+        }))
+        .filter(item => item.id && item.protocolo);
+      select.innerHTML = '<option value="">Selecione um protocolo</option>';
+      chamados.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = `${item.protocolo} — ${item.cliente}`;
+        select.appendChild(option);
+      });
+      if (chamados.some(item => item.id === selecionado)) select.value = selecionado;
+      atualizarBotoesDossie();
+    }
+
+    function atualizarBotoesDossie(carregando = false) {
+      const possuiChamado = !!document.getElementById('dossieChamadoSelect')?.value;
+      ['btnVisualizarDossie', 'btnEmailDossie', 'btnPdfDossie'].forEach(id => {
+        const botao = document.getElementById(id);
+        if (botao) botao.disabled = !possuiChamado || carregando;
+      });
+    }
+
+    async function buscarDossieSelecionado() {
+      const chamadoId = document.getElementById('dossieChamadoSelect')?.value;
+      if (!chamadoId) return null;
+      const incluirInternas = !!document.getElementById('dossieIncluirInternas')?.checked;
+      const [resultadoChamado, resultadoInteracoes] = await Promise.all([
+        supabaseClient.from('chamados').select('*').eq('id', chamadoId).single(),
+        supabaseClient.from('chamado_interacoes').select('*').eq('chamado_id', chamadoId).order('criado_em', { ascending: true })
+      ]);
+      if (resultadoChamado.error) throw resultadoChamado.error;
+      if (resultadoInteracoes.error) throw resultadoInteracoes.error;
+      const todas = resultadoInteracoes.data || [];
+      return {
+        chamado: resultadoChamado.data,
+        interacoes: incluirInternas ? todas : todas.filter(item => !item.interna),
+        internasOcultas: incluirInternas ? 0 : todas.filter(item => item.interna).length,
+        incluirInternas
+      };
+    }
+
+    function camposDossie(chamado) {
+      return [
+        ['Protocolo', chamado.protocolo || '-'],
+        ['Cliente / empresa', chamado.cliente || '-'],
+        ['Unidade / filial', chamado.unidade || '-'],
+        ['Solicitante', chamado.solicitante || '-'],
+        ['Técnico responsável', chamado.tecnico || '-'],
+        ['Origem / setor', chamado.origem || '-'],
+        ['Módulo', chamado.modulo || '-'],
+        ['Tipo de atendimento', chamado.tipo || '-'],
+        ['Prioridade', chamado.prioridade || '-'],
+        ['Status', chamado.status || '-'],
+        ['Aberto em', formatarDataHoraInteracao(chamado.abertura_em || chamado.criado_em) || '-'],
+        ['Fechado em', formatarDataHoraInteracao(chamado.fechamento_em) || 'Em aberto']
+      ];
+    }
+
+    function htmlInteracoesDossie(dossie) {
+      if (!dossie.interacoes.length) return '<div class="dossie-sem-interacoes">Nenhuma interação disponível para este documento.</div>';
+      return dossie.interacoes.map(item => `
+        <article class="dossie-interacao${item.interna ? ' interna' : ''}">
+          <div class="dossie-interacao-topo"><strong>${escaparHtml(item.tipo || 'Interação')}${item.interna ? ' · Interna' : ''}</strong><span>${escaparHtml(formatarDataHoraInteracao(item.criado_em))}</span></div>
+          <p>${escaparHtml(item.descricao || '').replace(/\n/g, '<br>')}</p>
+          <div class="dossie-interacao-meta">Registrado por ${escaparHtml(item.criado_por_nome || 'Usuário')}${item.proximo_contato ? ` · Próximo contato: ${escaparHtml(formatarDataHoraInteracao(item.proximo_contato))}` : ''}</div>
+        </article>`).join('');
+    }
+
+    function renderizarDossie(dossie) {
+      const preview = document.getElementById('dossieChamadoPreview');
+      const chamado = dossie.chamado;
+      preview.innerHTML = `
+        <div class="dossie-preview-head">
+          <div><span>Dossiê do chamado</span><h4>${escaparHtml(chamado.protocolo || '-')}</h4></div>
+          <span class="badge ${chamado.status === 'Resolvido' ? 'badge-resolvido' : 'badge-pendente'}">${escaparHtml(chamado.status || 'Pendente')}</span>
+        </div>
+        <div class="dossie-campos">${camposDossie(chamado).map(([rotulo, valor]) => `<div><span>${escaparHtml(rotulo)}</span><strong>${escaparHtml(valor)}</strong></div>`).join('')}</div>
+        <div class="dossie-bloco"><span>Descrição do problema</span><p>${escaparHtml(chamado.erro || chamado.descricao || 'Não informada').replace(/\n/g, '<br>')}</p></div>
+        <div class="dossie-bloco"><span>Resolução</span><p>${escaparHtml(chamado.resolucao || 'Ainda não registrada').replace(/\n/g, '<br>')}</p></div>
+        <div class="dossie-historico-head"><div><span>Histórico</span><strong>${dossie.interacoes.length} ${dossie.interacoes.length === 1 ? 'interação' : 'interações'}</strong></div>${dossie.internasOcultas ? `<small>${dossie.internasOcultas} ${dossie.internasOcultas === 1 ? 'anotação interna foi ocultada' : 'anotações internas foram ocultadas'}</small>` : ''}</div>
+        <div class="dossie-timeline">${htmlInteracoesDossie(dossie)}</div>`;
+      renderizarIcones();
+    }
+
+    async function carregarDossieChamado() {
+      const preview = document.getElementById('dossieChamadoPreview');
+      if (!document.getElementById('dossieChamadoSelect')?.value) {
+        dossieChamadoAtual = null;
+        atualizarBotoesDossie();
+        if (preview) preview.innerHTML = '<div class="dossie-vazio"><i data-lucide="clipboard-list"></i><strong>Selecione um chamado</strong><span>O resumo e as interações aparecerão aqui.</span></div>';
+        renderizarIcones();
+        return null;
+      }
+      atualizarBotoesDossie(true);
+      if (preview) preview.innerHTML = '<div class="dossie-vazio"><i data-lucide="loader-circle"></i><strong>Carregando dossiê...</strong></div>';
+      renderizarIcones();
+      try {
+        dossieChamadoAtual = await buscarDossieSelecionado();
+        renderizarDossie(dossieChamadoAtual);
+        return dossieChamadoAtual;
+      } catch (erro) {
+        console.error('Erro ao carregar dossiê:', erro);
+        if (preview) preview.innerHTML = `<div class="dossie-vazio erro"><strong>Não foi possível carregar o dossiê</strong><span>${escaparHtml(erro.message)}</span></div>`;
+        return null;
+      } finally {
+        atualizarBotoesDossie();
+      }
+    }
+
+    function textoDossie(dossie) {
+      const chamado = dossie.chamado;
+      const campos = camposDossie(chamado).map(([rotulo, valor]) => `${rotulo}: ${valor}`).join('\n');
+      const historico = dossie.interacoes.length ? dossie.interacoes.map((item, indice) =>
+        `${indice + 1}. [${formatarDataHoraInteracao(item.criado_em)}] ${item.tipo}${item.interna ? ' (Interna)' : ''} — ${item.criado_por_nome || 'Usuário'}\n${item.descricao}${item.proximo_contato ? `\nPróximo contato: ${formatarDataHoraInteracao(item.proximo_contato)}` : ''}`
+      ).join('\n\n') : 'Nenhuma interação disponível.';
+      return `DOSSIÊ DO CHAMADO ${chamado.protocolo || ''}\n\n${campos}\n\nDESCRIÇÃO DO PROBLEMA\n${chamado.erro || chamado.descricao || 'Não informada'}\n\nRESOLUÇÃO\n${chamado.resolucao || 'Ainda não registrada'}\n\nHISTÓRICO DE INTERAÇÕES\n${historico}`;
+    }
+
+    async function prepararEmailDossie() {
+      const dossie = await carregarDossieChamado();
+      if (!dossie) return;
+      let destinatario = '';
+      try {
+        const { data } = await supabaseClient.from('clientes').select('email').eq('nome', dossie.chamado.cliente).limit(1).maybeSingle();
+        if (data?.email && data.email !== '-') destinatario = data.email;
+      } catch (erro) {
+        console.warn('Não foi possível localizar o e-mail do cliente:', erro);
+      }
+      const assunto = `Dossiê do chamado ${dossie.chamado.protocolo || ''} — Help Soluções`;
+      const corpo = `${textoDossie(dossie)}\n\nDocumento preparado pelo CRM Help Soluções.`;
+      window.location.href = `mailto:${encodeURIComponent(destinatario)}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
+    }
+
+    async function gerarPdfDossie() {
+      if (!document.getElementById('dossieChamadoSelect')?.value) return;
+      const janela = window.open('', '_blank', 'width=1000,height=820');
+      if (!janela) { alert('Permita a abertura da janela para gerar o PDF.'); return; }
+      janela.document.write('<p style="font-family:Arial;padding:30px">Preparando dossiê...</p>');
+      try {
+        const dossie = await carregarDossieChamado();
+        if (!dossie) { janela.close(); return; }
+        const chamado = dossie.chamado;
+        const campos = camposDossie(chamado).map(([rotulo, valor]) => `<div><span>${escaparHtml(rotulo)}</span><strong>${escaparHtml(valor)}</strong></div>`).join('');
+        const historico = dossie.interacoes.length ? dossie.interacoes.map(item => `<article class="${item.interna ? 'interna' : ''}"><header><b>${escaparHtml(item.tipo || 'Interação')}${item.interna ? ' · Interna' : ''}</b><time>${escaparHtml(formatarDataHoraInteracao(item.criado_em))}</time></header><p>${escaparHtml(item.descricao || '').replace(/\n/g, '<br>')}</p><small>Registrado por ${escaparHtml(item.criado_por_nome || 'Usuário')}${item.proximo_contato ? ` · Próximo contato: ${escaparHtml(formatarDataHoraInteracao(item.proximo_contato))}` : ''}</small></article>`).join('') : '<p class="vazio">Nenhuma interação disponível.</p>';
+        janela.document.open();
+        janela.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Dossiê ${escaparHtml(chamado.protocolo || '')}</title><style>
+          *{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#172235;margin:36px;background:#fff;line-height:1.45}.top{display:flex;justify-content:space-between;gap:24px;border-bottom:3px solid #1768d4;padding-bottom:18px;margin-bottom:24px}.top h1{margin:0;color:#0b2b55;font-size:26px}.top h1 span{color:#f28b18}.meta{text-align:right;color:#667085;font-size:12px}.campos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}.campos div{border:1px solid #dce3ec;border-radius:7px;padding:9px}.campos span,.bloco>span{display:block;color:#667085;font-size:10px;text-transform:uppercase;font-weight:700;margin-bottom:4px}.campos strong{font-size:12px}.bloco{border:1px solid #dce3ec;border-radius:8px;padding:13px;margin-bottom:12px}.bloco p{font-size:12px;margin:0}h2{color:#0b2b55;font-size:17px;border-left:4px solid #f28b18;padding-left:9px;margin:25px 0 12px}article{position:relative;border-left:3px solid #1768d4;background:#f7f9fc;padding:12px 14px;margin-bottom:10px;page-break-inside:avoid}article.interna{border-left-color:#f28b18}article header{display:flex;justify-content:space-between;gap:16px;font-size:12px;color:#0b2b55}article time,article small{color:#667085;font-size:10px}article p{font-size:12px;margin:8px 0}.aviso{color:#8a5a16;background:#fff7e8;border:1px solid #f3d199;padding:9px;border-radius:7px;font-size:10px}.footer{margin-top:26px;padding-top:12px;border-top:1px solid #dce3ec;color:#667085;font-size:10px;text-align:center}@media print{body{margin:18px}.top{break-after:avoid}}
+        </style></head><body><div class="top"><div><h1>Dossiê do chamado <span>${escaparHtml(chamado.protocolo || '')}</span></h1><div style="color:#667085;margin-top:5px">Help Soluções Tecnológicas</div></div><div class="meta"><b>Gerado em</b><br>${escaparHtml(new Date().toLocaleString('pt-BR'))}</div></div><div class="campos">${campos}</div><div class="bloco"><span>Descrição do problema</span><p>${escaparHtml(chamado.erro || chamado.descricao || 'Não informada').replace(/\n/g, '<br>')}</p></div><div class="bloco"><span>Resolução</span><p>${escaparHtml(chamado.resolucao || 'Ainda não registrada').replace(/\n/g, '<br>')}</p></div><h2>Histórico de interações</h2>${dossie.internasOcultas ? `<div class="aviso">${dossie.internasOcultas} ${dossie.internasOcultas === 1 ? 'anotação interna não foi incluída' : 'anotações internas não foram incluídas'} neste documento.</div>` : ''}<div>${historico}</div><div class="footer">Documento gerado pelo CRM Help Soluções</div><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`);
+        janela.document.close();
+      } catch (erro) {
+        janela.close();
+        alert('Não foi possível gerar o PDF.\n\n' + erro.message);
+      }
     }
 
 

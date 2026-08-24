@@ -485,6 +485,35 @@
           </table>
           </div>
         </section>
+
+        <section class="table-container dossie-chamado-card">
+          <div class="table-header">
+            <div>
+              <h3><i data-lucide="file-search"></i>Dossiê do chamado</h3>
+              <p>Reúna os dados do chamado e o histórico de interações em um único documento.</p>
+            </div>
+          </div>
+          <div class="dossie-toolbar">
+            <div class="form-group dossie-select-wrap">
+              <label for="dossieChamadoSelect">Chamado</label>
+              <select id="dossieChamadoSelect" onchange="carregarDossieChamado()">
+                <option value="">Selecione um protocolo</option>
+              </select>
+            </div>
+            <label class="dossie-internas">
+              <input type="checkbox" id="dossieIncluirInternas" onchange="carregarDossieChamado()">
+              Incluir anotações internas
+            </label>
+            <div class="dossie-actions">
+              <button class="btn btn-secondary" id="btnVisualizarDossie" onclick="carregarDossieChamado()" disabled><i data-lucide="eye"></i>Visualizar</button>
+              <button class="btn btn-secondary" id="btnEmailDossie" onclick="prepararEmailDossie()" disabled><i data-lucide="mail"></i>Preparar e-mail</button>
+              <button class="btn btn-primary" id="btnPdfDossie" onclick="gerarPdfDossie()" disabled><i data-lucide="file-down"></i>Gerar PDF</button>
+            </div>
+          </div>
+          <div id="dossieChamadoPreview" class="dossie-preview">
+            <div class="dossie-vazio"><i data-lucide="clipboard-list"></i><strong>Selecione um chamado</strong><span>O resumo e as interações aparecerão aqui.</span></div>
+          </div>
+        </section>
       </div>
 
 <div id="visaoConfiguracoes" class="view-section hidden">
