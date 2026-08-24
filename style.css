@@ -626,3 +626,8 @@ body{background:radial-gradient(circle at 85% 0%,#102542 0,transparent 28%),#071
     .cadastro-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
     .cadastro-actions input{min-width:260px}
     @media (max-width:700px){.cadastro-actions{width:100%}.cadastro-actions input{width:100%;min-width:0}.cadastro-actions .btn{width:100%}}
+
+/* Centraliza verticalmente a ação principal do formulário de interações */
+.interacao-form > .btn-primary {
+  align-self: center;
+}
