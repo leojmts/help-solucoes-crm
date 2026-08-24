@@ -506,7 +506,7 @@
             </label>
             <div class="dossie-actions">
               <button class="btn btn-secondary" id="btnVisualizarDossie" onclick="carregarDossieChamado()" disabled><i data-lucide="eye"></i>Visualizar</button>
-              <button class="btn btn-secondary" id="btnEmailDossie" onclick="prepararEmailDossie()" disabled><i data-lucide="mail"></i>Preparar e-mail</button>
+              <button class="btn btn-secondary" id="btnEmailDossie" onclick="enviarEmailDossie()" disabled><i data-lucide="send"></i>Enviar e-mail</button>
               <button class="btn btn-primary" id="btnPdfDossie" onclick="gerarPdfDossie()" disabled><i data-lucide="file-down"></i>Gerar PDF</button>
             </div>
           </div>
@@ -535,6 +535,16 @@
             <input type="number" id="cfgSlaCritico" min="1" step="1" value="2">
           </div>
           <div class="settings-card">
+            <h3><i data-lucide="clock-3"></i>SLA dos demais chamados</h3>
+            <p>Prazo em horas usado para chamados normais e de baixa prioridade.</p>
+            <input type="number" id="cfgSlaNormal" min="1" step="1" value="24">
+          </div>
+          <div class="settings-card">
+            <h3><i data-lucide="bell-ring"></i>Antecedência dos lembretes</h3>
+            <p>Quantas horas antes do próximo contato o CRM deve avisar a equipe.</p>
+            <input type="number" id="cfgLembreteHoras" min="1" step="1" value="4">
+          </div>
+          <div class="settings-card">
             <h3><i data-lucide="building-2"></i>Nome da operação</h3>
             <p>Identificação exibida nas telas e utilizada como referência para o sistema.</p>
             <input type="text" id="cfgNomeEmpresa" value="Help Soluções Tecnológicas">
@@ -547,13 +557,24 @@
               <p style="color:var(--text-muted);font-size:.82rem;margin-top:6px;">Faça backup dos dados ou restaure um arquivo anteriormente exportado.</p>
             </div>
             <div class="actions">
-              <button class="btn btn-secondary" onclick="exportarBackup()">⬇️ Exportar Backup</button>
-              <button class="btn btn-secondary" onclick="document.getElementById('inputImportar').click()">⬆️ Importar Backup</button>
+              <button class="btn btn-secondary" onclick="exportarBackup()"><i data-lucide="download"></i>Exportar Backup</button>
+              <button class="btn btn-secondary" onclick="document.getElementById('inputImportar').click()"><i data-lucide="upload"></i>Importar Backup</button>
             </div>
           </div>
           <div class="modal-actions" style="justify-content:flex-start;">
             <button class="btn btn-primary" onclick="salvarConfiguracoes()">Salvar Configurações</button>
           </div>
+        </section>
+        <section class="table-container crm-tools-card">
+          <div class="table-header"><div><h3><i data-lucide="message-square-text"></i> Respostas prontas</h3><p>Textos reutilizáveis para registrar contatos com mais rapidez.</p></div></div>
+          <div class="crm-tool-form"><input id="modeloTitulo" maxlength="120" placeholder="Título"><input id="modeloCategoria" maxlength="80" placeholder="Categoria" value="Geral"><textarea id="modeloConteudo" maxlength="4000" placeholder="Texto da resposta"></textarea><button class="btn btn-primary" type="button" onclick="salvarRespostaModelo()"><i data-lucide="plus"></i>Adicionar</button></div>
+          <div id="listaRespostasModelo" class="crm-tool-list"></div>
+        </section>
+        <section class="table-container crm-tools-card">
+          <div class="table-header"><div><h3><i data-lucide="book-open"></i> Base de conhecimento</h3><p>Registre soluções recorrentes para a equipe consultar.</p></div></div>
+          <div class="crm-tool-form knowledge-form"><input id="conhecimentoTitulo" maxlength="160" placeholder="Título"><input id="conhecimentoCategoria" maxlength="80" placeholder="Categoria" value="Geral"><input id="conhecimentoPalavras" placeholder="Palavras-chave"><textarea id="conhecimentoProblema" maxlength="4000" placeholder="Problema / sintomas"></textarea><textarea id="conhecimentoSolucao" maxlength="8000" placeholder="Solução / procedimento"></textarea><button class="btn btn-primary" type="button" onclick="salvarConhecimento()"><i data-lucide="plus"></i>Adicionar</button></div>
+          <input id="buscaConhecimento" class="crm-tool-search" placeholder="Buscar solução..." oninput="renderizarConhecimento()">
+          <div id="listaConhecimento" class="crm-tool-list"></div>
         </section>
       </div>
 </main>
@@ -710,12 +731,15 @@
             <div class="form-group interacao-descricao">
               <label>Descrição</label>
               <input id="interacaoDescricao" maxlength="2000" placeholder="Ex: Cliente enviou fotos e aguarda retorno">
+              <select id="interacaoModelo" class="modelo-select" onchange="aplicarRespostaModelo()"><option value="">Usar resposta pronta...</option></select>
             </div>
             <div class="form-group">
               <label>Próximo contato (opcional)</label>
               <input id="interacaoProximoContato" type="datetime-local">
             </div>
             <label class="interacao-interna"><input id="interacaoInterna" type="checkbox"> Somente equipe</label>
+            <label class="interacao-anexo"><i data-lucide="paperclip"></i><span>Anexar arquivos</span><input id="interacaoAnexos" type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf,text/plain" onchange="mostrarAnexosSelecionados()"></label>
+            <div id="interacaoAnexosSelecionados" class="anexos-selecionados"></div>
             <button id="btnRegistrarInteracao" class="btn btn-primary" type="button" onclick="adicionarInteracaoChamado()"><i data-lucide="plus"></i>Registrar</button>
             <button id="btnCancelarEdicaoInteracao" class="btn btn-secondary hidden" type="button" onclick="limparFormularioInteracao()">Cancelar edição</button>
           </div>

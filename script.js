@@ -67,6 +67,40 @@ async function obterIdChamadoAtual() {
 }
 
 let interacaoEditandoId = null;
+let respostasModeloCache = [];
+let conhecimentoCache = [];
+
+function mostrarAnexosSelecionados() {
+  const input = document.getElementById('interacaoAnexos');
+  const area = document.getElementById('interacaoAnexosSelecionados');
+  if (!input || !area) return;
+  area.textContent = [...input.files].map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(1)} MB)`).join(' · ');
+}
+
+function nomeArquivoSeguro(nome) {
+  return nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9._-]/g, '_').slice(-120);
+}
+
+async function enviarAnexosInteracao(interacaoId, chamadoId) {
+  const input = document.getElementById('interacaoAnexos');
+  const arquivos = input ? [...input.files] : [];
+  const permitidos = ['image/jpeg','image/png','image/webp','application/pdf','text/plain'];
+  for (const arquivo of arquivos) {
+    if (arquivo.size > 10485760) throw new Error(`${arquivo.name}: o limite é 10 MB.`);
+    if (!permitidos.includes(arquivo.type)) throw new Error(`${arquivo.name}: formato não permitido.`);
+    const caminho = `${chamadoId}/${interacaoId}/${crypto.randomUUID()}-${nomeArquivoSeguro(arquivo.name)}`;
+    const { error: uploadError } = await supabaseClient.storage.from('chamado-anexos').upload(caminho, arquivo, { upsert: false, contentType: arquivo.type });
+    if (uploadError) throw uploadError;
+    const { error: metaError } = await supabaseClient.from('chamado_interacao_anexos').insert({ interacao_id: interacaoId, chamado_id: chamadoId, nome_arquivo: arquivo.name, caminho_storage: caminho, tipo_mime: arquivo.type, tamanho_bytes: arquivo.size, criado_por: usuarioLogado.id });
+    if (metaError) { await supabaseClient.storage.from('chamado-anexos').remove([caminho]); throw metaError; }
+  }
+}
+
+async function baixarAnexoInteracao(anexo) {
+  const { data, error } = await supabaseClient.storage.from('chamado-anexos').download(anexo.caminho_storage);
+  if (error) { alert('Não foi possível baixar o anexo.\n\n' + error.message); return; }
+  const url = URL.createObjectURL(data); const a = document.createElement('a'); a.href = url; a.download = anexo.nome_arquivo; a.click(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
 
 function limparFormularioInteracao() {
   interacaoEditandoId = null;
@@ -78,6 +112,10 @@ function limparFormularioInteracao() {
   if (interna) interna.checked = false;
   const tipo = document.getElementById('interacaoTipo');
   if (tipo) tipo.value = 'WhatsApp';
+  const anexos = document.getElementById('interacaoAnexos');
+  if (anexos) anexos.value = '';
+  const anexosArea = document.getElementById('interacaoAnexosSelecionados');
+  if (anexosArea) anexosArea.textContent = '';
   const botao = document.getElementById('btnRegistrarInteracao');
   if (botao) botao.innerHTML = '<i data-lucide="plus"></i>Registrar';
   document.getElementById('btnCancelarEdicaoInteracao')?.classList.add('hidden');
@@ -131,6 +169,11 @@ function renderizarInteracoesChamado(interacoes) {
     if (item.proximo_contato) {
       const proximo = document.createElement('span'); proximo.className = 'interacao-proximo'; proximo.textContent = `Próximo contato: ${formatarDataHoraInteracao(item.proximo_contato)}`; card.appendChild(proximo);
     }
+    if (item.anexos?.length) {
+      const anexos = document.createElement('div'); anexos.className = 'interacao-anexos';
+      item.anexos.forEach(anexo => { const b = document.createElement('button'); b.type = 'button'; b.className = 'interacao-anexo-link'; b.innerHTML = '<i data-lucide="paperclip"></i>'; b.append(document.createTextNode(anexo.nome_arquivo)); b.onclick = () => baixarAnexoInteracao(anexo); anexos.appendChild(b); });
+      card.appendChild(anexos);
+    }
     if (item.criado_por === usuarioLogado?.id || usuarioLogado?.perfil === 'admin') {
       const acoes = document.createElement('div'); acoes.className = 'interacao-acoes';
       const editar = document.createElement('button'); editar.type = 'button'; editar.className = 'interacao-editar'; editar.title = 'Editar interação'; definirIcone(editar, 'pencil'); editar.onclick = () => editarInteracaoChamado(item);
@@ -152,7 +195,13 @@ async function carregarInteracoesChamado() {
     const chamadoId = await obterIdChamadoAtual();
     const { data, error } = await supabaseClient.from('chamado_interacoes').select('*').eq('chamado_id', chamadoId).order('criado_em', { ascending: false });
     if (error) throw error;
-    renderizarInteracoesChamado(data || []);
+    const interacoes = data || [];
+    if (interacoes.length) {
+      const { data: anexos, error: anexosError } = await supabaseClient.from('chamado_interacao_anexos').select('*').in('interacao_id', interacoes.map(i => i.id)).order('criado_em');
+      if (anexosError) throw anexosError;
+      interacoes.forEach(i => { i.anexos = (anexos || []).filter(a => a.interacao_id === i.id); });
+    }
+    renderizarInteracoesChamado(interacoes);
   } catch (erro) {
     console.error('Erro ao carregar interações:', erro);
     if (lista) lista.innerHTML = '<div class="interacoes-estado">Não foi possível carregar as interações. Confirme se o SQL de instalação foi executado.</div>';
@@ -172,19 +221,23 @@ async function adicionarInteracaoChamado() {
       proximo_contato: document.getElementById('interacaoProximoContato').value || null,
       interna: document.getElementById('interacaoInterna').checked
     };
-    let error;
+    let error, interacaoId = interacaoEditandoId, chamadoId;
     if (interacaoEditandoId) {
       ({ error } = await supabaseClient.from('chamado_interacoes').update(payload).eq('id', interacaoEditandoId));
     } else {
-      const chamadoId = await obterIdChamadoAtual();
-      ({ error } = await supabaseClient.from('chamado_interacoes').insert({
+      chamadoId = await obterIdChamadoAtual();
+      let data;
+      ({ data, error } = await supabaseClient.from('chamado_interacoes').insert({
         ...payload,
         chamado_id: chamadoId,
         criado_por: usuarioLogado.id,
         criado_por_nome: usuarioLogado.nome || usuarioLogado.email || 'Usuário'
-      }));
+      }).select('id').single());
+      interacaoId = data?.id;
     }
     if (error) throw error;
+    chamadoId = chamadoId || await obterIdChamadoAtual();
+    if (interacaoId) await enviarAnexosInteracao(interacaoId, chamadoId);
     const protocolo = linhaEdicaoChamado.querySelectorAll('td')[0].innerText.trim();
     registrarLog(`${interacaoEditandoId ? 'editou' : 'registrou'} uma interação no chamado ${protocolo}`);
     limparFormularioInteracao();
@@ -202,6 +255,9 @@ async function adicionarInteracaoChamado() {
 async function excluirInteracaoChamado(id) {
   if (!confirm('Deseja excluir esta interação?')) return;
   try {
+    const { data: anexos, error: anexosError } = await supabaseClient.from('chamado_interacao_anexos').select('caminho_storage').eq('interacao_id', id);
+    if (anexosError) throw anexosError;
+    if (anexos?.length) { const { error: storageError } = await supabaseClient.storage.from('chamado-anexos').remove(anexos.map(a => a.caminho_storage)); if (storageError) throw storageError; }
     const { error } = await supabaseClient.from('chamado_interacoes').delete().eq('id', id);
     if (error) throw error;
     const protocolo = linhaEdicaoChamado.querySelectorAll('td')[0].innerText.trim();
@@ -832,20 +888,52 @@ async function carregarChamadosDaNuvem() {
     function carregarConfiguracoes() {
       document.getElementById('cfgValorHora').value = localStorage.getItem('help_crm_valor_hora') || '80';
       document.getElementById('cfgSlaCritico').value = localStorage.getItem('help_crm_sla_critico') || '2';
+      document.getElementById('cfgSlaNormal').value = localStorage.getItem('help_crm_sla_normal') || '24';
+      document.getElementById('cfgLembreteHoras').value = localStorage.getItem('help_crm_lembrete_horas') || '4';
       document.getElementById('cfgNomeEmpresa').value = localStorage.getItem('help_crm_nome_empresa') || 'Help Soluções Tecnológicas';
+      carregarFerramentasAtendimento();
     }
 
     function salvarConfiguracoes() {
       const hora = document.getElementById('cfgValorHora').value || '80';
       const sla = document.getElementById('cfgSlaCritico').value || '2';
+      const slaNormal = document.getElementById('cfgSlaNormal').value || '24';
+      const lembrete = document.getElementById('cfgLembreteHoras').value || '4';
       const nome = document.getElementById('cfgNomeEmpresa').value.trim() || 'Help Soluções Tecnológicas';
       localStorage.setItem('help_crm_valor_hora', hora);
       localStorage.setItem('help_crm_sla_critico', sla);
+      localStorage.setItem('help_crm_sla_normal', slaNormal);
+      localStorage.setItem('help_crm_lembrete_horas', lembrete);
       localStorage.setItem('help_crm_nome_empresa', nome);
       document.getElementById('relatorioValorHora').value = hora;
       marcarChamadosCriticos();
       alert('Configurações salvas com sucesso!');
     }
+
+    async function carregarFerramentasAtendimento() {
+      if (!usuarioLogado) return;
+      const [modelos, conhecimento] = await Promise.all([
+        supabaseClient.from('respostas_modelo').select('*').eq('ativo', true).order('categoria').order('titulo'),
+        supabaseClient.from('base_conhecimento').select('*').eq('ativo', true).order('categoria').order('titulo')
+      ]);
+      if (!modelos.error) respostasModeloCache = modelos.data || [];
+      if (!conhecimento.error) conhecimentoCache = conhecimento.data || [];
+      preencherRespostasModelo(); renderizarRespostasModelo(); renderizarConhecimento();
+    }
+
+    function preencherRespostasModelo() {
+      const select = document.getElementById('interacaoModelo'); if (!select) return;
+      select.innerHTML = '<option value="">Usar resposta pronta...</option>';
+      respostasModeloCache.forEach(m => { const o=document.createElement('option');o.value=m.id;o.textContent=`${m.categoria} · ${m.titulo}`;select.appendChild(o); });
+    }
+    function aplicarRespostaModelo() { const m=respostasModeloCache.find(x=>x.id===document.getElementById('interacaoModelo')?.value); if(m) document.getElementById('interacaoDescricao').value=m.conteudo; }
+    function criarAcoesFerramenta(item, excluirFn) { const a=document.createElement('div');a.className='crm-tool-actions';if(item.criado_por===usuarioLogado?.id||usuarioLogado?.perfil==='admin'){const b=document.createElement('button');b.type='button';b.title='Excluir';b.innerHTML='<i data-lucide="trash-2"></i>';b.onclick=()=>excluirFn(item);a.appendChild(b)}return a }
+    function renderizarRespostasModelo() { const el=document.getElementById('listaRespostasModelo');if(!el)return;el.innerHTML='';if(!respostasModeloCache.length){el.innerHTML='<div class="crm-tool-empty">Nenhuma resposta pronta cadastrada.</div>';return}respostasModeloCache.forEach(m=>{const c=document.createElement('article');c.className='crm-tool-item';const d=document.createElement('div');const t=document.createElement('strong');t.textContent=m.titulo;const s=document.createElement('small');s.textContent=m.categoria;const p=document.createElement('p');p.textContent=m.conteudo;d.append(t,s,p);c.append(d,criarAcoesFerramenta(m,excluirRespostaModelo));el.appendChild(c)});renderizarIcones() }
+    async function salvarRespostaModelo(){const titulo=document.getElementById('modeloTitulo').value.trim(),categoria=document.getElementById('modeloCategoria').value.trim()||'Geral',conteudo=document.getElementById('modeloConteudo').value.trim();if(!titulo||!conteudo){alert('Informe o título e o texto da resposta.');return}const{error}=await supabaseClient.from('respostas_modelo').insert({titulo,categoria,conteudo,criado_por:usuarioLogado.id});if(error){alert('Não foi possível salvar.\n\n'+error.message);return}document.getElementById('modeloTitulo').value='';document.getElementById('modeloConteudo').value='';await carregarFerramentasAtendimento()}
+    async function excluirRespostaModelo(m){if(!confirm(`Excluir a resposta "${m.titulo}"?`))return;const{error}=await supabaseClient.from('respostas_modelo').delete().eq('id',m.id);if(error)alert(error.message);else await carregarFerramentasAtendimento()}
+    function renderizarConhecimento(){const el=document.getElementById('listaConhecimento');if(!el)return;const q=(document.getElementById('buscaConhecimento')?.value||'').toLowerCase();const lista=conhecimentoCache.filter(x=>`${x.titulo} ${x.categoria} ${x.problema} ${x.solucao} ${x.palavras_chave}`.toLowerCase().includes(q));el.innerHTML='';if(!lista.length){el.innerHTML='<div class="crm-tool-empty">Nenhuma solução encontrada.</div>';return}lista.forEach(m=>{const c=document.createElement('article');c.className='crm-tool-item';const d=document.createElement('div');const t=document.createElement('strong');t.textContent=m.titulo;const s=document.createElement('small');s.textContent=`${m.categoria}${m.palavras_chave?' · '+m.palavras_chave:''}`;const p=document.createElement('p');p.textContent=`Problema: ${m.problema}\n\nSolução: ${m.solucao}`;d.append(t,s,p);c.append(d,criarAcoesFerramenta(m,excluirConhecimento));el.appendChild(c)});renderizarIcones()}
+    async function salvarConhecimento(){const dados={titulo:document.getElementById('conhecimentoTitulo').value.trim(),categoria:document.getElementById('conhecimentoCategoria').value.trim()||'Geral',palavras_chave:document.getElementById('conhecimentoPalavras').value.trim(),problema:document.getElementById('conhecimentoProblema').value.trim(),solucao:document.getElementById('conhecimentoSolucao').value.trim(),criado_por:usuarioLogado.id};if(!dados.titulo||!dados.problema||!dados.solucao){alert('Informe título, problema e solução.');return}const{error}=await supabaseClient.from('base_conhecimento').insert(dados);if(error){alert('Não foi possível salvar.\n\n'+error.message);return}['conhecimentoTitulo','conhecimentoPalavras','conhecimentoProblema','conhecimentoSolucao'].forEach(id=>document.getElementById(id).value='');await carregarFerramentasAtendimento()}
+    async function excluirConhecimento(m){if(!confirm(`Excluir "${m.titulo}" da base?`))return;const{error}=await supabaseClient.from('base_conhecimento').delete().eq('id',m.id);if(error)alert(error.message);else await carregarFerramentasAtendimento()}
 
     function atualizarDatalistClientes() {
       const datalist = document.getElementById('listaClientesSugestao');
@@ -1262,7 +1350,8 @@ async function carregarChamadosDaNuvem() {
     }
 
     function marcarChamadosCriticos() {
-      const LIMITE_HORAS = parseFloat(localStorage.getItem('help_crm_sla_critico') || '2');
+      const SLA_CRITICO = parseFloat(localStorage.getItem('help_crm_sla_critico') || '2');
+      const SLA_NORMAL = parseFloat(localStorage.getItem('help_crm_sla_normal') || '24');
       const linhas = document.querySelectorAll('#tabelaChamados tbody tr');
       linhas.forEach(linha => {
         const td = linha.querySelectorAll('td');
@@ -1271,10 +1360,13 @@ async function carregarChamadosDaNuvem() {
         const abertura = linha.getAttribute('data-abertura') || td[1].innerText.trim();
 
         let critico = false;
-        if (prioridade === 'Alta Prioridade' && status !== 'Resolvido') {
+        if (status !== 'Resolvido') {
           const dataAbertura = parseDataBr(abertura);
-          if (dataAbertura && (Date.now() - dataAbertura.getTime()) / 36e5 >= LIMITE_HORAS) {
-            critico = true;
+          if (dataAbertura) {
+            const decorrido = (Date.now() - dataAbertura.getTime()) / 36e5;
+            const limite = prioridade === 'Alta Prioridade' ? SLA_CRITICO : SLA_NORMAL;
+            critico = decorrido >= limite;
+            linha.title = critico ? `SLA vencido: ${decorrido.toFixed(1)}h de ${limite}h` : `SLA: ${decorrido.toFixed(1)}h de ${limite}h`;
           }
         }
         linha.classList.toggle('linha-alerta', critico);
@@ -1740,6 +1832,25 @@ async function carregarChamadosDaNuvem() {
       window.location.href = `mailto:${encodeURIComponent(destinatario)}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
     }
 
+    async function enviarEmailDossie() {
+      const dossie = await carregarDossieChamado(); if (!dossie) return;
+      let email = '';
+      const { data: cliente } = await supabaseClient.from('clientes').select('email').eq('nome', dossie.chamado.cliente).limit(1).maybeSingle();
+      email = prompt('Confirme o e-mail do destinatário:', cliente?.email && cliente.email !== '-' ? cliente.email : '')?.trim() || '';
+      if (!email) return;
+      if (!confirm(`Enviar o dossiê do chamado ${dossie.chamado.protocolo} para ${email}?`)) return;
+      const botao=document.getElementById('btnEmailDossie');botao.disabled=true;botao.textContent='Enviando...';
+      try {
+        const { data: sessao } = await supabaseClient.auth.getSession();
+        const resposta = await fetch('/api/send-dossie', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${sessao.session?.access_token||''}`}, body:JSON.stringify({to:email,subject:`Dossiê do chamado ${dossie.chamado.protocolo} — Help Soluções`,text:`${textoDossie(dossie)}\n\nDocumento enviado pelo CRM Help Soluções.`}) });
+        const resultado=await resposta.json().catch(()=>({}));
+        if(!resposta.ok) throw new Error(resultado.error||'Serviço de e-mail indisponível.');
+        alert('E-mail enviado com sucesso!');
+      } catch(erro) {
+        if(confirm(`${erro.message}\n\nDeseja abrir seu aplicativo de e-mail como alternativa?`)) prepararEmailDossie();
+      } finally {botao.innerHTML='<i data-lucide="send"></i>Enviar e-mail';atualizarBotoesDossie();renderizarIcones()}
+    }
+
     async function gerarPdfDossie() {
       if (!document.getElementById('dossieChamadoSelect')?.value) return;
       const janela = window.open('', '_blank', 'width=1000,height=820');
@@ -1918,13 +2029,19 @@ async function converterLeadCliente(){
 }
 
 // ===== CENTRAL DE NOTIFICAÇÕES =====
-    const notificacoesPadrao = [
-      {id:'sla-001', tipo:'danger', titulo:'SLA próximo do vencimento', texto:'O chamado #20250513-003 está próximo do limite de atendimento.', tempo:'Agora'},
-      {id:'novo-001', tipo:'info', titulo:'Novo chamado recebido', texto:'Um novo chamado foi aberto e aguarda direcionamento técnico.', tempo:'Há 18 min'},
-      {id:'cliente-001', tipo:'warning', titulo:'Aguardando retorno do cliente', texto:'Existe um chamado parado aguardando uma resposta do cliente.', tempo:'Há 42 min'}
-    ];
-    function getNotificacoes(){try{return JSON.parse(localStorage.getItem('help_crm_notificacoes')) || notificacoesPadrao}catch(e){return notificacoesPadrao}}
-    function salvarNotificacoes(lista){localStorage.setItem('help_crm_notificacoes',JSON.stringify(lista))}
+    let notificacoesOperacionais = [];
+    function idsNotificacoesLidas(){try{return JSON.parse(localStorage.getItem('help_crm_notificacoes_lidas'))||[]}catch(e){return[]}}
+    function getNotificacoes(){const lidas=idsNotificacoesLidas();return notificacoesOperacionais.filter(n=>!lidas.includes(n.id))}
+    function salvarNotificacoesLidas(ids){localStorage.setItem('help_crm_notificacoes_lidas',JSON.stringify(ids.slice(-300)))}
+    async function atualizarAlertasOperacionais(){
+      if(!usuarioLogado)return;
+      const agora=Date.now(), antecedencia=(parseFloat(localStorage.getItem('help_crm_lembrete_horas'))||4)*3600000;
+      const {data:interacoes}=await supabaseClient.from('chamado_interacoes').select('id,chamado_id,proximo_contato,descricao').not('proximo_contato','is',null).lte('proximo_contato',new Date(agora+antecedencia).toISOString()).order('proximo_contato').limit(30);
+      const ids=[...new Set((interacoes||[]).map(i=>i.chamado_id))];let protocolos={};
+      if(ids.length){const{data:chamados}=await supabaseClient.from('chamados').select('id,protocolo').in('id',ids);(chamados||[]).forEach(c=>protocolos[c.id]=c.protocolo)}
+      notificacoesOperacionais=(interacoes||[]).map(i=>{const vencido=new Date(i.proximo_contato).getTime()<agora;return{id:`retorno-${i.id}-${i.proximo_contato}`,tipo:vencido?'danger':'warning',titulo:vencido?'Retorno atrasado':'Próximo contato',texto:`Chamado ${protocolos[i.chamado_id]||'#'+i.chamado_id}: ${i.descricao.slice(0,100)}`,tempo:formatarDataHoraInteracao(i.proximo_contato)}});
+      renderizarNotificacoes();
+    }
     function renderizarNotificacoes(){
       const lista=getNotificacoes(), el=document.getElementById('notificationList'), badge=document.getElementById('notificationBadge'), sub=document.getElementById('notificationSub');
       if(!el||!badge||!sub)return;
@@ -1934,10 +2051,10 @@ async function converterLeadCliente(){
       if(!lista.length){el.innerHTML='<div class="notification-empty"><b>Tudo em dia</b>Você não possui notificações pendentes.</div>';return}
       lista.forEach(n=>{const item=document.createElement('div');item.className='notification-item';item.innerHTML=`<span class="notification-dot ${n.tipo==='info'?'':n.tipo}"></span><div><strong>${n.titulo}</strong><p>${n.texto}</p><time>${n.tempo}</time></div><button class="notification-dismiss" title="Marcar como lida" aria-label="Marcar como lida" onclick="marcarNotificacaoLida('${n.id}')">×</button>`;el.appendChild(item)});
     }
-    function alternarNotificacoes(){const panel=document.getElementById('notificationPanel');if(!panel)return;panel.classList.toggle('hidden');if(!panel.classList.contains('hidden'))renderizarNotificacoes()}
+    function alternarNotificacoes(){const panel=document.getElementById('notificationPanel');if(!panel)return;panel.classList.toggle('hidden');if(!panel.classList.contains('hidden'))atualizarAlertasOperacionais()}
     function fecharNotificacoes(){const panel=document.getElementById('notificationPanel');if(panel)panel.classList.add('hidden')}
-    function marcarNotificacaoLida(id){const lista=getNotificacoes().filter(n=>n.id!==id);salvarNotificacoes(lista);renderizarNotificacoes()}
-    function marcarTodasLidas(){salvarNotificacoes([]);renderizarNotificacoes()}
+    function marcarNotificacaoLida(id){const ids=idsNotificacoesLidas();if(!ids.includes(id))ids.push(id);salvarNotificacoesLidas(ids);renderizarNotificacoes()}
+    function marcarTodasLidas(){salvarNotificacoesLidas([...idsNotificacoesLidas(),...notificacoesOperacionais.map(n=>n.id)]);renderizarNotificacoes()}
     document.querySelectorAll('.modal-overlay').forEach(modal => {
       modal.addEventListener('click', function (event) {
         if (event.target === modal) fecharModais();
