@@ -3,8 +3,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido.' });
   const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+  const supabaseUrl = process.env.SUPABASE_URL || 'https://cdsdgijxsslmyhnqapiu.supabase.co';
+  const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_49trKYxsMypJahHt9QtCIA_Ayg3gyml';
   if (!token || !supabaseUrl || !supabaseKey) return res.status(401).json({ error: 'Sessão inválida.' });
   const auth = await fetch(`${supabaseUrl}/auth/v1/user`, { headers: { apikey: supabaseKey, Authorization: `Bearer ${token}` } });
   if (!auth.ok) return res.status(401).json({ error: 'Sessão expirada.' });

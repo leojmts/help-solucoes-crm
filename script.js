@@ -192,6 +192,7 @@ async function carregarInteracoesChamado() {
   area?.classList.remove('hidden');
   if (lista) lista.innerHTML = '<div class="interacoes-estado">Carregando histórico...</div>';
   try {
+    if (!respostasModeloCache.length) await carregarFerramentasAtendimento();
     const chamadoId = await obterIdChamadoAtual();
     const { data, error } = await supabaseClient.from('chamado_interacoes').select('*').eq('chamado_id', chamadoId).order('criado_em', { ascending: false });
     if (error) throw error;
