@@ -3,6 +3,30 @@ const SUPABASE_URL = 'https://cdsdgijxsslmyhnqapiu.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_49trKYxsMypJahHt9QtCIA_Ayg3gyml';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
+function renderizarIcones() {
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function definirIcone(botao, nome) {
+  botao.innerHTML = `<i data-lucide="${nome}"></i>`;
+}
+
+function aplicarRotulosTabelasMobile() {
+  ['tabelaChamados', 'tabelaClientes'].forEach(id => {
+    const tabela = document.getElementById(id);
+    if (!tabela) return;
+    const titulos = [...tabela.querySelectorAll('thead th')].map(th => th.textContent.trim());
+    tabela.querySelectorAll('tbody tr').forEach(tr => {
+      [...tr.children].forEach((td, i) => td.dataset.label = titulos[i] || 'Campo');
+    });
+  });
+}
+
+function finalizarInterfaceDinamica() {
+  aplicarRotulosTabelasMobile();
+  renderizarIcones();
+}
+
 async function salvarChamadoNaNuvem(chamado) {
   const { error } = await supabaseClient
     .from('chamados')
@@ -53,8 +77,9 @@ function limparFormularioInteracao() {
   const tipo = document.getElementById('interacaoTipo');
   if (tipo) tipo.value = 'WhatsApp';
   const botao = document.getElementById('btnRegistrarInteracao');
-  if (botao) botao.textContent = '＋ Registrar';
+  if (botao) botao.innerHTML = '<i data-lucide="plus"></i>Registrar';
   document.getElementById('btnCancelarEdicaoInteracao')?.classList.add('hidden');
+  renderizarIcones();
 }
 
 function dataParaInputLocal(valor) {
@@ -71,9 +96,10 @@ function editarInteracaoChamado(item) {
   document.getElementById('interacaoDescricao').value = item.descricao;
   document.getElementById('interacaoProximoContato').value = dataParaInputLocal(item.proximo_contato);
   document.getElementById('interacaoInterna').checked = !!item.interna;
-  document.getElementById('btnRegistrarInteracao').textContent = '✓ Salvar alteração';
+  document.getElementById('btnRegistrarInteracao').innerHTML = '<i data-lucide="save"></i>Salvar alteração';
   document.getElementById('btnCancelarEdicaoInteracao').classList.remove('hidden');
   document.getElementById('interacaoDescricao').focus();
+  renderizarIcones();
 }
 
 function formatarDataHoraInteracao(valor) {
@@ -105,12 +131,13 @@ function renderizarInteracoesChamado(interacoes) {
     }
     if (item.criado_por === usuarioLogado?.id || usuarioLogado?.perfil === 'admin') {
       const acoes = document.createElement('div'); acoes.className = 'interacao-acoes';
-      const editar = document.createElement('button'); editar.type = 'button'; editar.className = 'interacao-editar'; editar.title = 'Editar interação'; editar.textContent = '✎'; editar.onclick = () => editarInteracaoChamado(item);
-      const excluir = document.createElement('button'); excluir.type = 'button'; excluir.className = 'interacao-excluir'; excluir.title = 'Excluir interação'; excluir.textContent = '×'; excluir.onclick = () => excluirInteracaoChamado(item.id);
+      const editar = document.createElement('button'); editar.type = 'button'; editar.className = 'interacao-editar'; editar.title = 'Editar interação'; definirIcone(editar, 'pencil'); editar.onclick = () => editarInteracaoChamado(item);
+      const excluir = document.createElement('button'); excluir.type = 'button'; excluir.className = 'interacao-excluir'; excluir.title = 'Excluir interação'; definirIcone(excluir, 'trash-2'); excluir.onclick = () => excluirInteracaoChamado(item.id);
       acoes.append(editar, excluir); card.appendChild(acoes);
     }
     lista.appendChild(card);
   });
+  renderizarIcones();
 }
 
 async function carregarInteracoesChamado() {
@@ -165,7 +192,8 @@ async function adicionarInteracaoChamado() {
     alert('Não foi possível registrar a interação.\n\nDetalhes: ' + erro.message);
   } finally {
     botao.disabled = false;
-    botao.textContent = interacaoEditandoId ? '✓ Salvar alteração' : '＋ Registrar';
+    botao.innerHTML = interacaoEditandoId ? '<i data-lucide="save"></i>Salvar alteração' : '<i data-lucide="plus"></i>Registrar';
+    renderizarIcones();
   }
 }
 
@@ -251,11 +279,12 @@ function adicionarChamadoNuvemNaTabela(chamado) {
   const tdFechamento = document.createElement('td'); tdFechamento.textContent = fechamentoStr || '-'; novaLinha.appendChild(tdFechamento);
 
   const tdAcoes = document.createElement('td'); tdAcoes.className = 'actions-cell';
-  const btnWhats = document.createElement('button'); btnWhats.title = 'Enviar WhatsApp'; btnWhats.textContent = '💬'; btnWhats.onclick = function () { enviarWhatsappChamado(this); };
-  const btnVer = document.createElement('button'); btnVer.title = 'Editar/Visualizar'; btnVer.textContent = '👁️'; btnVer.onclick = function () { visualizarChamado(this); };
-  const btnExcluir = document.createElement('button'); btnExcluir.title = 'Excluir'; btnExcluir.textContent = '🗑️'; btnExcluir.onclick = function () { excluirChamado(this); };
+  const btnWhats = document.createElement('button'); btnWhats.title = 'Enviar WhatsApp'; definirIcone(btnWhats, 'message-circle'); btnWhats.onclick = function () { enviarWhatsappChamado(this); };
+  const btnVer = document.createElement('button'); btnVer.title = 'Editar/Visualizar'; definirIcone(btnVer, 'eye'); btnVer.onclick = function () { visualizarChamado(this); };
+  const btnExcluir = document.createElement('button'); btnExcluir.title = 'Excluir'; definirIcone(btnExcluir, 'trash-2'); btnExcluir.onclick = function () { excluirChamado(this); };
   tdAcoes.append(btnWhats, btnVer, btnExcluir);
   novaLinha.appendChild(tdAcoes);
+  finalizarInterfaceDinamica();
 }
 
 
@@ -274,12 +303,13 @@ async function carregarClientesDaNuvem() {
       const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
     });
     const tdAcoes = document.createElement('td'); tdAcoes.className = 'actions-cell';
-    const btnEditar = document.createElement('button'); btnEditar.title='Editar Cliente'; btnEditar.textContent='✏️'; btnEditar.onclick=()=>editarCliente(btnEditar);
-    const btnClonar = document.createElement('button'); btnClonar.title='Clonar Cliente'; btnClonar.textContent='📋'; btnClonar.onclick=()=>clonarCliente(btnClonar);
-    const btnExcluir = document.createElement('button'); btnExcluir.title='Excluir'; btnExcluir.textContent='🗑️'; btnExcluir.onclick=()=>excluirLinha(btnExcluir);
+    const btnEditar = document.createElement('button'); btnEditar.title='Editar Cliente'; definirIcone(btnEditar, 'pencil'); btnEditar.onclick=()=>editarCliente(btnEditar);
+    const btnClonar = document.createElement('button'); btnClonar.title='Clonar Cliente'; definirIcone(btnClonar, 'copy'); btnClonar.onclick=()=>clonarCliente(btnClonar);
+    const btnExcluir = document.createElement('button'); btnExcluir.title='Excluir'; definirIcone(btnExcluir, 'trash-2'); btnExcluir.onclick=()=>excluirLinha(btnExcluir);
     tdAcoes.append(btnEditar, btnClonar, btnExcluir); tr.appendChild(tdAcoes);
   });
   atualizarDatalistClientes();
+  finalizarInterfaceDinamica();
 }
 
 async function carregarTecnicosDaNuvem() {
@@ -307,6 +337,7 @@ async function carregarChamadosDaNuvem() {
   tbody.innerHTML = '';
   (data || []).forEach(adicionarChamadoNuvemNaTabela);
   filtrarChamados();
+  finalizarInterfaceDinamica();
 }
 
 
@@ -639,8 +670,8 @@ async function carregarChamadosDaNuvem() {
 
           const tdAcoes = document.createElement('td'); tdAcoes.className = 'actions-cell';
           const chave = u.tipo === 'perfil' ? u.user_id : u.email;
-          const btnEditar = document.createElement('button'); btnEditar.title = 'Editar'; btnEditar.textContent = '✏️'; btnEditar.onclick = () => editarUsuario(chave);
-          const btnExcluir = document.createElement('button'); btnExcluir.title = u.tipo === 'perfil' ? 'Desativar' : 'Cancelar convite'; btnExcluir.textContent = '🗑️'; btnExcluir.onclick = () => excluirUsuario(chave);
+          const btnEditar = document.createElement('button'); btnEditar.title = 'Editar'; definirIcone(btnEditar, 'pencil'); btnEditar.onclick = () => editarUsuario(chave);
+          const btnExcluir = document.createElement('button'); btnExcluir.title = u.tipo === 'perfil' ? 'Desativar' : 'Cancelar convite'; definirIcone(btnExcluir, 'trash-2'); btnExcluir.onclick = () => excluirUsuario(chave);
           tdAcoes.append(btnEditar, btnExcluir);
           tr.append(tdUsuario, tdPerfil, tdRecursos, tdAcoes);
           tbody.appendChild(tr);
@@ -648,6 +679,8 @@ async function carregarChamadosDaNuvem() {
       } catch (erro) {
         console.error('Erro ao carregar usuários:', erro);
         tbody.innerHTML = `<tr><td colspan="4">Não foi possível carregar usuários: ${erro.message}</td></tr>`;
+      } finally {
+        finalizarInterfaceDinamica();
       }
     }
 
@@ -779,7 +812,8 @@ async function carregarChamadosDaNuvem() {
       const tbody = document.querySelector('#tabelaTecnicos tbody');
       if (!tbody) return;
       const nomes = [...new Set([...document.querySelectorAll('#mTecnico option')].map(o => o.value).filter(Boolean))];
-      tbody.innerHTML = nomes.map(nome => `<tr><td>${nome}</td><td class="actions-cell"><button title="Excluir técnico" onclick="excluirTecnico('${nome.replace(/'/g, "\'")}')">🗑️</button></td></tr>`).join('');
+      tbody.innerHTML = nomes.map(nome => `<tr><td>${nome}</td><td class="actions-cell"><button title="Excluir técnico" onclick="excluirTecnico('${nome.replace(/'/g, "\'")}')"><i data-lucide="trash-2"></i></button></td></tr>`).join('');
+      finalizarInterfaceDinamica();
     }
 
     async function excluirTecnico(nome) {
@@ -1034,9 +1068,9 @@ async function carregarChamadosDaNuvem() {
         const tdFechamento = document.createElement('td'); tdFechamento.textContent = fechamentoStr || '-';
 
         const tdAcoes = document.createElement('td'); tdAcoes.className = 'actions-cell';
-        const btnWhats = document.createElement('button'); btnWhats.title = 'Enviar WhatsApp'; btnWhats.textContent = '💬'; btnWhats.onclick = function () { enviarWhatsappChamado(this); };
-        const btnVer = document.createElement('button'); btnVer.title = 'Editar/Visualizar'; btnVer.textContent = '👁️'; btnVer.onclick = function () { visualizarChamado(this); };
-        const btnExcluir = document.createElement('button'); btnExcluir.title = 'Excluir'; btnExcluir.textContent = '🗑️'; btnExcluir.onclick = function () { excluirChamado(this); };
+        const btnWhats = document.createElement('button'); btnWhats.title = 'Enviar WhatsApp'; definirIcone(btnWhats, 'message-circle'); btnWhats.onclick = function () { enviarWhatsappChamado(this); };
+        const btnVer = document.createElement('button'); btnVer.title = 'Editar/Visualizar'; definirIcone(btnVer, 'eye'); btnVer.onclick = function () { visualizarChamado(this); };
+        const btnExcluir = document.createElement('button'); btnExcluir.title = 'Excluir'; definirIcone(btnExcluir, 'trash-2'); btnExcluir.onclick = function () { excluirChamado(this); };
         tdAcoes.append(btnWhats, btnVer, btnExcluir);
 
         novaLinha.append(tdProtocolo, tdAbertura, tdCliente, tdUnidade, tdOrigem, tdSerial, tdSolicitante, tdTecnico, tdModulo, tdTipo, tdPrioridade, tdStatus, tdFechamento, tdAcoes);
@@ -1047,6 +1081,7 @@ async function carregarChamadosDaNuvem() {
       fecharModais();
       atualizarMetricas();
       salvarEstado();
+      finalizarInterfaceDinamica();
     }
 
     function visualizarChamado(btn) {
@@ -1071,9 +1106,10 @@ async function carregarChamadosDaNuvem() {
       const abertura = linhaEdicaoChamado.getAttribute('data-abertura') || td[1].innerText.trim();
       const fechamento = linhaEdicaoChamado.getAttribute('data-fechamento') || '';
       const infoDatas = document.getElementById('infoDatasChamado');
-      infoDatas.innerHTML = `<span>🟢 Aberto em: <strong>${abertura || '-'}</strong></span>` +
-        (fechamento ? `<span>🔴 Fechado em: <strong>${fechamento}</strong></span>` : `<span>⏳ Ainda em aberto</span>`);
+      infoDatas.innerHTML = `<span><i data-lucide="circle-dot"></i>Aberto em: <strong>${abertura || '-'}</strong></span>` +
+        (fechamento ? `<span><i data-lucide="check-circle"></i>Fechado em: <strong>${fechamento}</strong></span>` : `<span><i data-lucide="clock"></i>Ainda em aberto</span>`);
       infoDatas.classList.remove('hidden');
+      renderizarIcones();
 
       limparFormularioInteracao();
       carregarInteracoesChamado();
@@ -1598,7 +1634,7 @@ async function renderizarCRM(){
       return `<div class="crm-stage"><div class="crm-stage-head"><span>${e}</span><span>${ls.length}</span></div>${ls.map(x=>`<div class="crm-lead-card" onclick="editarLead('${x.id}')"><strong>${x.nome}</strong><small>${x.responsavel||x.cidade||'Sem contato'}</small><span class="crm-tag">${x.interesse||'-'}</span></div>`).join('')||'<small>Sem oportunidades</small>'}</div>`;
     }).join('');
     const p=a.filter(x=>x.proxima&&!x.convertido).sort((x,y)=>String(x.proxima).localeCompare(String(y.proxima)));
-    document.getElementById('crmProximas').innerHTML=p.length?p.map(x=>`<div class="crm-next"><strong>${x.nome}</strong><span>${new Date(x.proxima+'T12:00:00').toLocaleDateString('pt-BR')} · ${x.interesse||'-'}</span></div>`).join(''):'<div class="crm-next">Nenhuma ação pendente ✓</div>';
+    document.getElementById('crmProximas').innerHTML=p.length?p.map(x=>`<div class="crm-next"><strong>${x.nome}</strong><span>${new Date(x.proxima+'T12:00:00').toLocaleDateString('pt-BR')} · ${x.interesse||'-'}</span></div>`).join(''):'<div class="crm-next">Nenhuma ação pendente</div>';
   }catch(e){
     console.error('Erro ao carregar CRM:',e);
     alert('Não foi possível carregar o CRM da nuvem.\n\n'+e.message);
@@ -1714,7 +1750,7 @@ async function converterLeadCliente(){
       badge.textContent=lista.length; badge.style.display=lista.length?'grid':'none';
       sub.textContent=lista.length===1?'1 pendente':`${lista.length} pendentes`;
       el.innerHTML='';
-      if(!lista.length){el.innerHTML='<div class="notification-empty"><b>Tudo em dia ✓</b>Você não possui notificações pendentes.</div>';return}
+      if(!lista.length){el.innerHTML='<div class="notification-empty"><b>Tudo em dia</b>Você não possui notificações pendentes.</div>';return}
       lista.forEach(n=>{const item=document.createElement('div');item.className='notification-item';item.innerHTML=`<span class="notification-dot ${n.tipo==='info'?'':n.tipo}"></span><div><strong>${n.titulo}</strong><p>${n.texto}</p><time>${n.tempo}</time></div><button class="notification-dismiss" title="Marcar como lida" aria-label="Marcar como lida" onclick="marcarNotificacaoLida('${n.id}')">×</button>`;el.appendChild(item)});
     }
     function alternarNotificacoes(){const panel=document.getElementById('notificationPanel');if(!panel)return;panel.classList.toggle('hidden');if(!panel.classList.contains('hidden'))renderizarNotificacoes()}
@@ -1726,3 +1762,4 @@ async function converterLeadCliente(){
 
     // Ao abrir a página, verifica se já existe login ativo e restaura os dados salvos
     tentarSessaoExistente();
+    finalizarInterfaceDinamica();
