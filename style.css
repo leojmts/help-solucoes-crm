@@ -264,7 +264,7 @@
     .interacao-interna { display: flex !important; flex-direction: row !important; align-items: center; gap: 7px; min-height: 40px; cursor: pointer; }
     .interacao-interna input { width: auto; accent-color: var(--accent-green); }
     .interacoes-lista { display: grid; gap: 10px; max-height: 280px; overflow-y: auto; margin-top: 14px; padding-right: 4px; }
-    .interacao-item { position: relative; padding: 13px 40px 13px 15px; border: 1px solid var(--border-color); border-left: 3px solid var(--accent-blue); border-radius: 10px; background: rgba(11,15,23,.7); }
+    .interacao-item { position: relative; padding: 13px 78px 13px 15px; border: 1px solid var(--border-color); border-left: 3px solid var(--accent-blue); border-radius: 10px; background: rgba(11,15,23,.7); }
     .interacao-item.interna { border-left-color: var(--accent-orange); }
     .interacao-item-topo { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-bottom: 6px; }
     .interacao-tipo { color: #93c5fd; font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .3px; }
@@ -272,7 +272,9 @@
     .interacao-meta { color: var(--text-muted); font-size: .72rem; }
     .interacao-texto { color: #e2e8f0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .86rem; line-height: 1.45; }
     .interacao-proximo { display: block; width: fit-content; margin-top: 8px; color: #fbbf24; font-size: .75rem; }
-    .interacao-excluir { position: absolute; top: 8px; right: 8px; padding: 3px 7px; border: 0; border-radius: 6px; color: var(--text-muted); background: transparent; cursor: pointer; font-size: 16px; }
+    .interacao-acoes { position: absolute; top: 8px; right: 8px; display: flex; gap: 3px; }
+    .interacao-acoes button { padding: 4px 7px; border: 0; border-radius: 6px; color: var(--text-muted); background: transparent; cursor: pointer; font-size: 14px; }
+    .interacao-editar:hover { color: #60a5fa; background: rgba(59,130,246,.1); }
     .interacao-excluir:hover { color: #f87171; background: rgba(239,68,68,.1); }
     .interacoes-estado { padding: 18px; border: 1px dashed var(--border-hover); border-radius: 10px; text-align: center; color: var(--text-muted); font-size: .82rem; }
 

@@ -40,7 +40,10 @@ async function obterIdChamadoAtual() {
   return data.id;
 }
 
+let interacaoEditandoId = null;
+
 function limparFormularioInteracao() {
+  interacaoEditandoId = null;
   const descricao = document.getElementById('interacaoDescricao');
   if (descricao) descricao.value = '';
   const proximo = document.getElementById('interacaoProximoContato');
@@ -49,6 +52,28 @@ function limparFormularioInteracao() {
   if (interna) interna.checked = false;
   const tipo = document.getElementById('interacaoTipo');
   if (tipo) tipo.value = 'WhatsApp';
+  const botao = document.getElementById('btnRegistrarInteracao');
+  if (botao) botao.textContent = '＋ Registrar';
+  document.getElementById('btnCancelarEdicaoInteracao')?.classList.add('hidden');
+}
+
+function dataParaInputLocal(valor) {
+  if (!valor) return '';
+  const data = new Date(valor);
+  if (Number.isNaN(data.getTime())) return '';
+  const local = new Date(data.getTime() - data.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
+function editarInteracaoChamado(item) {
+  interacaoEditandoId = item.id;
+  document.getElementById('interacaoTipo').value = item.tipo;
+  document.getElementById('interacaoDescricao').value = item.descricao;
+  document.getElementById('interacaoProximoContato').value = dataParaInputLocal(item.proximo_contato);
+  document.getElementById('interacaoInterna').checked = !!item.interna;
+  document.getElementById('btnRegistrarInteracao').textContent = '✓ Salvar alteração';
+  document.getElementById('btnCancelarEdicaoInteracao').classList.remove('hidden');
+  document.getElementById('interacaoDescricao').focus();
 }
 
 function formatarDataHoraInteracao(valor) {
@@ -79,7 +104,10 @@ function renderizarInteracoesChamado(interacoes) {
       const proximo = document.createElement('span'); proximo.className = 'interacao-proximo'; proximo.textContent = `Próximo contato: ${formatarDataHoraInteracao(item.proximo_contato)}`; card.appendChild(proximo);
     }
     if (item.criado_por === usuarioLogado?.id || usuarioLogado?.perfil === 'admin') {
-      const excluir = document.createElement('button'); excluir.type = 'button'; excluir.className = 'interacao-excluir'; excluir.title = 'Excluir interação'; excluir.textContent = '×'; excluir.onclick = () => excluirInteracaoChamado(item.id); card.appendChild(excluir);
+      const acoes = document.createElement('div'); acoes.className = 'interacao-acoes';
+      const editar = document.createElement('button'); editar.type = 'button'; editar.className = 'interacao-editar'; editar.title = 'Editar interação'; editar.textContent = '✎'; editar.onclick = () => editarInteracaoChamado(item);
+      const excluir = document.createElement('button'); excluir.type = 'button'; excluir.className = 'interacao-excluir'; excluir.title = 'Excluir interação'; excluir.textContent = '×'; excluir.onclick = () => excluirInteracaoChamado(item.id);
+      acoes.append(editar, excluir); card.appendChild(acoes);
     }
     lista.appendChild(card);
   });
@@ -109,27 +137,35 @@ async function adicionarInteracaoChamado() {
   const botao = document.getElementById('btnRegistrarInteracao');
   botao.disabled = true; botao.textContent = 'Salvando...';
   try {
-    const chamadoId = await obterIdChamadoAtual();
     const payload = {
-      chamado_id: chamadoId,
       tipo: document.getElementById('interacaoTipo').value,
       descricao,
       proximo_contato: document.getElementById('interacaoProximoContato').value || null,
-      interna: document.getElementById('interacaoInterna').checked,
-      criado_por: usuarioLogado.id,
-      criado_por_nome: usuarioLogado.nome || usuarioLogado.email || 'Usuário'
+      interna: document.getElementById('interacaoInterna').checked
     };
-    const { error } = await supabaseClient.from('chamado_interacoes').insert(payload);
+    let error;
+    if (interacaoEditandoId) {
+      ({ error } = await supabaseClient.from('chamado_interacoes').update(payload).eq('id', interacaoEditandoId));
+    } else {
+      const chamadoId = await obterIdChamadoAtual();
+      ({ error } = await supabaseClient.from('chamado_interacoes').insert({
+        ...payload,
+        chamado_id: chamadoId,
+        criado_por: usuarioLogado.id,
+        criado_por_nome: usuarioLogado.nome || usuarioLogado.email || 'Usuário'
+      }));
+    }
     if (error) throw error;
     const protocolo = linhaEdicaoChamado.querySelectorAll('td')[0].innerText.trim();
-    registrarLog(`registrou uma interação no chamado ${protocolo}`);
+    registrarLog(`${interacaoEditandoId ? 'editou' : 'registrou'} uma interação no chamado ${protocolo}`);
     limparFormularioInteracao();
     await carregarInteracoesChamado();
   } catch (erro) {
     console.error('Erro ao registrar interação:', erro);
     alert('Não foi possível registrar a interação.\n\nDetalhes: ' + erro.message);
   } finally {
-    botao.disabled = false; botao.textContent = '＋ Registrar';
+    botao.disabled = false;
+    botao.textContent = interacaoEditandoId ? '✓ Salvar alteração' : '＋ Registrar';
   }
 }
 
