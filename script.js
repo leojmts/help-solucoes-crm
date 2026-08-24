@@ -30,6 +30,123 @@ async function excluirChamadoNaNuvem(protocolo) {
   if (error) throw error;
 }
 
+async function obterIdChamadoAtual() {
+  if (!linhaEdicaoChamado) return null;
+  if (linhaEdicaoChamado.dataset.idNuvem) return linhaEdicaoChamado.dataset.idNuvem;
+  const protocolo = linhaEdicaoChamado.querySelectorAll('td')[0].innerText.trim();
+  const { data, error } = await supabaseClient.from('chamados').select('id').eq('protocolo', protocolo).single();
+  if (error) throw error;
+  linhaEdicaoChamado.dataset.idNuvem = data.id;
+  return data.id;
+}
+
+function limparFormularioInteracao() {
+  const descricao = document.getElementById('interacaoDescricao');
+  if (descricao) descricao.value = '';
+  const proximo = document.getElementById('interacaoProximoContato');
+  if (proximo) proximo.value = '';
+  const interna = document.getElementById('interacaoInterna');
+  if (interna) interna.checked = false;
+  const tipo = document.getElementById('interacaoTipo');
+  if (tipo) tipo.value = 'WhatsApp';
+}
+
+function formatarDataHoraInteracao(valor) {
+  if (!valor) return '';
+  const data = new Date(valor);
+  return Number.isNaN(data.getTime()) ? valor : data.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+}
+
+function renderizarInteracoesChamado(interacoes) {
+  const lista = document.getElementById('listaInteracoesChamado');
+  const contador = document.getElementById('contadorInteracoesChamado');
+  if (!lista || !contador) return;
+  contador.textContent = `${interacoes.length} ${interacoes.length === 1 ? 'registro' : 'registros'}`;
+  lista.innerHTML = '';
+  if (!interacoes.length) {
+    lista.innerHTML = '<div class="interacoes-estado">Nenhuma interação registrada neste chamado.</div>';
+    return;
+  }
+  interacoes.forEach(item => {
+    const card = document.createElement('article');
+    card.className = 'interacao-item' + (item.interna ? ' interna' : '');
+    const topo = document.createElement('div'); topo.className = 'interacao-item-topo';
+    const tipo = document.createElement('span'); tipo.className = 'interacao-tipo'; tipo.textContent = item.tipo + (item.interna ? ' • Interna' : '');
+    const meta = document.createElement('span'); meta.className = 'interacao-meta'; meta.textContent = `${item.criado_por_nome || 'Usuário'} • ${formatarDataHoraInteracao(item.criado_em)}`;
+    const texto = document.createElement('div'); texto.className = 'interacao-texto'; texto.textContent = item.descricao;
+    topo.append(tipo, meta); card.append(topo, texto);
+    if (item.proximo_contato) {
+      const proximo = document.createElement('span'); proximo.className = 'interacao-proximo'; proximo.textContent = `Próximo contato: ${formatarDataHoraInteracao(item.proximo_contato)}`; card.appendChild(proximo);
+    }
+    if (item.criado_por === usuarioLogado?.id || usuarioLogado?.perfil === 'admin') {
+      const excluir = document.createElement('button'); excluir.type = 'button'; excluir.className = 'interacao-excluir'; excluir.title = 'Excluir interação'; excluir.textContent = '×'; excluir.onclick = () => excluirInteracaoChamado(item.id); card.appendChild(excluir);
+    }
+    lista.appendChild(card);
+  });
+}
+
+async function carregarInteracoesChamado() {
+  const area = document.getElementById('areaInteracoesChamado');
+  const lista = document.getElementById('listaInteracoesChamado');
+  if (!linhaEdicaoChamado) { area?.classList.add('hidden'); return; }
+  area?.classList.remove('hidden');
+  if (lista) lista.innerHTML = '<div class="interacoes-estado">Carregando histórico...</div>';
+  try {
+    const chamadoId = await obterIdChamadoAtual();
+    const { data, error } = await supabaseClient.from('chamado_interacoes').select('*').eq('chamado_id', chamadoId).order('criado_em', { ascending: false });
+    if (error) throw error;
+    renderizarInteracoesChamado(data || []);
+  } catch (erro) {
+    console.error('Erro ao carregar interações:', erro);
+    if (lista) lista.innerHTML = '<div class="interacoes-estado">Não foi possível carregar as interações. Confirme se o SQL de instalação foi executado.</div>';
+  }
+}
+
+async function adicionarInteracaoChamado() {
+  const descricaoEl = document.getElementById('interacaoDescricao');
+  const descricao = descricaoEl.value.trim();
+  if (!descricao) { alert('Descreva a interação antes de registrar.'); descricaoEl.focus(); return; }
+  const botao = document.getElementById('btnRegistrarInteracao');
+  botao.disabled = true; botao.textContent = 'Salvando...';
+  try {
+    const chamadoId = await obterIdChamadoAtual();
+    const payload = {
+      chamado_id: chamadoId,
+      tipo: document.getElementById('interacaoTipo').value,
+      descricao,
+      proximo_contato: document.getElementById('interacaoProximoContato').value || null,
+      interna: document.getElementById('interacaoInterna').checked,
+      criado_por: usuarioLogado.id,
+      criado_por_nome: usuarioLogado.nome || usuarioLogado.email || 'Usuário'
+    };
+    const { error } = await supabaseClient.from('chamado_interacoes').insert(payload);
+    if (error) throw error;
+    const protocolo = linhaEdicaoChamado.querySelectorAll('td')[0].innerText.trim();
+    registrarLog(`registrou uma interação no chamado ${protocolo}`);
+    limparFormularioInteracao();
+    await carregarInteracoesChamado();
+  } catch (erro) {
+    console.error('Erro ao registrar interação:', erro);
+    alert('Não foi possível registrar a interação.\n\nDetalhes: ' + erro.message);
+  } finally {
+    botao.disabled = false; botao.textContent = '＋ Registrar';
+  }
+}
+
+async function excluirInteracaoChamado(id) {
+  if (!confirm('Deseja excluir esta interação?')) return;
+  try {
+    const { error } = await supabaseClient.from('chamado_interacoes').delete().eq('id', id);
+    if (error) throw error;
+    const protocolo = linhaEdicaoChamado.querySelectorAll('td')[0].innerText.trim();
+    registrarLog(`excluiu uma interação do chamado ${protocolo}`);
+    await carregarInteracoesChamado();
+  } catch (erro) {
+    console.error('Erro ao excluir interação:', erro);
+    alert('Não foi possível excluir a interação.\n\nDetalhes: ' + erro.message);
+  }
+}
+
 function formatarDataHoraBanco(valor) {
   if (!valor) return '';
   const data = new Date(valor);
@@ -710,6 +827,8 @@ async function carregarChamadosDaNuvem() {
       document.getElementById('mResolucao').value = '';
       document.getElementById('infoDatasChamado').classList.add('hidden');
       document.getElementById('infoDatasChamado').innerHTML = '';
+      document.getElementById('areaInteracoesChamado').classList.add('hidden');
+      limparFormularioInteracao();
 
       document.getElementById('modalChamado').classList.add('active');
     }
@@ -919,6 +1038,9 @@ async function carregarChamadosDaNuvem() {
       infoDatas.innerHTML = `<span>🟢 Aberto em: <strong>${abertura || '-'}</strong></span>` +
         (fechamento ? `<span>🔴 Fechado em: <strong>${fechamento}</strong></span>` : `<span>⏳ Ainda em aberto</span>`);
       infoDatas.classList.remove('hidden');
+
+      limparFormularioInteracao();
+      carregarInteracoesChamado();
 
       document.getElementById('modalChamado').classList.add('active');
     }

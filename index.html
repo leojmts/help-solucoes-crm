@@ -668,6 +668,29 @@
           <label>Resolução</label>
           <textarea id="mResolucao" placeholder="Descreva o que foi feito para resolver..."></textarea>
         </div>
+        <section id="areaInteracoesChamado" class="chamado-interacoes hidden">
+          <div class="interacoes-cabecalho">
+            <div><h4>Histórico de interações</h4><small>Registre cada contato e acompanhe o próximo passo.</small></div>
+            <span id="contadorInteracoesChamado" class="interacoes-contador">0 registros</span>
+          </div>
+          <div class="interacao-form">
+            <div class="form-group">
+              <label>Tipo</label>
+              <select id="interacaoTipo"><option>WhatsApp</option><option>Ligação</option><option>E-mail</option><option>Visita</option><option>Orçamento</option><option>Observação interna</option><option>Outro</option></select>
+            </div>
+            <div class="form-group interacao-descricao">
+              <label>Descrição</label>
+              <input id="interacaoDescricao" maxlength="2000" placeholder="Ex: Cliente enviou fotos e aguarda retorno">
+            </div>
+            <div class="form-group">
+              <label>Próximo contato (opcional)</label>
+              <input id="interacaoProximoContato" type="datetime-local">
+            </div>
+            <label class="interacao-interna"><input id="interacaoInterna" type="checkbox"> Somente equipe</label>
+            <button id="btnRegistrarInteracao" class="btn btn-primary" type="button" onclick="adicionarInteracaoChamado()">＋ Registrar</button>
+          </div>
+          <div id="listaInteracoesChamado" class="interacoes-lista"></div>
+        </section>
       </div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="fecharModais()">Cancelar</button>
