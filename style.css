@@ -631,3 +631,54 @@ body{background:radial-gradient(circle at 85% 0%,#102542 0,transparent 28%),#071
 .interacao-form > .btn-primary {
   align-self: center;
 }
+
+/* ===== RELATÓRIOS: ACABAMENTO VISUAL ===== */
+#visaoRelatorios { gap: 18px; }
+#visaoRelatorios .header { margin-bottom: 2px; }
+#visaoRelatorios .report-actions { align-items: center; flex-wrap: wrap; }
+#visaoRelatorios .report-actions select {
+  min-height: 42px; padding: 0 38px 0 13px; color: var(--text-main);
+  background: #0d1d31; border: 1px solid var(--help-line); border-radius: 9px;
+  font: inherit; font-size: .84rem; outline: none; cursor: pointer;
+}
+#visaoRelatorios .report-actions select:focus { border-color: #347fe8; box-shadow: 0 0 0 3px rgba(52,127,232,.12); }
+#visaoRelatorios .table-container {
+  overflow: hidden; border-color: rgba(91,145,218,.22);
+  background: linear-gradient(145deg,rgba(15,34,57,.97),rgba(8,24,42,.97));
+}
+#visaoRelatorios .table-header { min-height: 58px; gap: 18px; }
+#visaoRelatorios .table-header h3 { display: flex; align-items: center; gap: 9px; font-size: 1rem; }
+#visaoRelatorios .table-header h3 .lucide { color: #64a6ff; }
+#visaoRelatorios .table-header p { margin-left: auto; text-align: right; line-height: 1.4; }
+#visaoRelatorios table { min-width: 680px; }
+#visaoRelatorios th { padding: 14px 16px; font-size: .72rem; letter-spacing: .45px; }
+#visaoRelatorios td { padding: 15px 16px; }
+#visaoRelatorios tbody tr:last-child td { border-bottom: 0; }
+#visaoRelatorios .report-rate-field {
+  max-width: 260px; margin: 16px 18px; padding: 14px 16px;
+  background: rgba(6,19,35,.55); border: 1px solid var(--help-line); border-radius: 10px;
+}
+#visaoRelatorios .report-rate-field label { display: block; margin-bottom: 8px; color: #9db0c7; font-size: .78rem; font-weight: 600; }
+#visaoRelatorios .report-rate-field input {
+  width: 100%; height: 40px; padding: 0 12px; color: var(--text-main); background: #091624;
+  border: 1px solid #2b405a; border-radius: 8px; font: inherit; outline: none;
+}
+#visaoRelatorios .report-rate-field input:focus { border-color: #347fe8; box-shadow: 0 0 0 3px rgba(52,127,232,.12); }
+
+/* Mantém a navegação visível durante a rolagem no computador */
+@media (min-width: 721px) {
+  .sidebar {
+    position: fixed; inset: 0 auto 0 0; z-index: 1500;
+    height: 100dvh; overflow-y: auto;
+  }
+  .content { margin-left: 230px; width: calc(100% - 230px); }
+  .container.sidebar-collapsed .content { margin-left: 78px; width: calc(100% - 78px); }
+}
+
+@media (max-width: 720px) {
+  #visaoRelatorios .report-actions { display: grid; grid-template-columns: 1fr; width: 100%; }
+  #visaoRelatorios .report-actions select, #visaoRelatorios .report-actions .btn { width: 100%; justify-content: center; }
+  #visaoRelatorios .table-header { align-items: flex-start; }
+  #visaoRelatorios .table-header p { margin-left: 0; text-align: left; }
+  #visaoRelatorios .report-rate-field { max-width: none; }
+}
