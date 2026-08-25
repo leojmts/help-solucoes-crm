@@ -23,6 +23,7 @@
           <li id="menuDashboard" class="active nav-item" data-permissao="dashboard" onclick="trocarAba('dashboard')" title="Dashboard"><i data-lucide="layout-dashboard"></i><span class="nav-label">Dashboard</span></li>
           <li id="menuCRM" class="nav-item" onclick="trocarAba('crm')" title="CRM Comercial"><i data-lucide="briefcase"></i><span class="nav-label">CRM Comercial</span></li>
           <li id="menuCadastro" class="nav-item" data-permissao="clientes" onclick="trocarAba('cadastro')" title="Cadastros"><i data-lucide="database"></i><span class="nav-label">Cadastro</span></li>
+          <li id="menuProcessos" class="nav-item" onclick="trocarAba('processos')" title="Processos internos"><i data-lucide="list-checks"></i><span class="nav-label">Processos</span></li>
           <li id="menuRelatorios" class="nav-item" data-permissao="relatorios" onclick="trocarAba('relatorios')" title="Relatórios"><i data-lucide="line-chart"></i><span class="nav-label">Relatórios</span></li>
           <li id="menuConfiguracoes" class="nav-item" data-permissao="configuracoes" onclick="trocarAba('configuracoes')" title="Configurações"><i data-lucide="settings"></i><span class="nav-label">Configurações</span></li>
         </ul>
@@ -516,6 +517,25 @@
         </section>
       </div>
 
+<div id="visaoProcessos" class="view-section hidden">
+  <header class="header processos-header">
+    <div><h1>Processos internos</h1><p>Organize rotinas recorrentes e acompanhe cada execução da equipe.</p></div>
+    <button class="btn btn-primary" type="button" onclick="abrirModalProcesso()"><i data-lucide="plus"></i>Novo processo</button>
+  </header>
+  <section class="processos-resumo">
+    <div class="processo-resumo-card"><span>Pendentes</span><strong id="processosPendentes">0</strong></div>
+    <div class="processo-resumo-card alerta"><span>Atrasados</span><strong id="processosAtrasados">0</strong></div>
+    <div class="processo-resumo-card"><span>Para hoje</span><strong id="processosHoje">0</strong></div>
+    <div class="processo-resumo-card sucesso"><span>Executados no mês</span><strong id="processosExecutadosMes">0</strong></div>
+  </section>
+  <section class="processos-toolbar">
+    <label class="processos-busca"><i data-lucide="search"></i><input id="buscaProcessos" placeholder="Pesquisar processo ou responsável" oninput="renderizarProcessos()"></label>
+    <select id="filtroProcessosStatus" onchange="renderizarProcessos()"><option value="">Todos os status</option><option>Pendente</option><option>Em andamento</option><option>Pausada</option><option>Concluída</option></select>
+    <select id="filtroProcessosResponsavel" onchange="renderizarProcessos()"><option value="">Todos os responsáveis</option></select>
+  </section>
+  <div id="listaProcessos" class="processos-lista"><div class="processos-vazio">Carregando processos...</div></div>
+</div>
+
 <div id="visaoConfiguracoes" class="view-section hidden">
         <header class="header">
           <div>
@@ -593,6 +613,25 @@
         </section>
       </div>
 </main>
+
+  <div id="modalProcesso" class="crm-modal-overlay" onclick="if(event.target===this) fecharModalProcesso()">
+    <div class="crm-modal-content processo-modal" role="dialog" aria-modal="true" aria-labelledby="processoModalTitulo">
+      <div class="modal-header"><div><h2 id="processoModalTitulo">Novo processo interno</h2><p>Defina a rotina, o responsável e quando ela deve acontecer.</p></div><button class="modal-close" type="button" onclick="fecharModalProcesso()">×</button></div>
+      <div class="processo-form-grid">
+        <label class="crm-field processo-campo-largo"><span>Título *</span><input id="processoTitulo" maxlength="160" placeholder="Ex.: Manutenção preventiva na Ranhos"></label>
+        <label class="crm-field"><span>Responsável *</span><select id="processoResponsavel"></select></label>
+        <label class="crm-field"><span>Prioridade</span><select id="processoPrioridade"><option>Baixa</option><option selected>Normal</option><option>Alta</option></select></label>
+        <label class="crm-field"><span>Frequência</span><select id="processoFrequencia" onchange="atualizarCamposRecorrencia()"><option>Única</option><option>Diária</option><option>Semanal</option><option>Quinzenal</option><option>Mensal</option><option>Personalizada</option></select></label>
+        <label class="crm-field"><span>Próxima execução *</span><input id="processoProximaExecucao" type="datetime-local"></label>
+        <label class="crm-field hidden" id="processoIntervaloWrap"><span>Repetir a cada quantos dias?</span><input id="processoIntervalo" type="number" min="1" max="365" value="7"></label>
+        <div id="processoDiasWrap" class="crm-field processo-campo-largo hidden"><span>Dias da semana</span><div class="processo-dias"><label><input type="checkbox" value="1">Seg</label><label><input type="checkbox" value="2">Ter</label><label><input type="checkbox" value="3">Qua</label><label><input type="checkbox" value="4">Qui</label><label><input type="checkbox" value="5">Sex</label><label><input type="checkbox" value="6">Sáb</label><label><input type="checkbox" value="0">Dom</label></div></div>
+        <label class="crm-field processo-campo-largo"><span>Descrição</span><textarea id="processoDescricao" rows="3" placeholder="Explique o objetivo e os cuidados desta rotina."></textarea></label>
+        <label class="crm-field processo-campo-largo"><span>Checklist <small>(um item por linha)</small></span><textarea id="processoChecklist" rows="4" placeholder="Conferir backup&#10;Atualizar o sistema&#10;Registrar evidências"></textarea></label>
+        <label class="crm-field processo-campo-largo"><span>Observações</span><textarea id="processoObservacoes" rows="2" placeholder="Informações internas adicionais."></textarea></label>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" type="button" onclick="fecharModalProcesso()">Cancelar</button><button id="btnSalvarProcesso" class="btn btn-primary" type="button" onclick="salvarProcesso()"><i data-lucide="save"></i>Salvar processo</button></div>
+    </div>
+  </div>
   </div>
 
   <div id="telaLogin">
