@@ -48,7 +48,7 @@
     <div id="notificationList" class="notification-list"></div>
     <div class="notification-foot"><button type="button" onclick="marcarTodasLidas()">Marcar todas como lidas</button></div>
   </div>
-</div><button class="btn btn-primary" data-permissao="novoChamado" onclick="abrirModalChamado()"><i data-lucide="plus"></i>Novo chamado</button></div>
+</div><button class="btn btn-secondary dashboard-customize-btn" type="button" onclick="abrirPersonalizacaoDashboard()"><i data-lucide="layout-dashboard"></i>Personalizar painel</button><button class="btn btn-primary" data-permissao="novoChamado" onclick="abrirModalChamado()"><i data-lucide="plus"></i>Novo chamado</button></div>
           <input type="file" id="inputImportar" accept="application/json" style="display:none" onchange="importarBackup(this.files[0])">
         </header>
 
@@ -90,15 +90,12 @@
           </div>
         </section>
 
-        <section class="chart-container">
-          <div class="chart-box">
-            <h4>Chamados por Técnico</h4>
-            <div id="graficoTecnico" class="bar-chart"></div>
+        <section class="dashboard-ops-section">
+          <div class="dashboard-ops-head">
+            <div><h2>Painel operacional</h2><p>Prioridades, agenda e desempenho da equipe em um só lugar.</p></div>
+            <label class="dashboard-periodo"><span>Período</span><select id="dashboardPeriodo" onchange="alterarPeriodoDashboard(this.value)"><option value="hoje">Hoje</option><option value="semana">Últimos 7 dias</option><option value="mes">Este mês</option><option value="todos">Todo o período</option></select></label>
           </div>
-          <div class="chart-box">
-            <h4>Chamados por Status</h4>
-            <div id="graficoStatus" class="donut-chart-wrap"></div>
-          </div>
+          <div id="dashboardWidgets" class="dashboard-widgets-grid"></div>
         </section>
 
         <section class="table-container">
@@ -613,6 +610,23 @@
         </section>
       </div>
 </main>
+
+  <div id="modalDashboardPersonalizar" class="crm-modal-overlay" onclick="if(event.target===this) fecharPersonalizacaoDashboard()">
+    <div class="crm-modal-content dashboard-config-modal" role="dialog" aria-modal="true" aria-labelledby="dashboardConfigTitulo">
+      <div class="modal-header"><div><h2 id="dashboardConfigTitulo">Personalizar painel</h2><p>Escolha, organize e dimensione os blocos do seu dashboard.</p></div><button class="modal-close" type="button" onclick="fecharPersonalizacaoDashboard()">×</button></div>
+      <div class="dashboard-config-intro"><i data-lucide="move"></i><span>Arraste os blocos para mudar a ordem ou utilize as setas. A configuração será salva somente para o seu usuário.</span></div>
+      <div id="dashboardConfigLista" class="dashboard-config-lista"></div>
+      <div class="modal-footer"><button class="btn btn-secondary" type="button" onclick="restaurarDashboardPadrao()"><i data-lucide="rotate-ccw"></i>Restaurar padrão</button><span class="dashboard-config-spacer"></span><button class="btn btn-secondary" type="button" onclick="fecharPersonalizacaoDashboard()">Cancelar</button><button class="btn btn-primary" id="btnSalvarDashboard" type="button" onclick="salvarPersonalizacaoDashboard()"><i data-lucide="save"></i>Salvar painel</button></div>
+    </div>
+  </div>
+
+  <div id="modalAvisoInterno" class="crm-modal-overlay" onclick="if(event.target===this) fecharModalAviso()">
+    <div class="crm-modal-content dashboard-aviso-modal" role="dialog" aria-modal="true" aria-labelledby="avisoModalTitulo">
+      <div class="modal-header"><div><h2 id="avisoModalTitulo">Novo aviso interno</h2><p>O comunicado ficará visível no dashboard da equipe.</p></div><button class="modal-close" type="button" onclick="fecharModalAviso()">×</button></div>
+      <div class="dashboard-aviso-form"><label class="crm-field"><span>Título *</span><input id="avisoTitulo" maxlength="120" placeholder="Ex.: Manutenção programada"></label><label class="crm-field"><span>Mensagem *</span><textarea id="avisoMensagem" maxlength="1000" rows="4" placeholder="Escreva o comunicado para a equipe."></textarea></label><label class="crm-field"><span>Expira em <small>(opcional)</small></span><input id="avisoExpira" type="datetime-local"></label></div>
+      <div class="modal-footer"><button class="btn btn-secondary" type="button" onclick="fecharModalAviso()">Cancelar</button><button class="btn btn-primary" type="button" onclick="salvarAvisoInterno()"><i data-lucide="send"></i>Publicar aviso</button></div>
+    </div>
+  </div>
 
   <div id="modalProcesso" class="crm-modal-overlay" onclick="if(event.target===this) fecharModalProcesso()">
     <div class="crm-modal-content processo-modal" role="dialog" aria-modal="true" aria-labelledby="processoModalTitulo">
