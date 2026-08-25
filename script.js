@@ -70,6 +70,17 @@ let interacaoEditandoId = null;
 let respostasModeloCache = [];
 let conhecimentoCache = [];
 
+function formatarCampoHora(input) {
+  let valor = input.value.replace(/\D/g, '').slice(0, 4);
+  if (valor.length > 2) valor = valor.slice(0, 2) + ':' + valor.slice(2);
+  input.value = valor;
+}
+
+function horaValida(valor) {
+  const partes = /^(\d{2}):(\d{2})$/.exec(valor);
+  return !!partes && Number(partes[1]) <= 23 && Number(partes[2]) <= 59;
+}
+
 function mostrarAnexosSelecionados() {
   const input = document.getElementById('interacaoAnexos');
   const area = document.getElementById('interacaoAnexosSelecionados');
@@ -143,6 +154,7 @@ function editarInteracaoChamado(item) {
   document.getElementById('btnRegistrarInteracao').innerHTML = '<i data-lucide="save"></i>Salvar alteração';
   document.getElementById('btnCancelarEdicaoInteracao').classList.remove('hidden');
   document.getElementById('interacaoDescricao').focus();
+  document.querySelector('.interacao-form')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   renderizarIcones();
 }
 
@@ -180,8 +192,8 @@ function renderizarInteracoesChamado(interacoes) {
     }
     if (item.criado_por === usuarioLogado?.id || usuarioLogado?.perfil === 'admin') {
       const acoes = document.createElement('div'); acoes.className = 'interacao-acoes';
-      const editar = document.createElement('button'); editar.type = 'button'; editar.className = 'interacao-editar'; editar.title = 'Editar interação'; definirIcone(editar, 'pencil'); editar.onclick = () => editarInteracaoChamado(item);
-      const excluir = document.createElement('button'); excluir.type = 'button'; excluir.className = 'interacao-excluir'; excluir.title = 'Excluir interação'; definirIcone(excluir, 'trash-2'); excluir.onclick = () => excluirInteracaoChamado(item.id);
+      const editar = document.createElement('button'); editar.type = 'button'; editar.className = 'interacao-editar'; editar.title = 'Editar interação'; definirIcone(editar, 'pencil'); editar.append(document.createTextNode('Editar')); editar.onclick = () => editarInteracaoChamado(item);
+      const excluir = document.createElement('button'); excluir.type = 'button'; excluir.className = 'interacao-excluir'; excluir.title = 'Excluir interação'; definirIcone(excluir, 'trash-2'); excluir.append(document.createTextNode('Excluir')); excluir.onclick = () => excluirInteracaoChamado(item.id);
       acoes.append(editar, excluir); card.appendChild(acoes);
     }
     lista.appendChild(card);
@@ -217,13 +229,17 @@ async function adicionarInteracaoChamado() {
   const descricaoEl = document.getElementById('interacaoDescricao');
   const descricao = descricaoEl.value.trim();
   if (!descricao) { alert('Descreva a interação antes de registrar.'); descricaoEl.focus(); return; }
+  const dataProximo = document.getElementById('interacaoProximoData').value;
+  const horaProximo = document.getElementById('interacaoProximoHora').value.trim();
+  if (!dataProximo && horaProximo) { alert('Selecione também a data do próximo contato.'); document.getElementById('interacaoProximoData').focus(); return; }
+  if (dataProximo && !horaValida(horaProximo)) { alert('Informe um horário válido no formato HH:MM. Exemplo: 08:00.'); document.getElementById('interacaoProximoHora').focus(); return; }
   const botao = document.getElementById('btnRegistrarInteracao');
   botao.disabled = true; botao.textContent = 'Salvando...';
   try {
     const payload = {
       tipo: document.getElementById('interacaoTipo').value,
       descricao,
-      proximo_contato: document.getElementById('interacaoProximoData').value ? `${document.getElementById('interacaoProximoData').value}T${document.getElementById('interacaoProximoHora').value || '09:00'}` : null,
+      proximo_contato: dataProximo ? `${dataProximo}T${horaProximo}` : null,
       interna: document.getElementById('interacaoInterna').checked
     };
     let error, interacaoId = interacaoEditandoId, chamadoId;

@@ -752,7 +752,7 @@
               <label>Próximo contato — data e hora (opcional)</label>
               <div class="interacao-data-hora">
                 <label><span>Data</span><input id="interacaoProximoData" type="date"></label>
-                <label><span>Hora</span><input id="interacaoProximoHora" type="time" step="300"></label>
+                <label><span>Hora (HH:MM)</span><input id="interacaoProximoHora" type="text" inputmode="numeric" maxlength="5" placeholder="08:00" oninput="formatarCampoHora(this)"></label>
               </div>
             </div>
             <label class="interacao-interna"><input id="interacaoInterna" type="checkbox"> Somente equipe</label>
