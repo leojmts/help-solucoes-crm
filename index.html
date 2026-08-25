@@ -750,7 +750,10 @@
             </div>
             <div class="form-group interacao-proximo-campo">
               <label>Próximo contato — data e hora (opcional)</label>
-              <input id="interacaoProximoContato" type="datetime-local">
+              <div class="interacao-data-hora">
+                <label><span>Data</span><input id="interacaoProximoData" type="date"></label>
+                <label><span>Hora</span><input id="interacaoProximoHora" type="time" step="300"></label>
+              </div>
             </div>
             <label class="interacao-interna"><input id="interacaoInterna" type="checkbox"> Somente equipe</label>
             <label class="interacao-anexo"><i data-lucide="paperclip"></i><span>Anexar arquivos</span><input id="interacaoAnexos" type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf,text/plain" onchange="mostrarAnexosSelecionados()"></label>

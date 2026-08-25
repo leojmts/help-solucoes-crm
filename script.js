@@ -106,8 +106,10 @@ function limparFormularioInteracao() {
   interacaoEditandoId = null;
   const descricao = document.getElementById('interacaoDescricao');
   if (descricao) descricao.value = '';
-  const proximo = document.getElementById('interacaoProximoContato');
-  if (proximo) proximo.value = '';
+  const proximoData = document.getElementById('interacaoProximoData');
+  if (proximoData) proximoData.value = '';
+  const proximoHora = document.getElementById('interacaoProximoHora');
+  if (proximoHora) proximoHora.value = '';
   const interna = document.getElementById('interacaoInterna');
   if (interna) interna.checked = false;
   const tipo = document.getElementById('interacaoTipo');
@@ -134,7 +136,9 @@ function editarInteracaoChamado(item) {
   interacaoEditandoId = item.id;
   document.getElementById('interacaoTipo').value = item.tipo;
   document.getElementById('interacaoDescricao').value = item.descricao;
-  document.getElementById('interacaoProximoContato').value = dataParaInputLocal(item.proximo_contato);
+  const proximoLocal = dataParaInputLocal(item.proximo_contato);
+  document.getElementById('interacaoProximoData').value = proximoLocal ? proximoLocal.slice(0,10) : '';
+  document.getElementById('interacaoProximoHora').value = proximoLocal ? proximoLocal.slice(11,16) : '';
   document.getElementById('interacaoInterna').checked = !!item.interna;
   document.getElementById('btnRegistrarInteracao').innerHTML = '<i data-lucide="save"></i>Salvar alteração';
   document.getElementById('btnCancelarEdicaoInteracao').classList.remove('hidden');
@@ -219,7 +223,7 @@ async function adicionarInteracaoChamado() {
     const payload = {
       tipo: document.getElementById('interacaoTipo').value,
       descricao,
-      proximo_contato: document.getElementById('interacaoProximoContato').value || null,
+      proximo_contato: document.getElementById('interacaoProximoData').value ? `${document.getElementById('interacaoProximoData').value}T${document.getElementById('interacaoProximoHora').value || '09:00'}` : null,
       interna: document.getElementById('interacaoInterna').checked
     };
     let error, interacaoId = interacaoEditandoId, chamadoId;
@@ -268,6 +272,17 @@ async function excluirInteracaoChamado(id) {
     console.error('Erro ao excluir interação:', erro);
     alert('Não foi possível excluir a interação.\n\nDetalhes: ' + erro.message);
   }
+}
+
+async function registrarEventosResponsabilidade(chamadoId, eventos) {
+  if (!chamadoId || !eventos.length || !usuarioLogado) return;
+  const registros = eventos.map(descricao => ({
+    chamado_id: chamadoId, tipo: 'Observação interna', descricao,
+    proximo_contato: null, interna: true, criado_por: usuarioLogado.id,
+    criado_por_nome: usuarioLogado.nome || usuarioLogado.email || 'Usuário'
+  }));
+  const { error } = await supabaseClient.from('chamado_interacoes').insert(registros);
+  if (error) console.warn('Chamado salvo, mas o histórico de responsabilidade não foi registrado:', error);
 }
 
 function formatarDataHoraBanco(valor) {
@@ -1072,6 +1087,8 @@ async function carregarChamadosDaNuvem() {
       if (linhaEdicaoChamado) {
         const td = linhaEdicaoChamado.querySelectorAll('td');
         const protocoloAtual = td[0].innerText.trim();
+        const tecnicoAnterior = td[7].innerText.trim();
+        const statusAnterior = td[11].innerText.trim();
         let fechamentoISO = linhaEdicaoChamado.getAttribute('data-fechamento-iso') || null;
         if (status === 'Resolvido' && !fechamentoISO) fechamentoISO = new Date().toISOString();
         if (status !== 'Resolvido') fechamentoISO = null;
@@ -1086,6 +1103,12 @@ async function carregarChamadosDaNuvem() {
           alert('Não foi possível atualizar o chamado na nuvem.\n\nDetalhes: ' + erroSupabase.message);
           return;
         }
+
+        const eventosResponsabilidade = [];
+        if (tecnicoAnterior !== tecnico) eventosResponsabilidade.push(`Atendimento transferido de ${tecnicoAnterior || 'Não atribuído'} para ${tecnico}.`);
+        if (statusAnterior !== 'Resolvido' && status === 'Resolvido') eventosResponsabilidade.push(`Chamado finalizado por ${usuarioLogado?.nome || usuarioLogado?.email || tecnico}. Técnico responsável no encerramento: ${tecnico}.`);
+        if (statusAnterior === 'Resolvido' && status !== 'Resolvido') eventosResponsabilidade.push(`Chamado reaberto por ${usuarioLogado?.nome || usuarioLogado?.email || 'Usuário'}. Técnico responsável: ${tecnico}.`);
+        try { await registrarEventosResponsabilidade(await obterIdChamadoAtual(), eventosResponsabilidade); } catch (historicoErro) { console.warn(historicoErro); }
 
         linhaEdicaoChamado.setAttribute('data-erro', erro);
         if (fechamentoISO) linhaEdicaoChamado.setAttribute('data-fechamento-iso', fechamentoISO); else linhaEdicaoChamado.removeAttribute('data-fechamento-iso');
@@ -1141,6 +1164,7 @@ async function carregarChamadosDaNuvem() {
           });
           chamadoCriado = resultadoCriacao.chamado;
           protocoloStr = resultadoCriacao.protocolo;
+          await registrarEventosResponsabilidade(chamadoCriado.id, [`Chamado atribuído a ${tecnico} por ${usuarioLogado?.nome || usuarioLogado?.email || 'Usuário'}.`]);
         } catch (erroSupabase) {
           console.error('Erro ao salvar chamado no Supabase:', erroSupabase);
           novaLinha.remove();
