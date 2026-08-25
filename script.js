@@ -81,6 +81,13 @@ function horaValida(valor) {
   return !!partes && Number(partes[1]) <= 23 && Number(partes[2]) <= 59;
 }
 
+function proximoContatoParaIso(data, hora) {
+  if (!data) return null;
+  const local = new Date(`${data}T${hora}:00`);
+  if (Number.isNaN(local.getTime())) throw new Error('Data ou horário de próximo contato inválido.');
+  return local.toISOString();
+}
+
 function mostrarAnexosSelecionados() {
   const input = document.getElementById('interacaoAnexos');
   const area = document.getElementById('interacaoAnexosSelecionados');
@@ -239,7 +246,7 @@ async function adicionarInteracaoChamado() {
     const payload = {
       tipo: document.getElementById('interacaoTipo').value,
       descricao,
-      proximo_contato: dataProximo ? `${dataProximo}T${horaProximo}` : null,
+      proximo_contato: proximoContatoParaIso(dataProximo, horaProximo),
       interna: document.getElementById('interacaoInterna').checked
     };
     let error, interacaoId = interacaoEditandoId, chamadoId;
