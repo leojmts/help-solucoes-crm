@@ -567,13 +567,28 @@
         </section>
         <section class="table-container crm-tools-card">
           <div class="table-header"><div><h3><i data-lucide="message-square-text"></i> Respostas prontas</h3><p>Textos reutilizáveis para registrar contatos com mais rapidez.</p></div></div>
-          <div class="crm-tool-form"><input id="modeloTitulo" maxlength="120" placeholder="Título"><input id="modeloCategoria" maxlength="80" placeholder="Categoria" value="Geral"><textarea id="modeloConteudo" maxlength="4000" placeholder="Texto da resposta"></textarea><button class="btn btn-primary" type="button" onclick="salvarRespostaModelo()"><i data-lucide="plus"></i>Adicionar</button></div>
+          <div class="crm-tool-form resposta-form">
+            <label class="crm-field"><span>Título <b>*</b></span><input id="modeloTitulo" maxlength="120" placeholder="Ex.: Aguardando retorno"></label>
+            <label class="crm-field"><span>Categoria</span><input id="modeloCategoria" maxlength="80" placeholder="Ex.: Atendimento" value="Geral"></label>
+            <label class="crm-field crm-field-wide"><span>Texto da resposta <b>*</b></span><textarea id="modeloConteudo" maxlength="4000" placeholder="Digite o texto que será reutilizado nas interações..." oninput="document.getElementById('modeloContador').textContent=this.value.length"></textarea><small><span id="modeloContador">0</span>/4000 caracteres</small></label>
+            <button id="btnSalvarModelo" class="btn btn-primary" type="button" onclick="salvarRespostaModelo()"><i data-lucide="plus"></i>Salvar resposta</button>
+          </div>
+          <div id="statusRespostasModelo" class="crm-tool-status hidden"></div>
+          <div class="crm-search-wrap"><i data-lucide="search"></i><input id="buscaRespostasModelo" class="crm-tool-search" placeholder="Buscar por título, categoria ou conteúdo..." oninput="renderizarRespostasModelo()"><button type="button" onclick="limparBuscaRespostas()" title="Limpar busca"><i data-lucide="x"></i></button></div>
           <div id="listaRespostasModelo" class="crm-tool-list"></div>
         </section>
         <section class="table-container crm-tools-card">
           <div class="table-header"><div><h3><i data-lucide="book-open"></i> Base de conhecimento</h3><p>Registre soluções recorrentes para a equipe consultar.</p></div></div>
-          <div class="crm-tool-form knowledge-form"><input id="conhecimentoTitulo" maxlength="160" placeholder="Título"><input id="conhecimentoCategoria" maxlength="80" placeholder="Categoria" value="Geral"><input id="conhecimentoPalavras" placeholder="Palavras-chave"><textarea id="conhecimentoProblema" maxlength="4000" placeholder="Problema / sintomas"></textarea><textarea id="conhecimentoSolucao" maxlength="8000" placeholder="Solução / procedimento"></textarea><button class="btn btn-primary" type="button" onclick="salvarConhecimento()"><i data-lucide="plus"></i>Adicionar</button></div>
-          <input id="buscaConhecimento" class="crm-tool-search" placeholder="Buscar solução..." oninput="renderizarConhecimento()">
+          <div class="crm-tool-form knowledge-form">
+            <label class="crm-field"><span>Título <b>*</b></span><input id="conhecimentoTitulo" maxlength="160" placeholder="Ex.: Impressora não comunica"></label>
+            <label class="crm-field"><span>Categoria</span><input id="conhecimentoCategoria" maxlength="80" placeholder="Ex.: PDV" value="Geral"></label>
+            <label class="crm-field"><span>Palavras-chave</span><input id="conhecimentoPalavras" placeholder="impressora, rede, IP"></label>
+            <label class="crm-field"><span>Problema ou sintomas <b>*</b></span><textarea id="conhecimentoProblema" maxlength="4000" placeholder="Descreva o comportamento apresentado..."></textarea></label>
+            <label class="crm-field"><span>Solução ou procedimento <b>*</b></span><textarea id="conhecimentoSolucao" maxlength="8000" placeholder="Explique o passo a passo para resolver..."></textarea></label>
+            <button id="btnSalvarConhecimento" class="btn btn-primary" type="button" onclick="salvarConhecimento()"><i data-lucide="plus"></i>Salvar solução</button>
+          </div>
+          <div id="statusConhecimento" class="crm-tool-status hidden"></div>
+          <div class="crm-search-wrap"><i data-lucide="search"></i><input id="buscaConhecimento" class="crm-tool-search" placeholder="Buscar por título, problema ou palavra-chave..." oninput="renderizarConhecimento()"><button type="button" onclick="limparBuscaConhecimento()" title="Limpar busca"><i data-lucide="x"></i></button></div>
           <div id="listaConhecimento" class="crm-tool-list"></div>
         </section>
       </div>
