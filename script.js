@@ -268,6 +268,7 @@ async function adicionarInteracaoChamado() {
     if (interacaoId) await enviarAnexosInteracao(interacaoId, chamadoId);
     const protocolo = linhaEdicaoChamado.querySelectorAll('td')[0].innerText.trim();
     registrarLog(`${interacaoEditandoId ? 'editou' : 'registrou'} uma interação no chamado ${protocolo}`);
+    if (!interacaoEditandoId) await processarMencoesInteracao(descricao, chamadoId, protocolo);
     limparFormularioInteracao();
     await carregarInteracoesChamado();
   } catch (erro) {
@@ -329,6 +330,7 @@ function adicionarChamadoNuvemNaTabela(chamado) {
   novaLinha.dataset.idNuvem = chamado.id || '';
   novaLinha.setAttribute('data-erro', chamado.erro || chamado.descricao || '');
   novaLinha.setAttribute('data-resolucao', chamado.resolucao || '');
+  novaLinha.dataset.contatoConfirmado = chamado.contato_confirmado ? 'true' : 'false';
   novaLinha.setAttribute('data-abertura', aberturaStr);
   novaLinha.setAttribute('data-abertura-iso', chamado.abertura_em || chamado.criado_em || '');
   if (fechamentoStr) novaLinha.setAttribute('data-fechamento', fechamentoStr);
@@ -414,6 +416,7 @@ async function carregarTecnicosDaNuvem() {
   if (!select) return;
   const { data, error } = await supabaseClient.from('tecnicos').select('*').eq('ativo', true).order('nome', { ascending: true });
   if (error) throw error;
+  tecnicosNuvem = data || [];
   select.innerHTML = '';
   (data || []).forEach(t => {
     const option = document.createElement('option'); option.value=t.nome; option.textContent=t.nome; option.dataset.idNuvem=t.id; select.appendChild(option);
@@ -444,7 +447,7 @@ async function carregarChamadosDaNuvem() {
       function mover() {
         const main = document.querySelector('main.content');
         if (!main) return;
-        ['visaoDashboard','visaoCRM','visaoCadastro','visaoProcessos','visaoRelatorios','visaoConfiguracoes'].forEach(id => {
+        ['visaoDashboard','visaoMeuTrabalho','visaoKanban','visaoCRM','visaoCadastro','visaoProcessos','visaoRelatorios','visaoConfiguracoes'].forEach(id => {
           const tela = document.getElementById(id);
           if (tela && tela.parentElement !== main) main.appendChild(tela);
         });
@@ -461,6 +464,9 @@ async function carregarChamadosDaNuvem() {
     let linhaEdicaoCliente = null;
     let linhaEdicaoUsuario = null;
     let usuarioLogado = null;
+    let tecnicosNuvem = [];
+    let audioContextoNotificacao = null;
+    let intervaloNotificacoes = null;
 
     const RECURSOS = ['dashboard', 'clientes', 'novoChamado', 'novoCliente', 'novoTecnico', 'usuarios', 'relatorios', 'configuracoes'];
     const PERFIS_PADRAO = {
@@ -877,6 +883,7 @@ async function carregarChamadosDaNuvem() {
         renderizarUsuarios();
         renderizarLog();
         await carregarDashboardPersonalizado();
+        await iniciarNotificacoesTempoReal();
       } catch (e) {
         console.error('Não foi possível carregar os dados:', e);
         throw e;
@@ -886,6 +893,8 @@ async function carregarChamadosDaNuvem() {
     function trocarAba(aba) {
       const mapa = {
         dashboard: 'Dashboard',
+        meuTrabalho: 'MeuTrabalho',
+        kanban: 'Kanban',
         crm: 'CRM',
         cadastro: 'Cadastro',
         processos: 'Processos',
@@ -913,6 +922,8 @@ async function carregarChamadosDaNuvem() {
         if (aba === 'processos' && typeof carregarProcessos === 'function') carregarProcessos();
         if (aba === 'configuracoes' && typeof carregarConfiguracoes === 'function') carregarConfiguracoes();
         if (aba === 'dashboard' && dashboardCarregado) renderizarDashboardPersonalizado();
+        if (aba === 'meuTrabalho') renderizarMeuTrabalho();
+        if (aba === 'kanban') renderizarKanban();
       } catch (erro) {
         console.error('Erro ao carregar a tela:', aba, erro);
       }
@@ -1055,6 +1066,9 @@ async function carregarChamadosDaNuvem() {
       document.getElementById('mStatus').value = 'Pendente';
       document.getElementById('mErro').value = '';
       document.getElementById('mResolucao').value = '';
+      document.getElementById('mContatoConfirmado').checked = false;
+      document.getElementById('controleAtendimento').classList.add('hidden');
+      atualizarChecklistEncerramento();
       document.getElementById('infoDatasChamado').classList.add('hidden');
       document.getElementById('infoDatasChamado').innerHTML = '';
       document.getElementById('areaInteracoesChamado').classList.add('hidden');
@@ -1106,6 +1120,22 @@ async function carregarChamadosDaNuvem() {
       const status = document.getElementById('mStatus').value;
       const erro = document.getElementById('mErro').value || '';
       const resolucao = document.getElementById('mResolucao').value || '';
+      const contatoConfirmado = document.getElementById('mContatoConfirmado')?.checked || false;
+
+      if (status === 'Resolvido' && !linhaEdicaoChamado) {
+        alert('Salve o chamado primeiro para registrar o atendimento e depois conclua pelo checklist.');
+        return;
+      }
+
+      if (status === 'Resolvido' && linhaEdicaoChamado) {
+        const tempoTotal = Number(linhaEdicaoChamado.dataset.tempoMinutos || 0);
+        if (!resolucao.trim() || !contatoConfirmado || tempoTotal < 1) {
+          document.getElementById('checklistEncerramento')?.classList.remove('hidden');
+          atualizarChecklistEncerramento();
+          alert('Para resolver o chamado, preencha a resolução, registre pelo menos 1 minuto de atendimento e confirme o contato com o cliente.');
+          return;
+        }
+      }
 
       const badgeStatusClass = status === 'Resolvido' ? 'badge-resolvido' : (status === 'Pendente' ? 'badge-pendente' : 'badge-andamento');
       const badgePrioridadeClass = prioridade === 'Alta Prioridade' ? 'badge-alta' : 'badge-normal';
@@ -1123,7 +1153,7 @@ async function carregarChamadosDaNuvem() {
         try {
           await atualizarChamadoNaNuvem(protocoloAtual, {
             cliente, unidade, origem, serial, solicitante, tecnico, modulo, tipo,
-            prioridade, status, erro, resolucao, fechamento_em: fechamentoISO
+            prioridade, status, erro, resolucao, contato_confirmado: contatoConfirmado, fechamento_em: fechamentoISO
           });
         } catch (erroSupabase) {
           console.error('Erro ao atualizar chamado no Supabase:', erroSupabase);
@@ -1136,10 +1166,12 @@ async function carregarChamadosDaNuvem() {
         if (statusAnterior !== 'Resolvido' && status === 'Resolvido') eventosResponsabilidade.push(`Chamado finalizado por ${usuarioLogado?.nome || usuarioLogado?.email || tecnico}. Técnico responsável no encerramento: ${tecnico}.`);
         if (statusAnterior === 'Resolvido' && status !== 'Resolvido') eventosResponsabilidade.push(`Chamado reaberto por ${usuarioLogado?.nome || usuarioLogado?.email || 'Usuário'}. Técnico responsável: ${tecnico}.`);
         try { await registrarEventosResponsabilidade(await obterIdChamadoAtual(), eventosResponsabilidade); } catch (historicoErro) { console.warn(historicoErro); }
+        if (tecnicoAnterior !== tecnico) await notificarTecnicoAtribuido(tecnico, await obterIdChamadoAtual(), protocoloAtual);
 
         linhaEdicaoChamado.setAttribute('data-erro', erro);
         if (fechamentoISO) linhaEdicaoChamado.setAttribute('data-fechamento-iso', fechamentoISO); else linhaEdicaoChamado.removeAttribute('data-fechamento-iso');
         linhaEdicaoChamado.setAttribute('data-resolucao', resolucao);
+        linhaEdicaoChamado.dataset.contatoConfirmado = contatoConfirmado ? 'true' : 'false';
 
         let fechamento = linhaEdicaoChamado.getAttribute('data-fechamento') || '';
         if (status === 'Resolvido' && !fechamento) {
@@ -1185,13 +1217,14 @@ async function carregarChamadosDaNuvem() {
             prioridade,
             status,
             erro,
-            resolucao,
+            resolucao, contato_confirmado: contatoConfirmado,
             abertura_em: new Date().toISOString(),
             fechamento_em: status === 'Resolvido' ? new Date().toISOString() : null
           });
           chamadoCriado = resultadoCriacao.chamado;
           protocoloStr = resultadoCriacao.protocolo;
           await registrarEventosResponsabilidade(chamadoCriado.id, [`Chamado atribuído a ${tecnico} por ${usuarioLogado?.nome || usuarioLogado?.email || 'Usuário'}.`]);
+          await notificarTecnicoAtribuido(tecnico, chamadoCriado.id, protocoloStr);
         } catch (erroSupabase) {
           console.error('Erro ao salvar chamado no Supabase:', erroSupabase);
           novaLinha.remove();
@@ -1202,6 +1235,7 @@ async function carregarChamadosDaNuvem() {
         novaLinha.dataset.idNuvem = chamadoCriado.id;
         novaLinha.setAttribute('data-erro', erro);
         novaLinha.setAttribute('data-resolucao', resolucao);
+        novaLinha.dataset.contatoConfirmado = contatoConfirmado ? 'true' : 'false';
         novaLinha.setAttribute('data-abertura', aberturaStr);
         novaLinha.setAttribute('data-abertura-iso', chamadoCriado.abertura_em || '');
         if (fechamentoStr) novaLinha.setAttribute('data-fechamento', fechamentoStr);
@@ -1276,6 +1310,7 @@ async function carregarChamadosDaNuvem() {
       document.getElementById('mStatus').value = td[11].innerText.trim();
       document.getElementById('mErro').value = linhaEdicaoChamado.getAttribute('data-erro') || '';
       document.getElementById('mResolucao').value = linhaEdicaoChamado.getAttribute('data-resolucao') || linhaEdicaoChamado.getAttribute('data-obs') || '';
+      document.getElementById('mContatoConfirmado').checked = linhaEdicaoChamado.dataset.contatoConfirmado === 'true';
 
       const abertura = linhaEdicaoChamado.getAttribute('data-abertura') || td[1].innerText.trim();
       const fechamento = linhaEdicaoChamado.getAttribute('data-fechamento') || '';
@@ -1287,6 +1322,9 @@ async function carregarChamadosDaNuvem() {
 
       limparFormularioInteracao();
       carregarInteracoesChamado();
+      atualizarControleAtendimento();
+      preencherMencoesEquipe();
+      atualizarChecklistEncerramento();
 
       document.getElementById('modalChamado').classList.add('active');
     }
@@ -2121,10 +2159,14 @@ async function converterLeadCliente(){
     async function atualizarAlertasOperacionais(){
       if(!usuarioLogado)return;
       const agora=Date.now(), antecedencia=(parseFloat(localStorage.getItem('help_crm_lembrete_horas'))||4)*3600000;
-      const {data:interacoes}=await supabaseClient.from('chamado_interacoes').select('id,chamado_id,proximo_contato,descricao').not('proximo_contato','is',null).lte('proximo_contato',new Date(agora+antecedencia).toISOString()).order('proximo_contato').limit(30);
+      const [{data:interacoes},{data:persistidas},{data:processos}]=await Promise.all([supabaseClient.from('chamado_interacoes').select('id,chamado_id,proximo_contato,descricao').not('proximo_contato','is',null).lte('proximo_contato',new Date(agora+antecedencia).toISOString()).order('proximo_contato').limit(30),supabaseClient.from('notificacoes_usuarios').select('*').eq('destinatario_id',usuarioLogado.id).eq('lida',false).order('criado_em',{ascending:false}).limit(40),supabaseClient.from('processos_internos').select('id,titulo,proxima_execucao,responsavel_nome,status').neq('status','Concluída').lte('proxima_execucao',new Date(agora+antecedencia).toISOString()).limit(20)]);
       const ids=[...new Set((interacoes||[]).map(i=>i.chamado_id))];let protocolos={};
       if(ids.length){const{data:chamados}=await supabaseClient.from('chamados').select('id,protocolo').in('id',ids);(chamados||[]).forEach(c=>protocolos[c.id]=c.protocolo)}
-      notificacoesOperacionais=(interacoes||[]).map(i=>{const vencido=new Date(i.proximo_contato).getTime()<agora;return{id:`retorno-${i.id}-${i.proximo_contato}`,tipo:vencido?'danger':'warning',titulo:vencido?'Retorno atrasado':'Próximo contato',texto:`Chamado ${protocolos[i.chamado_id]||'#'+i.chamado_id}: ${i.descricao.slice(0,100)}`,tempo:formatarDataHoraInteracao(i.proximo_contato)}});
+      const retornos=(interacoes||[]).map(i=>{const vencido=new Date(i.proximo_contato).getTime()<agora;return{id:`retorno-${i.id}-${i.proximo_contato}`,tipo:vencido?'danger':'warning',titulo:vencido?'Retorno atrasado':'Próximo contato',texto:`Chamado ${protocolos[i.chamado_id]||'#'+i.chamado_id}: ${i.descricao.slice(0,100)}`,tempo:formatarDataHoraInteracao(i.proximo_contato),chamado_id:i.chamado_id}});
+      const tarefas=(processos||[]).filter(p=>pertenceAoUsuario(p.responsavel_nome)||usuarioLogado.perfil==='admin').map(p=>{const vencido=new Date(p.proxima_execucao).getTime()<agora;return{id:`processo-${p.id}-${p.proxima_execucao}`,tipo:vencido?'danger':'warning',titulo:vencido?'Processo atrasado':'Processo próximo',texto:p.titulo,tempo:formatarDataHoraInteracao(p.proxima_execucao)}});
+      const sla=todosChamadosOperacionais().filter(c=>c.status!=='Resolvido'&&c.abertura&&(pertenceAoUsuario(c.tecnico)||usuarioLogado.perfil==='admin')).map(c=>{const horas=(agora-new Date(c.abertura).getTime())/36e5,limite=c.prioridade.toLowerCase().includes('alta')?(Number(localStorage.getItem('help_crm_sla_critico'))||4):(Number(localStorage.getItem('help_crm_sla_normal'))||24);return{c,horas,limite}}).filter(x=>x.horas>=x.limite).map(x=>({id:`sla-${x.c.id}-${x.limite}`,tipo:'danger',titulo:'SLA ultrapassado',texto:`${x.c.protocolo} · ${x.c.cliente} está há ${Math.floor(x.horas)}h em aberto.`,tempo:'Ação necessária',chamado_id:x.c.id}));
+      const nuvem=(persistidas||[]).map(n=>({id:n.id,tipo:n.tipo==='atribuicao'?'info':'warning',titulo:n.titulo,texto:n.mensagem,tempo:formatarDataHoraInteracao(n.criado_em),chamado_id:n.chamado_id,persistida:true}));
+      notificacoesOperacionais=[...nuvem,...sla,...retornos,...tarefas];
       renderizarNotificacoes();
     }
     function renderizarNotificacoes(){
@@ -2138,8 +2180,8 @@ async function converterLeadCliente(){
     }
     function alternarNotificacoes(){const panel=document.getElementById('notificationPanel');if(!panel)return;panel.classList.toggle('hidden');if(!panel.classList.contains('hidden'))atualizarAlertasOperacionais()}
     function fecharNotificacoes(){const panel=document.getElementById('notificationPanel');if(panel)panel.classList.add('hidden')}
-    function marcarNotificacaoLida(id){const ids=idsNotificacoesLidas();if(!ids.includes(id))ids.push(id);salvarNotificacoesLidas(ids);renderizarNotificacoes()}
-    function marcarTodasLidas(){salvarNotificacoesLidas([...idsNotificacoesLidas(),...notificacoesOperacionais.map(n=>n.id)]);renderizarNotificacoes()}
+    async function marcarNotificacaoLida(id){const n=notificacoesOperacionais.find(x=>String(x.id)===String(id));if(n?.persistida)await supabaseClient.from('notificacoes_usuarios').update({lida:true}).eq('id',id);const ids=idsNotificacoesLidas();if(!ids.includes(id))ids.push(id);salvarNotificacoesLidas(ids);renderizarNotificacoes()}
+    async function marcarTodasLidas(){await supabaseClient.from('notificacoes_usuarios').update({lida:true}).eq('destinatario_id',usuarioLogado.id).eq('lida',false);salvarNotificacoesLidas([...idsNotificacoesLidas(),...notificacoesOperacionais.map(n=>n.id)]);renderizarNotificacoes()}
     document.querySelectorAll('.modal-overlay').forEach(modal => {
       modal.addEventListener('click', function (event) {
         if (event.target === modal) fecharModais();
@@ -2239,6 +2281,32 @@ async function converterLeadCliente(){
     }
     async function alterarStatusProcesso(id,status){const{error}=await supabaseClient.from('processos_internos').update({status,atualizado_em:new Date().toISOString()}).eq('id',id);if(error)alert(error.message);else await carregarProcessos()}
     async function excluirProcesso(id){const p=processosInternos.find(x=>x.id===id);if(!p||!confirm(`Excluir o processo "${p.titulo}" e todo o histórico dele?`))return;const{error}=await supabaseClient.from('processos_internos').delete().eq('id',id);if(error)alert('Não foi possível excluir.\n\n'+error.message);else{registrarLog(`excluiu o processo ${p.titulo}`);await carregarProcessos()}}
+
+    // Fluxo diário: Meu trabalho, Kanban, cronômetro, menções e alertas nativos
+    let canalNotificacoesEquipe=null, cronometroIntervalo=null;
+    function todosChamadosOperacionais(){return [...document.querySelectorAll('#tabelaChamados tbody tr')].filter(l=>l.cells?.length>=13).map(l=>({el:l,id:l.dataset.idNuvem||'',protocolo:l.cells[0].innerText.trim(),abertura:l.dataset.aberturaIso||'',cliente:l.cells[2].innerText.trim(),unidade:l.cells[3].innerText.trim(),tecnico:l.cells[7].innerText.trim(),modulo:l.cells[8].innerText.trim(),prioridade:l.cells[10].innerText.trim(),status:l.cells[11].innerText.trim(),erro:l.dataset.erro||''}))}
+    function pertenceAoUsuario(nome){const tecnico=tecnicosNuvem.find(t=>(t.nome||'').toLowerCase().trim()===(nome||'').toLowerCase().trim());if(tecnico?.user_id)return tecnico.user_id===usuarioLogado?.id;const alvo=(nome||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(),eu=(usuarioLogado?.usuario||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();return alvo.split(/\W+/).filter(x=>x.length>=4).some(x=>eu.includes(x)||x.includes(eu.replace(/\d/g,'')))}
+    function cardOperacionalChamado(c){return `<article class="trabalho-card ${c.prioridade.toLowerCase().includes('alta')?'alta':''}" onclick="abrirChamadoDashboard('${c.id}')"><div><span>${escaparHtml(c.protocolo)}</span><b class="badge ${c.status==='Resolvido'?'badge-resolvido':c.status==='Em Andamento'?'badge-andamento':'badge-pendente'}">${escaparHtml(c.status)}</b></div><h3>${escaparHtml(c.cliente)}</h3><p>${escaparHtml(c.erro||c.modulo)}</p><footer><span><i data-lucide="box"></i>${escaparHtml(c.modulo)}</span><span><i data-lucide="calendar"></i>${c.abertura?formatarExecucaoProcesso(c.abertura):'—'}</span></footer></article>`}
+    async function renderizarMeuTrabalho(){const lista=document.getElementById('meuTrabalhoLista'),resumo=document.getElementById('meuTrabalhoResumo');if(!lista||!resumo)return;const filtro=document.getElementById('meuTrabalhoFiltro')?.value||'abertos',todos=todosChamadosOperacionais().filter(c=>pertenceAoUsuario(c.tecnico)),itens=todos.filter(c=>filtro==='todos'||(filtro==='resolvidos'?c.status==='Resolvido':c.status!=='Resolvido'));const alta=todos.filter(c=>c.status!=='Resolvido'&&c.prioridade.toLowerCase().includes('alta')).length;const andamento=todos.filter(c=>c.status==='Em Andamento').length;let minutos=0;try{const ids=todos.map(c=>c.id).filter(Boolean);if(ids.length){const{data}=await supabaseClient.from('chamado_tempos').select('minutos').in('chamado_id',ids).eq('usuario_id',usuarioLogado.id);minutos=(data||[]).reduce((s,x)=>s+(x.minutos||0),0)}}catch(e){console.warn(e)}resumo.innerHTML=`<div><span>Minha fila</span><strong>${todos.filter(c=>c.status!=='Resolvido').length}</strong></div><div><span>Em andamento</span><strong>${andamento}</strong></div><div class="alerta"><span>Alta prioridade</span><strong>${alta}</strong></div><div><span>Tempo registrado</span><strong>${formatarMinutos(minutos)}</strong></div>`;lista.innerHTML=itens.length?itens.map(cardOperacionalChamado).join(''):'<div class="operacional-vazio"><i data-lucide="check-circle-2"></i><strong>Tudo em dia</strong><span>Nenhum chamado nesta visualização.</span></div>';renderizarIcones()}
+    function preencherFiltroKanban(){const s=document.getElementById('kanbanTecnico');if(!s)return;const atual=s.value,nomes=[...new Set(todosChamadosOperacionais().map(c=>c.tecnico).filter(x=>x&&x!=='-'))].sort();s.innerHTML='<option value="">Todos os técnicos</option>'+nomes.map(n=>`<option>${escaparHtml(n)}</option>`).join('');s.value=atual}
+    function renderizarKanban(){const board=document.getElementById('kanbanChamados');if(!board)return;preencherFiltroKanban();const tecnico=document.getElementById('kanbanTecnico')?.value||'',busca=(document.getElementById('kanbanBusca')?.value||'').toLowerCase(),colunas=['Pendente','Em Andamento','Aguardando Cliente','Resolvido'];const chamados=todosChamadosOperacionais().filter(c=>(!tecnico||c.tecnico===tecnico)&&(!busca||`${c.protocolo} ${c.cliente} ${c.modulo}`.toLowerCase().includes(busca)));board.innerHTML=colunas.map(status=>{const itens=chamados.filter(c=>c.status===status||(status==='Pendente'&&c.status==='Aberto'));return `<section class="kanban-coluna" data-status="${status}" ondragover="event.preventDefault()" ondrop="soltarChamadoKanban(event,'${status}')"><header><span class="kanban-status-dot status-${status.toLowerCase().replaceAll(' ','-')}"></span><h3>${status}</h3><b>${itens.length}</b></header><div>${itens.map(c=>`<article class="kanban-card" draggable="true" data-id="${c.id}" ondragstart="event.dataTransfer.setData('text/plain','${c.id}')" onclick="abrirChamadoDashboard('${c.id}')"><span>${escaparHtml(c.protocolo)}</span><h4>${escaparHtml(c.cliente)}</h4><p>${escaparHtml(c.modulo)}</p><footer><small>${escaparHtml(c.tecnico)}</small><b class="${c.prioridade.toLowerCase().includes('alta')?'alta':''}">${escaparHtml(c.prioridade)}</b></footer></article>`).join('')||'<div class="kanban-vazio">Solte um chamado aqui</div>'}</div></section>`}).join('');renderizarIcones()}
+    async function soltarChamadoKanban(event,status){const id=event.dataTransfer.getData('text/plain'),c=todosChamadosOperacionais().find(x=>String(x.id)===String(id));if(!c||c.status===status)return;event.preventDefault();if(status==='Resolvido'){abrirChamadoDashboard(id);document.getElementById('mStatus').value='Resolvido';atualizarChecklistEncerramento();alert('Complete o checklist de encerramento antes de resolver.');return}const{error}=await supabaseClient.from('chamados').update({status,fechamento_em:null}).eq('id',id);if(error){alert(error.message);return}c.el.cells[11].innerHTML=`<span class="badge ${status==='Em Andamento'?'badge-andamento':'badge-pendente'}">${status}</span>`;c.el.cells[12].innerText='-';c.el.dataset.fechamentoIso='';renderizarKanban();atualizarMetricas()}
+    function formatarMinutos(m){m=Math.max(0,Math.round(m||0));return m>=60?`${Math.floor(m/60)}h ${m%60}min`:`${m}min`}
+    async function atualizarControleAtendimento(){if(!linhaEdicaoChamado)return;const area=document.getElementById('controleAtendimento'),id=await obterIdChamadoAtual();area.classList.remove('hidden');const{data,error}=await supabaseClient.from('chamado_tempos').select('*').eq('chamado_id',id).order('iniciado_em',{ascending:false});if(error)return;const total=(data||[]).reduce((s,x)=>s+(x.minutos||0),0),aberto=(data||[]).find(x=>!x.finalizado_em&&x.usuario_id===usuarioLogado.id);linhaEdicaoChamado.dataset.tempoMinutos=String(total);linhaEdicaoChamado.dataset.tempoAbertoId=aberto?.id||'';linhaEdicaoChamado.dataset.tempoIniciado=aberto?.iniciado_em||'';atualizarCronometroVisual();atualizarChecklistEncerramento()}
+    function atualizarCronometroVisual(){if(!linhaEdicaoChamado)return;const total=Number(linhaEdicaoChamado.dataset.tempoMinutos||0),inicio=linhaEdicaoChamado.dataset.tempoIniciado,rodando=!!inicio,decorrido=rodando?Math.floor((Date.now()-new Date(inicio).getTime())/60000):0;document.getElementById('tempoChamadoResumo').textContent=`${formatarMinutos(total+decorrido)} ${rodando?'· em andamento':''}`;const b=document.getElementById('btnCronometroChamado');b.innerHTML=rodando?'<i data-lucide="square"></i>Finalizar atendimento':'<i data-lucide="play"></i>Iniciar atendimento';b.classList.toggle('cronometro-ativo',rodando);clearInterval(cronometroIntervalo);if(rodando)cronometroIntervalo=setInterval(atualizarCronometroVisual,30000);renderizarIcones()}
+    async function alternarCronometroChamado(){if(!linhaEdicaoChamado)return;const id=await obterIdChamadoAtual(),registro=linhaEdicaoChamado.dataset.tempoAbertoId;if(registro){const inicio=new Date(linhaEdicaoChamado.dataset.tempoIniciado),fim=new Date(),minutos=Math.max(1,Math.round((fim-inicio)/60000));const obs=prompt('O que foi feito neste período? (opcional)','');if(obs===null)return;const{error}=await supabaseClient.from('chamado_tempos').update({finalizado_em:fim.toISOString(),minutos,observacao:obs}).eq('id',registro);if(error){alert(error.message);return}}else{const{error}=await supabaseClient.from('chamado_tempos').insert({chamado_id:id,usuario_id:usuarioLogado.id,usuario_nome:usuarioLogado.usuario});if(error){alert(error.code==='23505'?'Você já possui outro atendimento em andamento. Finalize-o antes de iniciar este.':error.message);return}}await atualizarControleAtendimento()}
+    function atualizarChecklistEncerramento(){const status=document.getElementById('mStatus')?.value,box=document.getElementById('checklistEncerramento');if(!box)return;box.classList.toggle('hidden',status!=='Resolvido');const resolucao=!!document.getElementById('mResolucao')?.value.trim(),tempo=Number(linhaEdicaoChamado?.dataset.tempoMinutos||0)>0;document.getElementById('checkResolucao').classList.toggle('ok',resolucao);document.getElementById('checkResolucao').querySelector('i')?.setAttribute('data-lucide',resolucao?'check-circle-2':'circle');document.getElementById('checkTempo').classList.toggle('ok',tempo);document.getElementById('checkTempo').querySelector('i')?.setAttribute('data-lucide',tempo?'check-circle-2':'circle');renderizarIcones()}
+    function preencherMencoesEquipe(){const d=document.getElementById('listaMencoesEquipe');if(!d)return;const nomes=[...document.querySelectorAll('#mTecnico option')].map(o=>o.value).filter(Boolean);d.innerHTML=nomes.map(n=>`<option value="@${escaparHtml(n)} ">`).join('')}
+    async function perfilPorNome(nome){const limpo=nome.replace(/^@/,'').trim().toLowerCase(),tecnico=tecnicosNuvem.find(t=>(t.nome||'').toLowerCase()===limpo);if(tecnico?.user_id)return{user_id:tecnico.user_id,nome:tecnico.nome};const{data}=await supabaseClient.from('perfis_usuarios').select('user_id,nome').eq('ativo',true);return(data||[]).find(p=>(p.nome||'').toLowerCase()===limpo||(p.nome||'').toLowerCase().startsWith(limpo))}
+    async function criarNotificacao(destinatario,tipo,titulo,mensagem,chamadoId=null){if(!destinatario||destinatario===usuarioLogado.id)return;await supabaseClient.from('notificacoes_usuarios').insert({destinatario_id:destinatario,remetente_id:usuarioLogado.id,tipo,titulo,mensagem,chamado_id:chamadoId})}
+    async function processarMencoesInteracao(texto,chamadoId,protocolo){const nomes=[...texto.matchAll(/@([\p{L}\d._-]+(?:\s+[\p{L}\d._-]+)?)/gu)].map(x=>x[1]);for(const nome of [...new Set(nomes)]){const p=await perfilPorNome(nome);if(p)await criarNotificacao(p.user_id,'mencao',`Você foi mencionado em ${protocolo}`,texto.slice(0,500),chamadoId)}}
+    async function notificarTecnicoAtribuido(nome,chamadoId,protocolo){const p=await perfilPorNome(nome);if(p)await criarNotificacao(p.user_id,'atribuicao',`Novo chamado atribuído: ${protocolo}`,`O chamado ${protocolo} foi atribuído a você.`,chamadoId)}
+    function tocarSomNotificacao(){try{const A=window.AudioContext||window.webkitAudioContext;audioContextoNotificacao=audioContextoNotificacao||new A();const ctx=audioContextoNotificacao;if(ctx.state==='suspended')ctx.resume();[[0,880,.12],[.16,1174,.15]].forEach(([t,f,d])=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(.0001,ctx.currentTime+t);g.gain.exponentialRampToValueAtTime(.16,ctx.currentTime+t+.015);g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+t+d);o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+d+.02)})}catch(e){console.warn(e)}}
+    async function ativarNotificacoesNativas(){if(!('Notification'in window)){alert('Este navegador não oferece notificações.');return}const p=await Notification.requestPermission();if(p==='granted'){localStorage.setItem('help_crm_notificacoes_nativas','1');tocarSomNotificacao();new Notification('Alertas ativados',{body:'O CRM avisará sobre atribuições, menções, retornos e prazos.'});document.getElementById('btnAtivarNotificacoes').classList.add('ativo')}else alert('Permissão não concedida. Libere as notificações nas configurações do navegador.')}
+    function exibirNotificacaoNativa(n){if(localStorage.getItem('help_crm_notificacoes_nativas')!=='1'||Notification.permission!=='granted')return;tocarSomNotificacao();const x=new Notification(n.titulo,{body:n.mensagem||n.texto,tag:n.id,renotify:true});x.onclick=()=>{window.focus();if(n.chamado_id)abrirChamadoDashboard(String(n.chamado_id));x.close()}}
+    async function iniciarNotificacoesTempoReal(){if(!usuarioLogado)return;if(canalNotificacoesEquipe)await supabaseClient.removeChannel(canalNotificacoesEquipe);canalNotificacoesEquipe=supabaseClient.channel(`notificacoes-${usuarioLogado.id}`).on('postgres_changes',{event:'INSERT',schema:'public',table:'notificacoes_usuarios',filter:`destinatario_id=eq.${usuarioLogado.id}`},payload=>{const n=payload.new;exibirNotificacaoNativa(n);atualizarAlertasOperacionais()}).subscribe();if(intervaloNotificacoes)clearInterval(intervaloNotificacoes);intervaloNotificacoes=setInterval(()=>{atualizarAlertasOperacionais();verificarPrazosNativos()},60000);atualizarAlertasOperacionais()}
+    async function verificarPrazosNativos(){const novas=getNotificacoes().filter(n=>!idsNotificacoesLidas().includes(n.id));const avisadas=JSON.parse(localStorage.getItem('help_crm_notificacoes_avisadas')||'[]');novas.forEach(n=>{if(!avisadas.includes(n.id)){exibirNotificacaoNativa(n);avisadas.push(n.id)}});localStorage.setItem('help_crm_notificacoes_avisadas',JSON.stringify(avisadas.slice(-300)))}
+    document.getElementById('mStatus')?.addEventListener('change',atualizarChecklistEncerramento);document.getElementById('mResolucao')?.addEventListener('input',atualizarChecklistEncerramento);
 
     // Dashboard operacional personalizável
     const DASHBOARD_WIDGETS = {

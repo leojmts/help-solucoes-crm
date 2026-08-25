@@ -21,6 +21,8 @@
       <nav>
         <ul>
           <li id="menuDashboard" class="active nav-item" data-permissao="dashboard" onclick="trocarAba('dashboard')" title="Dashboard"><i data-lucide="layout-dashboard"></i><span class="nav-label">Dashboard</span></li>
+          <li id="menuMeuTrabalho" class="nav-item" onclick="trocarAba('meuTrabalho')" title="Meu trabalho"><i data-lucide="user-check"></i><span class="nav-label">Meu trabalho</span></li>
+          <li id="menuKanban" class="nav-item" onclick="trocarAba('kanban')" title="Kanban de chamados"><i data-lucide="columns-3"></i><span class="nav-label">Kanban</span></li>
           <li id="menuCRM" class="nav-item" onclick="trocarAba('crm')" title="CRM Comercial"><i data-lucide="briefcase"></i><span class="nav-label">CRM Comercial</span></li>
           <li id="menuCadastro" class="nav-item" data-permissao="clientes" onclick="trocarAba('cadastro')" title="Cadastros"><i data-lucide="database"></i><span class="nav-label">Cadastro</span></li>
           <li id="menuProcessos" class="nav-item" onclick="trocarAba('processos')" title="Processos internos"><i data-lucide="list-checks"></i><span class="nav-label">Processos</span></li>
@@ -46,7 +48,7 @@
   <div id="notificationPanel" class="notification-panel hidden" aria-live="polite">
     <div class="notification-head"><div><strong>Notificações</strong><span id="notificationSub">3 pendentes</span></div><button type="button" class="notification-close" onclick="fecharNotificacoes()">×</button></div>
     <div id="notificationList" class="notification-list"></div>
-    <div class="notification-foot"><button type="button" onclick="marcarTodasLidas()">Marcar todas como lidas</button></div>
+    <div class="notification-foot"><button id="btnAtivarNotificacoes" type="button" onclick="ativarNotificacoesNativas()"><i data-lucide="volume-2"></i> Ativar alertas no navegador</button><button type="button" onclick="marcarTodasLidas()">Marcar todas como lidas</button></div>
   </div>
 </div><button class="btn btn-secondary dashboard-customize-btn" type="button" onclick="abrirPersonalizacaoDashboard()"><i data-lucide="layout-dashboard"></i>Personalizar painel</button><button class="btn btn-primary" data-permissao="novoChamado" onclick="abrirModalChamado()"><i data-lucide="plus"></i>Novo chamado</button></div>
           <input type="file" id="inputImportar" accept="application/json" style="display:none" onchange="importarBackup(this.files[0])">
@@ -251,6 +253,9 @@
         </section>
       </div>
 
+<div id="visaoMeuTrabalho" class="view-section hidden operacional-view"><header class="header"><div><h1>Meu trabalho</h1><p>Chamados, processos e horas atribuídos a você.</p></div><button class="btn btn-primary" onclick="abrirModalChamado()"><i data-lucide="plus"></i>Novo chamado</button></header><section id="meuTrabalhoResumo" class="meu-trabalho-resumo"></section><section class="operacional-panel"><div class="operacional-panel-head"><div><h3>Minha fila</h3><p>Prioridades organizadas para você começar pelo que importa.</p></div><select id="meuTrabalhoFiltro" onchange="renderizarMeuTrabalho()"><option value="abertos">Em aberto</option><option value="todos">Todos</option><option value="resolvidos">Resolvidos</option></select></div><div id="meuTrabalhoLista" class="meu-trabalho-lista"></div></section></div>
+
+<div id="visaoKanban" class="view-section hidden operacional-view"><header class="header"><div><h1>Kanban de chamados</h1><p>Arraste os cartões para atualizar o andamento.</p></div><div class="kanban-filtros"><select id="kanbanTecnico" onchange="renderizarKanban()"><option value="">Todos os técnicos</option></select><input id="kanbanBusca" placeholder="Buscar chamado ou cliente" oninput="renderizarKanban()"></div></header><section id="kanbanChamados" class="kanban-board"></section></div>
 
 <div id="visaoCRM" class="view-section hidden"><header class="header"><div><h1>CRM Comercial</h1><p>Organize oportunidades e acompanhe cada próximo passo.</p></div><div class="actions"><button class="btn btn-primary" onclick="abrirModalLead()"><i data-lucide="plus"></i>Novo lead</button></div></header><section class="crm-summary"><div class="crm-mini"><span>Leads ativos</span><strong id="crmTotalAtivos">0</strong></div><div class="crm-mini"><span>Em negociação</span><strong id="crmNegociacao">0</strong></div><div class="crm-mini"><span>Follow-ups pendentes</span><strong id="crmFollowups">0</strong></div><div class="crm-mini"><span>Convertidos</span><strong id="crmConvertidos">0</strong></div></section><section class="crm-layout"><div class="crm-board" id="crmBoard"></div><aside class="crm-actions"><h3>Próximas ações</h3><div id="crmProximas"></div></aside></section></div><div id="modalLead" class="crm-modal-overlay" onclick="if(event.target===this) fecharModalLead()"><div class="crm-modal-content" role="dialog" aria-modal="true" aria-labelledby="crmModalTitulo"><div class="modal-header"><h2 id="crmModalTitulo">Novo lead</h2><button class="modal-close" onclick="fecharModalLead()">×</button></div><div class="crm-modal-grid"><div><label>Empresa / Nome</label><input id="crmNome"></div><div><label>Responsável</label><input id="crmResponsavel"></div><div><label>WhatsApp</label><input id="crmTelefone"></div><div><label>Cidade</label><input id="crmCidade"></div><div><label>Interesse</label><select id="crmInteresse"><option>ERP / Gestão</option><option>PDV</option><option>Emissão Fiscal</option><option>Suporte / Informática</option></select></div><div><label>Etapa</label><select id="crmEtapa"><option>Novo</option><option>Contato</option><option>Demonstração</option><option>Proposta</option><option>Negociação</option><option>Fechado</option></select></div><div><label>Próxima ação</label><input id="crmProximaAcao" type="date"></div><div><label>Valor estimado</label><input id="crmValor" type="number"></div><div class="full"><label>Observações</label><textarea id="crmObs" rows="3"></textarea></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="fecharModalLead()">Cancelar</button><button class="btn btn-primary" onclick="salvarLead()">Salvar</button></div><div id="crmHistoricoArea" style="display:none;margin-top:16px"><h3>Histórico</h3><div id="crmHistorico"></div><div style="display:flex;gap:8px;margin-top:10px"><input id="crmNovaInteracao" placeholder="Registrar ligação, visita ou WhatsApp"><button class="btn btn-secondary" onclick="adicionarInteracao()">Registrar</button></div><div style="margin-top:10px;display:flex;gap:8px"><button class="btn btn-secondary" onclick="moverLeadEtapa()">Avançar etapa</button><button class="btn btn-primary" onclick="converterLeadCliente()">Converter em cliente</button></div></div></div></div></div>
       
@@ -775,6 +780,7 @@
           <select id="mStatus">
             <option value="Pendente">Pendente</option>
             <option value="Em Andamento">Em Andamento</option>
+            <option value="Aguardando Cliente">Aguardando Cliente</option>
             <option value="Resolvido">Resolvido</option>
           </select>
         </div>
@@ -786,6 +792,15 @@
           <label>Resolução</label>
           <textarea id="mResolucao" placeholder="Descreva o que foi feito para resolver..."></textarea>
         </div>
+        <section id="controleAtendimento" class="controle-atendimento hidden">
+          <div class="controle-atendimento-info"><span><i data-lucide="timer"></i>Tempo de atendimento</span><strong id="tempoChamadoResumo">Nenhum tempo registrado</strong></div>
+          <button id="btnCronometroChamado" class="btn btn-secondary" type="button" onclick="alternarCronometroChamado()"><i data-lucide="play"></i>Iniciar atendimento</button>
+        </section>
+        <section id="checklistEncerramento" class="checklist-encerramento hidden">
+          <div><i data-lucide="shield-check"></i><span><strong>Checklist de encerramento</strong><small>Obrigatório para marcar como resolvido.</small></span></div>
+          <label><input id="mContatoConfirmado" type="checkbox"> Confirmei a solução com o cliente</label>
+          <p><span id="checkResolucao"><i data-lucide="circle"></i>Resolução preenchida</span><span id="checkTempo"><i data-lucide="circle"></i>Tempo registrado</span></p>
+        </section>
         <section id="areaInteracoesChamado" class="chamado-interacoes hidden">
           <div class="interacoes-cabecalho">
             <div><h4>Histórico de interações</h4><small>Registre cada contato e acompanhe o próximo passo.</small></div>
@@ -798,7 +813,8 @@
             </div>
             <div class="form-group interacao-descricao">
               <label>Descrição</label>
-              <input id="interacaoDescricao" maxlength="2000" placeholder="Ex: Cliente enviou fotos e aguarda retorno">
+              <input id="interacaoDescricao" maxlength="2000" list="listaMencoesEquipe" placeholder="Comente ou marque alguém com @nome">
+              <datalist id="listaMencoesEquipe"></datalist>
               <select id="interacaoModelo" class="modelo-select" onchange="aplicarRespostaModelo()"><option value="">Usar resposta pronta...</option></select>
             </div>
             <div class="form-group interacao-proximo-campo">
