@@ -799,6 +799,29 @@ async function carregarChamadosDaNuvem() {
       return seq;
     }
 
+    async function salvarNovoChamadoComProtocolo(dados) {
+      const ano = new Date().getFullYear();
+      const prefixo = `HELP-${ano}-`;
+      const { data: ultimo, error: consultaError } = await supabaseClient
+        .from('chamados').select('protocolo').like('protocolo', `${prefixo}%`)
+        .order('protocolo', { ascending: false }).limit(1).maybeSingle();
+      if (consultaError) throw consultaError;
+      const numeroBanco = parseInt(String(ultimo?.protocolo || '').split('-').pop(), 10) || 0;
+      const numeroLocal = parseInt(localStorage.getItem('help_crm_protocolo_seq') || '0', 10) || 0;
+      let numero = Math.max(numeroBanco, numeroLocal) + 1;
+      for (let tentativa = 0; tentativa < 8; tentativa++, numero++) {
+        const protocolo = `${prefixo}${String(numero).padStart(4, '0')}`;
+        try {
+          const chamado = await salvarChamadoNaNuvem({ ...dados, protocolo });
+          localStorage.setItem('help_crm_protocolo_seq', String(numero));
+          return { chamado, protocolo };
+        } catch (erro) {
+          if (erro?.code !== '23505' && !String(erro?.message || '').includes('chamados_protocolo_key')) throw erro;
+        }
+      }
+      throw new Error('Não foi possível gerar um protocolo livre após várias tentativas.');
+    }
+
     // ---- Persistência: chamados na nuvem; cadastros auxiliares ainda locais nesta etapa ----
     function salvarEstado() {
       // Chamados, clientes e técnicos já são persistidos no Supabase.
@@ -1093,16 +1116,14 @@ async function carregarChamadosDaNuvem() {
         const tabela = document.getElementById('tabelaChamados').getElementsByTagName('tbody')[0];
         const novaLinha = tabela.insertRow(0);
 
-        const numProtocolo = proximoProtocolo();
-        const protocoloStr = `HELP-2026-${String(numProtocolo).padStart(4, '0')}`;
+        let protocoloStr = '';
         const aberturaStr = agoraStr;
         const fechamentoStr = status === 'Resolvido' ? agoraStr : '';
 
         // Primeiro salva no Supabase. Se falhar, o chamado não é criado somente localmente.
         let chamadoCriado;
         try {
-          chamadoCriado = await salvarChamadoNaNuvem({
-            protocolo: protocoloStr,
+          const resultadoCriacao = await salvarNovoChamadoComProtocolo({
             cliente,
             unidade,
             origem,
@@ -1118,6 +1139,8 @@ async function carregarChamadosDaNuvem() {
             abertura_em: new Date().toISOString(),
             fechamento_em: status === 'Resolvido' ? new Date().toISOString() : null
           });
+          chamadoCriado = resultadoCriacao.chamado;
+          protocoloStr = resultadoCriacao.protocolo;
         } catch (erroSupabase) {
           console.error('Erro ao salvar chamado no Supabase:', erroSupabase);
           novaLinha.remove();
