@@ -2046,14 +2046,33 @@ async function renderizarCRM(){
     document.getElementById('crmConvertidos').textContent=a.filter(x=>x.convertido||x.etapa==='Fechado').length;
     document.getElementById('crmBoard').innerHTML=crmEtapas.map(e=>{
       const ls=a.filter(x=>x.etapa===e&&!x.convertido);
-      return `<div class="crm-stage"><div class="crm-stage-head"><span>${e}</span><span>${ls.length}</span></div>${ls.map(x=>`<div class="crm-lead-card" onclick="editarLead('${x.id}')"><strong>${x.nome}</strong><small>${x.responsavel||x.cidade||'Sem contato'}</small><span class="crm-tag">${x.interesse||'-'}</span></div>`).join('')||'<small>Sem oportunidades</small>'}</div>`;
+      const valor=ls.reduce((s,x)=>s+(Number(x.valor)||0),0);
+      return `<section class="crm-stage" data-etapa="${e}" ondragover="permitirSoltarLead(event)" ondragleave="sairDestinoLead(event)" ondrop="soltarLeadComercial(event,'${e}')"><div class="crm-stage-head"><div><span>${e}</span><small>${valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</small></div><b>${ls.length}</b></div><div class="crm-stage-list">${ls.map(x=>`<article class="crm-lead-card" draggable="true" data-lead-id="${x.id}" ondragstart="iniciarArrastoLead(event,'${x.id}')" ondragend="finalizarArrastoLead(event)" onclick="editarLead('${x.id}')"><div class="crm-lead-top"><strong>${escaparHtml(x.nome)}</strong><i data-lucide="grip-vertical"></i></div><small>${escaparHtml(x.responsavel||x.cidade||'Sem contato')}</small><span class="crm-tag">${escaparHtml(x.interesse||'-')}</span>${x.proxima?`<span class="crm-lead-date"><i data-lucide="calendar"></i>${new Date(x.proxima+'T12:00:00').toLocaleDateString('pt-BR')}</span>`:''}<select class="crm-mobile-stage" aria-label="Mover ${escaparHtml(x.nome)} para outra etapa" onclick="event.stopPropagation()" onchange="moverLeadParaEtapa('${x.id}',this.value);event.stopPropagation()">${crmEtapas.map(et=>`<option value="${et}" ${et===e?'selected':''}>${et}</option>`).join('')}</select></article>`).join('')||'<div class="crm-stage-empty">Solte uma oportunidade aqui</div>'}</div></section>`;
     }).join('');
     const p=a.filter(x=>x.proxima&&!x.convertido).sort((x,y)=>String(x.proxima).localeCompare(String(y.proxima)));
-    document.getElementById('crmProximas').innerHTML=p.length?p.map(x=>`<div class="crm-next"><strong>${x.nome}</strong><span>${new Date(x.proxima+'T12:00:00').toLocaleDateString('pt-BR')} · ${x.interesse||'-'}</span></div>`).join(''):'<div class="crm-next">Nenhuma ação pendente</div>';
+    document.getElementById('crmProximas').innerHTML=p.length?p.map(x=>`<div class="crm-next"><strong>${escaparHtml(x.nome)}</strong><span>${new Date(x.proxima+'T12:00:00').toLocaleDateString('pt-BR')} · ${escaparHtml(x.interesse||'-')}</span></div>`).join(''):'<div class="crm-next">Nenhuma ação pendente</div>';
+    renderizarIcones();
   }catch(e){
     console.error('Erro ao carregar CRM:',e);
     alert('Não foi possível carregar o CRM da nuvem.\n\n'+e.message);
   }
+}
+
+function iniciarArrastoLead(event,id){event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',id);event.currentTarget.classList.add('arrastando')}
+function finalizarArrastoLead(event){event.currentTarget.classList.remove('arrastando');document.querySelectorAll('.crm-stage.destino').forEach(x=>x.classList.remove('destino'))}
+function permitirSoltarLead(event){event.preventDefault();event.dataTransfer.dropEffect='move';event.currentTarget.classList.add('destino')}
+function sairDestinoLead(event){if(!event.currentTarget.contains(event.relatedTarget))event.currentTarget.classList.remove('destino')}
+async function soltarLeadComercial(event,etapa){event.preventDefault();event.currentTarget.classList.remove('destino');const id=event.dataTransfer.getData('text/plain');await moverLeadParaEtapa(id,etapa)}
+async function moverLeadParaEtapa(id,novaEtapa){
+  const lead=crmCache.find(x=>String(x.id)===String(id));
+  if(!lead||!crmEtapas.includes(novaEtapa)||lead.etapa===novaEtapa)return;
+  const etapaAnterior=lead.etapa;lead.etapa=novaEtapa;
+  try{
+    const uid=await crmUsuarioId(),agora=new Date().toISOString();
+    const{error}=await supabaseClient.from('leads').update({etapa:novaEtapa,atualizado_em:agora}).eq('id',id);if(error)throw error;
+    const{error:histErro}=await supabaseClient.from('lead_interacoes').insert({lead_id:id,texto:`Etapa alterada de ${etapaAnterior} para ${novaEtapa}.`,criado_por:uid});if(histErro)console.warn('Etapa salva, mas o histórico não foi registrado:',histErro);
+    await renderizarCRM();
+  }catch(e){lead.etapa=etapaAnterior;await renderizarCRM();alert('Não foi possível mover a oportunidade.\n\n'+e.message)}
 }
 
 function abrirModalLead(){
