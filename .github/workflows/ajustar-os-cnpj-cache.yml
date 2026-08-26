@@ -1,0 +1,41 @@
+name: Ajustar OS CNPJ e cache
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/ajustar-os-cnpj-cache.yml'
+permissions:
+  contents: write
+jobs:
+  ajustar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ajustar rótulo e versões
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('os-documento-v4.js')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace("'Documento: ' + osHtml(cliente.documento)", "'CNPJ: ' + osHtml(cliente.documento)")
+          s = s.replace("'Documento: —'", "'CNPJ: —'")
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('os-documento-v4.js?v=20260826-2', 'os-documento-v4.js?v=20260826-3')
+          s = s.replace('os-itens-acoes.js?v=20260826-1', 'os-itens-acoes.js?v=20260826-2')
+          p.write_text(s, encoding='utf-8')
+          PY
+          node --check os-documento-v4.js
+          node --check os-itens-acoes.js
+      - name: Publicar ajustes
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add os-documento-v4.js index.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Corrige CNPJ e cache dos itens da OS"
+          git push
