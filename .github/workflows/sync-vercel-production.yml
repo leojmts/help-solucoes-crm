@@ -1,0 +1,100 @@
+name: Sync Vercel production snapshot
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [sync-producao-2026-08-26]
+    paths:
+      - '.github/workflows/sync-vercel-production.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sync branch
+        uses: actions/checkout@v4
+        with:
+          ref: sync-producao-2026-08-26
+          fetch-depth: 0
+
+      - name: Download current production snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://help-solucoes-crm.vercel.app"
+          files=(
+            index.html
+            script.js
+            style.css
+            os-financeiro.js
+            os-financeiro.css
+            financeiro-avancado.js
+            financeiro-avancado.css
+            crm-correcoes.js
+            crm-correcoes.css
+            whatsapp-connect.html
+            help-logo.png
+          )
+          for f in "${files[@]}"; do
+            echo "Downloading $f"
+            curl --fail --silent --show-error --location "$base/$f" -o "$f"
+          done
+          mkdir -p privacidade
+          curl --fail --silent --show-error --location "$base/privacidade/" -o privacidade/index.html
+
+          grep -q 'financeiro-avancado.js' index.html
+          grep -q 'crm-correcoes.js' index.html
+          grep -q 'instalarConciliacaoOFX' crm-correcoes.js
+          grep -q 'financeiro_contas' crm-correcoes.js
+          grep -q 'financeiroVisualizar' script.js
+          test -s help-logo.png
+
+      - name: Enable secure account management layer
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          css = '<link rel="stylesheet" href="gerenciamento-contas.css">'
+          js = '<script src="gerenciamento-contas.js"></script>'
+          if css not in s:
+              anchor = '<link rel="stylesheet" href="crm-correcoes.css">'
+              if anchor not in s:
+                  raise SystemExit('crm-correcoes.css anchor not found')
+              s = s.replace(anchor, anchor + '\n  ' + css, 1)
+          if js not in s:
+              anchor = '<script src="crm-correcoes.js"></script>'
+              if anchor not in s:
+                  raise SystemExit('crm-correcoes.js anchor not found')
+              s = s.replace(anchor, anchor + '\n  ' + js, 1)
+          p.write_text(s, encoding='utf-8')
+
+      - name: Validate JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check script.js
+          node --check os-financeiro.js
+          node --check financeiro-avancado.js
+          node --check crm-correcoes.js
+          node --check gerenciamento-contas.js
+
+      - name: Commit synchronized snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html script.js style.css os-financeiro.js os-financeiro.css \
+            financeiro-avancado.js financeiro-avancado.css \
+            crm-correcoes.js crm-correcoes.css whatsapp-connect.html help-logo.png \
+            privacidade/index.html gerenciamento-contas.js gerenciamento-contas.css
+          if git diff --cached --quiet; then
+            echo "Snapshot already synchronized."
+            exit 0
+          fi
+          git commit -m "Sincroniza snapshot atual da produção Vercel"
+          git push origin HEAD:sync-producao-2026-08-26
