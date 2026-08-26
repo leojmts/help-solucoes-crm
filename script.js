@@ -11,6 +11,14 @@ function definirIcone(botao, nome) {
   botao.innerHTML = `<i data-lucide="${nome}"></i>`;
 }
 
+function definirBadge(celula, classe, texto) {
+  celula.innerHTML = '';
+  const badge = document.createElement('span');
+  badge.className = `badge ${classe}`;
+  badge.textContent = texto ?? '';
+  celula.appendChild(badge);
+}
+
 function aplicarRotulosTabelasMobile() {
   ['tabelaChamados', 'tabelaClientes'].forEach(id => {
     const tabela = document.getElementById(id);
@@ -468,10 +476,10 @@ async function carregarChamadosDaNuvem() {
     let audioContextoNotificacao = null;
     let intervaloNotificacoes = null;
 
-    const RECURSOS = ['dashboard', 'clientes', 'novoChamado', 'novoCliente', 'novoTecnico', 'usuarios', 'relatorios', 'configuracoes'];
+    const RECURSOS = ['dashboard', 'clientes', 'novoChamado', 'novoCliente', 'novoTecnico', 'usuarios', 'crm', 'os', 'financeiro', 'financeiroVisualizar', 'financeiroCriar', 'financeiroBaixar', 'financeiroExcluir', 'financeiroRelatorios', 'enviarEmail', 'backup', 'whatsapp', 'relatorios', 'configuracoes'];
     const PERFIS_PADRAO = {
       admin: RECURSOS.reduce((acc, r) => { acc[r] = true; return acc; }, {}),
-      tecnico: { dashboard: true, clientes: true, novoChamado: true, novoCliente: false, novoTecnico: false, usuarios: false, relatorios: false, configuracoes: false }
+      tecnico: { dashboard: true, clientes: true, novoChamado: true, novoCliente: false, novoTecnico: false, usuarios: false, crm: false, os: true, financeiro: false, financeiroVisualizar:false, financeiroCriar:false, financeiroBaixar:false, financeiroExcluir:false, financeiroRelatorios:false, enviarEmail: false, backup: false, whatsapp: false, relatorios: false, configuracoes: false }
     };
 
     // ---- Perfis e permissões na nuvem ----
@@ -531,7 +539,7 @@ async function carregarChamadosDaNuvem() {
         usuario: nomeExibicao,
         email: user.email || perfilNuvem.email || '',
         perfil: perfilNuvem.perfil || 'personalizado',
-        permissoes: perfilNuvem.permissoes || {}
+        permissoes: { ...(PERFIS_PADRAO[perfilNuvem.perfil] || {}), ...(perfilNuvem.permissoes || {}) }
       };
 
       document.getElementById('telaLogin').classList.add('hidden');
@@ -748,7 +756,7 @@ async function carregarChamadosDaNuvem() {
       tbody.innerHTML = '';
       if (!usuarioLogado || !usuarioLogado.permissoes?.usuarios) return;
 
-      const rotulos = { dashboard: 'Dashboard', clientes: 'Clientes', novoChamado: 'Novo Chamado', novoCliente: 'Novo Cliente', novoTecnico: 'Novo Técnico', usuarios: 'Usuários', relatorios: 'Relatórios', configuracoes:'Configurações' };
+      const rotulos = { dashboard: 'Dashboard', clientes: 'Clientes', novoChamado: 'Novo Chamado', novoCliente: 'Novo Cliente', novoTecnico: 'Novo Técnico', usuarios: 'Usuários', crm:'CRM Comercial', os:'Ordens de serviço', financeiro:'Financeiro', enviarEmail:'Enviar dossiês', backup:'Backup', whatsapp:'WhatsApp', relatorios: 'Relatórios', configuracoes:'Configurações' };
       try {
         const { perfis, convites } = await buscarUsuariosNuvem();
         const itens = [
@@ -761,7 +769,12 @@ async function carregarChamadosDaNuvem() {
           if (u.tipo === 'perfil' && !u.ativo) tr.style.opacity = '.55';
 
           const tdUsuario = document.createElement('td');
-          tdUsuario.innerHTML = `<strong>${u.nome || u.email.split('@')[0]}</strong><br><small style="color:var(--text-muted)">${u.email}${u.tipo==='convite'?' · convite pendente':(!u.ativo?' · desativado':'')}</small>`;
+          const nomeUsuario = document.createElement('strong');
+          nomeUsuario.textContent = u.nome || u.email.split('@')[0];
+          const emailUsuario = document.createElement('small');
+          emailUsuario.style.color = 'var(--text-muted)';
+          emailUsuario.textContent = `${u.email}${u.tipo==='convite'?' · convite pendente':(!u.ativo?' · desativado':'')}`;
+          tdUsuario.append(nomeUsuario, document.createElement('br'), emailUsuario);
           const tdPerfil = document.createElement('td');
           const badgePerfil = document.createElement('span');
           badgePerfil.className = 'badge badge-role' + (u.perfil === 'admin' ? ' admin' : '');
@@ -782,7 +795,8 @@ async function carregarChamadosDaNuvem() {
         });
       } catch (erro) {
         console.error('Erro ao carregar usuários:', erro);
-        tbody.innerHTML = `<tr><td colspan="4">Não foi possível carregar usuários: ${erro.message}</td></tr>`;
+        tbody.innerHTML = '';
+        const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=4;td.textContent=`Não foi possível carregar usuários: ${erro.message}`;tr.appendChild(td);tbody.appendChild(tr);
       } finally {
         finalizarInterfaceDinamica();
       }
@@ -792,48 +806,21 @@ async function carregarChamadosDaNuvem() {
       document.getElementById('wrapObsTecnicas').classList.toggle('revelado');
     }
 
-    // ---- Backup (exportar/importar) ----
-    function exportarBackup() {
-      const dados = {
-        chamados: document.querySelector('#tabelaChamados tbody').innerHTML,
-        clientes: document.querySelector('#tabelaClientes tbody').innerHTML,
-        tecnicos: document.getElementById('mTecnico').innerHTML,
-        usuarios: localStorage.getItem('help_crm_usuarios'),
-        log: localStorage.getItem('help_crm_log'),
-        protocoloSeq: localStorage.getItem('help_crm_protocolo_seq'),
-        exportadoEm: formatarDataHoraAtual()
-      };
-      const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `backup-help-crm-${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      registrarLog('exportou um backup dos dados');
-    }
-
-    function importarBackup(arquivo) {
-      if (!arquivo) return;
-      if (!confirm('Importar este backup vai substituir os dados atuais. Continuar?')) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const dados = JSON.parse(e.target.result);
-          if (dados.chamados !== undefined) localStorage.setItem('help_crm_chamados', dados.chamados);
-          if (dados.clientes !== undefined) localStorage.setItem('help_crm_clientes', dados.clientes);
-          if (dados.tecnicos !== undefined) localStorage.setItem('help_crm_tecnicos', dados.tecnicos);
-          if (dados.usuarios) localStorage.setItem('help_crm_usuarios', dados.usuarios);
-          if (dados.log) localStorage.setItem('help_crm_log', dados.log);
-          if (dados.protocoloSeq) localStorage.setItem('help_crm_protocolo_seq', dados.protocoloSeq);
-          registrarLog('importou um backup de dados');
-          alert('Backup importado com sucesso! A página será recarregada.');
-          location.reload();
-        } catch (err) {
-          alert('Não foi possível ler este arquivo de backup.');
-        }
-      };
-      reader.readAsText(arquivo);
+    // ---- Backup real dos dados de negócio do Supabase ----
+    const TABELAS_BACKUP = ['clientes','tecnicos','chamados','leads','lead_interacoes','chamado_interacoes','respostas_modelo','base_conhecimento','processos_internos','processo_execucoes','equipamentos','ordens_servico','os_itens','financeiro_lancamentos','financeiro_fornecedores','financeiro_recorrencias','financeiro_pagamentos','financeiro_anexos','financeiro_caixas','financeiro_caixa_movimentos','financeiro_contas','financeiro_transferencias','financeiro_ofx_importacoes','financeiro_ofx_movimentos','avisos_internos','chamado_tempos'];
+    function podeGerenciarBackup(){return usuarioLogado?.perfil==='admin'||usuarioLogado?.permissoes?.backup===true}
+    async function exportarBackup() {
+      if(!podeGerenciarBackup())return alert('Somente administradores autorizados podem exportar o backup.');
+      const botao=typeof event!=='undefined'?event.currentTarget:null; if(botao)botao.disabled=true;
+      try{
+        const tabelas={};
+        for(const tabela of TABELAS_BACKUP){const{data,error}=await supabaseClient.from(tabela).select('*').range(0,9999);if(error)throw new Error(`${tabela}: ${error.message}`);tabelas[tabela]=data||[]}
+        const dados={formato:'help-crm-backup',versao:2,projeto:'cdsdgijxsslmyhnqapiu',exportado_em:new Date().toISOString(),tabelas,configuracoes:{valor_hora:localStorage.getItem('help_crm_valor_hora'),sla_critico:localStorage.getItem('help_crm_sla_critico'),sla_normal:localStorage.getItem('help_crm_sla_normal'),lembrete_horas:localStorage.getItem('help_crm_lembrete_horas'),nome_empresa:localStorage.getItem('help_crm_nome_empresa')}};
+        const blob=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`backup-help-crm-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(url);
+        await supabaseClient.from('auditoria_crm').insert({usuario_id:usuarioLogado.id,acao:'backup_exportado',detalhes:{versao:2,tabelas:TABELAS_BACKUP.length}});
+        registrarLog('exportou um backup real dos dados do Supabase');
+        alert('Backup concluído. O arquivo foi salvo na pasta Downloads.');
+      }catch(err){alert('Não foi possível exportar o backup da nuvem.\n\n'+err.message)}finally{if(botao)botao.disabled=false}
     }
 
     function proximoProtocolo() {
@@ -952,7 +939,8 @@ async function carregarChamadosDaNuvem() {
       const tbody = document.querySelector('#tabelaTecnicos tbody');
       if (!tbody) return;
       const nomes = [...new Set([...document.querySelectorAll('#mTecnico option')].map(o => o.value).filter(Boolean))];
-      tbody.innerHTML = nomes.map(nome => `<tr><td>${nome}</td><td class="actions-cell"><button title="Excluir técnico" onclick="excluirTecnico('${nome.replace(/'/g, "\'")}')"><i data-lucide="trash-2"></i></button></td></tr>`).join('');
+      tbody.innerHTML = '';
+      nomes.forEach(nome=>{const tr=document.createElement('tr'),tdNome=document.createElement('td'),tdAcoes=document.createElement('td'),botao=document.createElement('button');tdNome.textContent=nome;tdAcoes.className='actions-cell';botao.type='button';botao.title='Excluir técnico';definirIcone(botao,'trash-2');botao.addEventListener('click',()=>excluirTecnico(nome));tdAcoes.appendChild(botao);tr.append(tdNome,tdAcoes);tbody.appendChild(tr)});
       finalizarInterfaceDinamica();
     }
 
@@ -972,6 +960,7 @@ async function carregarChamadosDaNuvem() {
       document.getElementById('cfgSlaNormal').value = localStorage.getItem('help_crm_sla_normal') || '24';
       document.getElementById('cfgLembreteHoras').value = localStorage.getItem('help_crm_lembrete_horas') || '4';
       document.getElementById('cfgNomeEmpresa').value = localStorage.getItem('help_crm_nome_empresa') || 'Help Soluções Tecnológicas';
+      document.getElementById('cfgPix').value = localStorage.getItem('help_crm_pix') || '';
       carregarFerramentasAtendimento();
     }
 
@@ -981,11 +970,13 @@ async function carregarChamadosDaNuvem() {
       const slaNormal = document.getElementById('cfgSlaNormal').value || '24';
       const lembrete = document.getElementById('cfgLembreteHoras').value || '4';
       const nome = document.getElementById('cfgNomeEmpresa').value.trim() || 'Help Soluções Tecnológicas';
+      const pix = document.getElementById('cfgPix').value.trim();
       localStorage.setItem('help_crm_valor_hora', hora);
       localStorage.setItem('help_crm_sla_critico', sla);
       localStorage.setItem('help_crm_sla_normal', slaNormal);
       localStorage.setItem('help_crm_lembrete_horas', lembrete);
       localStorage.setItem('help_crm_nome_empresa', nome);
+      localStorage.setItem('help_crm_pix', pix);
       document.getElementById('relatorioValorHora').value = hora;
       marcarChamadosCriticos();
       alert('Configurações salvas com sucesso!');
@@ -1189,14 +1180,14 @@ async function carregarChamadosDaNuvem() {
 
         td[2].innerText = cliente;
         td[3].innerText = unidade;
-        td[4].innerHTML = `<span class="badge badge-origem">${origem}</span>`;
+        definirBadge(td[4], 'badge-origem', origem);
         td[5].innerText = serial;
         td[6].innerText = solicitante;
-        td[7].innerHTML = `<span class="badge badge-tecnico">${tecnico}</span>`;
+        definirBadge(td[7], 'badge-tecnico', tecnico);
         td[8].innerText = modulo;
         td[9].innerText = tipo;
-        td[10].innerHTML = `<span class="badge ${badgePrioridadeClass}">${prioridade}</span>`;
-        td[11].innerHTML = `<span class="badge ${badgeStatusClass}">${status}</span>`;
+        definirBadge(td[10], badgePrioridadeClass, prioridade);
+        definirBadge(td[11], badgeStatusClass, status);
         td[12].innerText = fechamento || '-';
         registrarLog(`editou o chamado ${td[0].innerText}`);
       } else {
@@ -1839,7 +1830,7 @@ async function carregarChamadosDaNuvem() {
       const possuiChamado = !!document.getElementById('dossieChamadoSelect')?.value;
       ['btnVisualizarDossie', 'btnEmailDossie', 'btnPdfDossie'].forEach(id => {
         const botao = document.getElementById(id);
-        if (botao) botao.disabled = !possuiChamado || carregando;
+        if (botao) botao.disabled = !possuiChamado || carregando || (id==='btnEmailDossie'&&!(usuarioLogado?.perfil==='admin'||usuarioLogado?.permissoes?.enviarEmail===true));
       });
     }
 
@@ -1962,6 +1953,7 @@ async function carregarChamadosDaNuvem() {
     }
 
     async function enviarEmailDossie() {
+      if(!(usuarioLogado?.perfil==='admin'||usuarioLogado?.permissoes?.enviarEmail===true)){alert('Seu usuário não possui permissão para enviar dossiês.');return}
       const dossie = await carregarDossieChamado(); if (!dossie) return;
       let email = '';
       const { data: cliente } = await supabaseClient.from('clientes').select('email').eq('nome', dossie.chamado.cliente).limit(1).maybeSingle();
@@ -1971,7 +1963,7 @@ async function carregarChamadosDaNuvem() {
       const botao=document.getElementById('btnEmailDossie');botao.disabled=true;botao.textContent='Enviando...';
       try {
         const { data: sessao } = await supabaseClient.auth.getSession();
-        const resposta = await fetch('/api/send-dossie', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${sessao.session?.access_token||''}`}, body:JSON.stringify({to:email,subject:`Dossiê do chamado ${dossie.chamado.protocolo} — Help Soluções`,text:`${textoDossie(dossie)}\n\nDocumento enviado pelo CRM Help Soluções.`,html:htmlEmailDossie(dossie)}) });
+        const resposta = await fetch('/api/send-dossie', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${sessao.session?.access_token||''}`}, body:JSON.stringify({to:email,chamadoId:Number(dossie.chamado.id)}) });
         const resultado=await resposta.json().catch(()=>({}));
         if(!resposta.ok) throw new Error(resultado.error||'Serviço de e-mail indisponível.');
         alert('E-mail enviado com sucesso!');
@@ -2102,7 +2094,9 @@ async function editarLead(id){
   const {data:hist,error}=await supabaseClient.from('lead_interacoes').select('*').eq('lead_id',id).order('criado_em',{ascending:false});
   if(error){alert('Não foi possível carregar o histórico do lead.\n\n'+error.message);return}
   document.getElementById('crmHistoricoArea').style.display='block';
-  document.getElementById('crmHistorico').innerHTML=(hist||[]).map(h=>`<div class="crm-next">${h.texto}<span>${new Date(h.criado_em).toLocaleString('pt-BR')}</span></div>`).join('')||'<div class="crm-next">Sem interações registradas.</div>';
+  const historicoEl=document.getElementById('crmHistorico');historicoEl.innerHTML='';
+  if(!(hist||[]).length){const vazio=document.createElement('div');vazio.className='crm-next';vazio.textContent='Sem interações registradas.';historicoEl.appendChild(vazio)}
+  else (hist||[]).forEach(h=>{const item=document.createElement('div'),texto=document.createTextNode(h.texto||''),data=document.createElement('span');item.className='crm-next';data.textContent=new Date(h.criado_em).toLocaleString('pt-BR');item.append(texto,data);historicoEl.appendChild(item)});
   document.getElementById('modalLead').classList.add('active');
 }
 
@@ -2201,7 +2195,7 @@ async function converterLeadCliente(){
       sub.textContent=lista.length===1?'1 pendente':`${lista.length} pendentes`;
       el.innerHTML='';
       if(!lista.length){el.innerHTML='<div class="notification-empty"><b>Tudo em dia</b>Você não possui notificações pendentes.</div>';return}
-      lista.forEach(n=>{const item=document.createElement('div');item.className='notification-item';item.innerHTML=`<span class="notification-dot ${n.tipo==='info'?'':n.tipo}"></span><div><strong>${n.titulo}</strong><p>${n.texto}</p><time>${n.tempo}</time></div><button class="notification-dismiss" title="Marcar como lida" aria-label="Marcar como lida" onclick="marcarNotificacaoLida('${n.id}')">×</button>`;el.appendChild(item)});
+      lista.forEach(n=>{const item=document.createElement('div'),dot=document.createElement('span'),corpo=document.createElement('div'),titulo=document.createElement('strong'),texto=document.createElement('p'),tempo=document.createElement('time'),fechar=document.createElement('button');item.className='notification-item';dot.className=`notification-dot ${n.tipo==='info'?'':n.tipo}`;titulo.textContent=n.titulo||'';texto.textContent=n.texto||'';tempo.textContent=n.tempo||'';corpo.append(titulo,texto,tempo);fechar.className='notification-dismiss';fechar.type='button';fechar.title='Marcar como lida';fechar.setAttribute('aria-label','Marcar como lida');fechar.textContent='×';fechar.addEventListener('click',()=>marcarNotificacaoLida(n.id));item.append(dot,corpo,fechar);el.appendChild(item)});
     }
     function alternarNotificacoes(){const panel=document.getElementById('notificationPanel');if(!panel)return;panel.classList.toggle('hidden');if(!panel.classList.contains('hidden'))atualizarAlertasOperacionais()}
     function fecharNotificacoes(){const panel=document.getElementById('notificationPanel');if(panel)panel.classList.add('hidden')}
@@ -2315,7 +2309,7 @@ async function converterLeadCliente(){
     async function renderizarMeuTrabalho(){const lista=document.getElementById('meuTrabalhoLista'),resumo=document.getElementById('meuTrabalhoResumo');if(!lista||!resumo)return;const filtro=document.getElementById('meuTrabalhoFiltro')?.value||'abertos',todos=todosChamadosOperacionais().filter(c=>pertenceAoUsuario(c.tecnico)),itens=todos.filter(c=>filtro==='todos'||(filtro==='resolvidos'?c.status==='Resolvido':c.status!=='Resolvido'));const alta=todos.filter(c=>c.status!=='Resolvido'&&c.prioridade.toLowerCase().includes('alta')).length;const andamento=todos.filter(c=>c.status==='Em Andamento').length;let minutos=0;try{const ids=todos.map(c=>c.id).filter(Boolean);if(ids.length){const{data}=await supabaseClient.from('chamado_tempos').select('minutos').in('chamado_id',ids).eq('usuario_id',usuarioLogado.id);minutos=(data||[]).reduce((s,x)=>s+(x.minutos||0),0)}}catch(e){console.warn(e)}resumo.innerHTML=`<div><span>Minha fila</span><strong>${todos.filter(c=>c.status!=='Resolvido').length}</strong></div><div><span>Em andamento</span><strong>${andamento}</strong></div><div class="alerta"><span>Alta prioridade</span><strong>${alta}</strong></div><div><span>Tempo registrado</span><strong>${formatarMinutos(minutos)}</strong></div>`;lista.innerHTML=itens.length?itens.map(cardOperacionalChamado).join(''):'<div class="operacional-vazio"><i data-lucide="check-circle-2"></i><strong>Tudo em dia</strong><span>Nenhum chamado nesta visualização.</span></div>';renderizarIcones()}
     function preencherFiltroKanban(){const s=document.getElementById('kanbanTecnico');if(!s)return;const atual=s.value,nomes=[...new Set(todosChamadosOperacionais().map(c=>c.tecnico).filter(x=>x&&x!=='-'))].sort();s.innerHTML='<option value="">Todos os técnicos</option>'+nomes.map(n=>`<option>${escaparHtml(n)}</option>`).join('');s.value=atual}
     function renderizarKanban(){const board=document.getElementById('kanbanChamados');if(!board)return;preencherFiltroKanban();const tecnico=document.getElementById('kanbanTecnico')?.value||'',busca=(document.getElementById('kanbanBusca')?.value||'').toLowerCase(),colunas=['Pendente','Em Andamento','Aguardando Cliente','Resolvido'];const chamados=todosChamadosOperacionais().filter(c=>(!tecnico||c.tecnico===tecnico)&&(!busca||`${c.protocolo} ${c.cliente} ${c.modulo}`.toLowerCase().includes(busca)));board.innerHTML=colunas.map(status=>{const itens=chamados.filter(c=>c.status===status||(status==='Pendente'&&c.status==='Aberto'));return `<section class="kanban-coluna" data-status="${status}" ondragover="event.preventDefault()" ondrop="soltarChamadoKanban(event,'${status}')"><header><span class="kanban-status-dot status-${status.toLowerCase().replaceAll(' ','-')}"></span><h3>${status}</h3><b>${itens.length}</b></header><div>${itens.map(c=>`<article class="kanban-card" draggable="true" data-id="${c.id}" ondragstart="event.dataTransfer.setData('text/plain','${c.id}')" onclick="abrirChamadoDashboard('${c.id}')"><span>${escaparHtml(c.protocolo)}</span><h4>${escaparHtml(c.cliente)}</h4><p>${escaparHtml(c.modulo)}</p><footer><small>${escaparHtml(c.tecnico)}</small><b class="${c.prioridade.toLowerCase().includes('alta')?'alta':''}">${escaparHtml(c.prioridade)}</b></footer></article>`).join('')||'<div class="kanban-vazio">Solte um chamado aqui</div>'}</div></section>`}).join('');renderizarIcones()}
-    async function soltarChamadoKanban(event,status){const id=event.dataTransfer.getData('text/plain'),c=todosChamadosOperacionais().find(x=>String(x.id)===String(id));if(!c||c.status===status)return;event.preventDefault();if(status==='Resolvido'){abrirChamadoDashboard(id);document.getElementById('mStatus').value='Resolvido';atualizarChecklistEncerramento();alert('Complete o checklist de encerramento antes de resolver.');return}const{error}=await supabaseClient.from('chamados').update({status,fechamento_em:null}).eq('id',id);if(error){alert(error.message);return}c.el.cells[11].innerHTML=`<span class="badge ${status==='Em Andamento'?'badge-andamento':'badge-pendente'}">${status}</span>`;c.el.cells[12].innerText='-';c.el.dataset.fechamentoIso='';renderizarKanban();atualizarMetricas()}
+    async function soltarChamadoKanban(event,status){const permitidos=['Pendente','Em Andamento','Aguardando Cliente','Resolvido'];if(!permitidos.includes(status))return;const id=event.dataTransfer.getData('text/plain'),c=todosChamadosOperacionais().find(x=>String(x.id)===String(id));if(!c||c.status===status)return;event.preventDefault();if(status==='Resolvido'){abrirChamadoDashboard(id);document.getElementById('mStatus').value='Resolvido';atualizarChecklistEncerramento();alert('Complete o checklist de encerramento antes de resolver.');return}const{error}=await supabaseClient.from('chamados').update({status,fechamento_em:null}).eq('id',id);if(error){alert(error.message);return}definirBadge(c.el.cells[11],status==='Em Andamento'?'badge-andamento':'badge-pendente',status);c.el.cells[12].innerText='-';c.el.dataset.fechamentoIso='';renderizarKanban();atualizarMetricas()}
     function formatarMinutos(m){m=Math.max(0,Math.round(m||0));return m>=60?`${Math.floor(m/60)}h ${m%60}min`:`${m}min`}
     async function atualizarControleAtendimento(){if(!linhaEdicaoChamado)return;const area=document.getElementById('controleAtendimento'),id=await obterIdChamadoAtual();area.classList.remove('hidden');const{data,error}=await supabaseClient.from('chamado_tempos').select('*').eq('chamado_id',id).order('iniciado_em',{ascending:false});if(error)return;const total=(data||[]).reduce((s,x)=>s+(x.minutos||0),0),aberto=(data||[]).find(x=>!x.finalizado_em&&x.usuario_id===usuarioLogado.id);linhaEdicaoChamado.dataset.tempoMinutos=String(total);linhaEdicaoChamado.dataset.tempoAbertoId=aberto?.id||'';linhaEdicaoChamado.dataset.tempoIniciado=aberto?.iniciado_em||'';atualizarCronometroVisual();atualizarChecklistEncerramento()}
     function atualizarCronometroVisual(){if(!linhaEdicaoChamado)return;const total=Number(linhaEdicaoChamado.dataset.tempoMinutos||0),inicio=linhaEdicaoChamado.dataset.tempoIniciado,rodando=!!inicio,decorrido=rodando?Math.floor((Date.now()-new Date(inicio).getTime())/60000):0;document.getElementById('tempoChamadoResumo').textContent=`${formatarMinutos(total+decorrido)} ${rodando?'· em andamento':''}`;const b=document.getElementById('btnCronometroChamado');b.innerHTML=rodando?'<i data-lucide="square"></i>Finalizar atendimento':'<i data-lucide="play"></i>Iniciar atendimento';b.classList.toggle('cronometro-ativo',rodando);clearInterval(cronometroIntervalo);if(rodando)cronometroIntervalo=setInterval(atualizarCronometroVisual,30000);renderizarIcones()}

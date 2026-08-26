@@ -55,6 +55,7 @@
       border-radius: 8px; display: flex; align-items: center; justify-content: center;
       font-weight: 700; color: #fff; font-size: 1.1rem; box-shadow: 0 4px 12px var(--accent-green-glow);
     }
+    .brand-icon img { width:100%; height:100%; display:block; object-fit:cover; border-radius:inherit; }
     .brand h2 { font-size: 1.15rem; color: #ffffff; font-weight: 600; letter-spacing: -0.3px; }
 
     .sidebar nav ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
