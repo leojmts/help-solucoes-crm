@@ -1,0 +1,47 @@
+imprimirOS = function () {
+  if (!osAtual) return;
+  const itens = osAtual.os_itens || [];
+  const pecas = itens.filter(x => x.tipo === 'Peça');
+  const servicos = itens.filter(x => x.tipo === 'Serviço');
+  const cliente = clientesOSCache.find(c => String(c.nome || '').trim().toLocaleLowerCase('pt-BR') === String(osAtual.cliente || '').trim().toLocaleLowerCase('pt-BR')) || {};
+  const logo = new URL('help-logo.png', window.location.href).href;
+  const totalPecas = pecas.reduce((s, x) => s + Number(x.quantidade || 0) * Number(x.valor_unitario || 0), 0);
+  const totalServicos = servicos.reduce((s, x) => s + Number(x.quantidade || 0) * Number(x.valor_unitario || 0), 0);
+  const subtotal = totalPecas + totalServicos;
+  const desconto = Number(osAtual.desconto || 0);
+  const linhaItem = (x, i) => `<tr><td class="num">${i + 1}</td><td>${osHtml(x.descricao || '—')}</td><td>${osHtml(osAtual.tecnico || '—')}</td><td class="centro">UN</td><td class="centro">${Number(x.quantidade || 0)}</td><td class="dinheiro">${osMoeda(x.valor_unitario)}</td><td class="dinheiro">${osMoeda(Number(x.quantidade || 0) * Number(x.valor_unitario || 0))}</td></tr>`;
+  const tabela = (titulo, lista, vazio) => `<section class="os-doc-bloco"><div class="os-doc-titulo">${titulo}</div><table class="os-doc-tabela"><thead><tr><th>Cód.</th><th>Descrição</th><th>Técnico</th><th>Und.</th><th>Qtd.</th><th>Unit. R$</th><th>Total R$</th></tr></thead><tbody>${lista.length ? lista.map(linhaItem).join('') : `<tr><td colspan="7" class="vazio">${vazio}</td></tr>`}</tbody></table></section>`;
+
+  const corpo = `<style>
+    .folha.os-doc-ref{width:900px;max-width:calc(100% - 24px);margin:18px auto;padding:24px 28px 30px;border-top:0;color:#171717;font-family:Arial,sans-serif;font-size:12px}
+    .os-doc-ref *{box-sizing:border-box}.os-doc-cab{display:grid;grid-template-columns:1fr 260px;gap:24px;align-items:start;margin-bottom:8px}
+    .os-doc-empresa{display:flex;gap:14px;align-items:flex-start}.os-doc-empresa img{width:92px;height:58px;object-fit:contain}.os-doc-empresa h1{margin:0 0 5px;font-size:18px;color:#111;text-transform:uppercase}.os-doc-empresa p{margin:3px 0;color:#222;line-height:1.35}
+    .os-doc-meta{text-align:right;line-height:1.5}.os-doc-meta h2{margin:0 0 1px;font-size:16px}.os-doc-meta strong.numero{display:block;font-size:17px;letter-spacing:.08em;margin-bottom:4px}
+    .os-doc-aviso{text-align:center;font-size:10px;font-weight:700;padding:7px 5px;border-bottom:1px solid #c8c8c8;margin-bottom:8px}
+    .os-doc-cliente{border:1px solid #c8c8c8;padding:9px 12px;margin-bottom:9px;font-size:12px;line-height:1.45}.os-doc-cliente strong{font-size:13px}.os-doc-cliente span{margin-right:10px}
+    .os-doc-triplo{display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid #c8c8c8;margin-bottom:9px}.os-doc-triplo>div{min-height:43px;padding:6px 8px;border-right:1px solid #c8c8c8}.os-doc-triplo>div:last-child{border-right:0}.os-doc-label{display:block;font-size:9px;font-weight:700;text-transform:uppercase;margin-bottom:3px}.os-doc-triplo b{font-size:11px}
+    .os-doc-detalhes{display:grid;grid-template-columns:1fr 1fr;border:1px solid #c8c8c8;margin-bottom:9px}.os-doc-detalhes>div{padding:7px 9px;min-height:48px}.os-doc-detalhes>div+div{border-left:1px solid #c8c8c8}.os-doc-detalhes p{margin:3px 0 0;white-space:pre-wrap;line-height:1.35}
+    .os-doc-bloco{margin-top:9px}.os-doc-titulo{padding:5px 8px;border:1px solid #c8c8c8;border-bottom:0;background:#ededed;font-size:10px;font-weight:800;text-align:left;text-transform:uppercase;letter-spacing:.04em}
+    .os-doc-tabela{width:100%;border-collapse:collapse;font-size:11px}.os-doc-tabela th{padding:6px 7px;background:#f0f0f0;border:1px solid #c8c8c8;color:#171717;text-align:left;text-transform:none;font-size:10px}.os-doc-tabela td{padding:7px;border:1px solid #d2d2d2;vertical-align:middle}.os-doc-tabela .num,.os-doc-tabela .centro{text-align:center}.os-doc-tabela .dinheiro{text-align:right;white-space:nowrap}.os-doc-tabela .vazio{text-align:center;color:#777;padding:10px}
+    .os-doc-resumo{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;margin-top:10px;border:1px solid #c8c8c8}.os-doc-resumo>div{text-align:center;border-right:1px solid #c8c8c8}.os-doc-resumo>div:last-child{border-right:0}.os-doc-resumo span{display:block;padding:4px;background:#ededed;border-bottom:1px solid #c8c8c8;font-size:9px;font-weight:800;text-transform:uppercase}.os-doc-resumo b{display:block;padding:7px;font-size:11px}
+    .os-doc-total{display:flex;justify-content:flex-end;align-items:baseline;gap:9px;margin:24px 0 34px;font-size:15px;font-weight:700}.os-doc-total strong{font-size:24px}
+    .os-doc-assinaturas{display:grid;grid-template-columns:220px 1fr;gap:80px;align-items:end;margin:56px 45px 0}.os-doc-assinaturas div{border-top:1px solid #222;text-align:center;padding-top:6px;font-size:10px}.os-doc-rodape{text-align:center;color:#777;font-size:9px;margin-top:24px}
+    @media print{.folha.os-doc-ref{width:100%;max-width:none;margin:0;padding:8mm 8mm 5mm}.os-doc-bloco,.os-doc-resumo,.os-doc-triplo,.os-doc-detalhes{break-inside:avoid}@page{size:A4 portrait;margin:6mm}}
+  </style><main class="folha os-doc-ref">
+    <header class="os-doc-cab">
+      <div class="os-doc-empresa"><img src="${logo}" alt="Help Soluções Tecnológicas"><div><h1>Help Soluções Tecnológicas</h1><p>Sistemas de gestão empresarial e informática</p><p>Atendimento técnico e soluções em tecnologia</p></div></div>
+      <div class="os-doc-meta"><h2>Ordem de Serviço</h2><strong class="numero">${osHtml(osAtual.numero)}</strong><div>Data: <b>${osData(osAtual.criado_em)}</b></div><div>Situação: <b>${osHtml(osAtual.status || '—')}</b></div><div>Garantia: <b>${Number(osAtual.garantia_dias || 0)} dias</b></div><div>Previsão: <b>${osData(osAtual.previsao)}</b></div></div>
+    </header>
+    <div class="os-doc-aviso">ORDEM DE SERVIÇO — NÃO É DOCUMENTO FISCAL E NÃO COMPROVA PAGAMENTO</div>
+    <section class="os-doc-cliente"><strong>${osHtml(osAtual.cliente || 'CLIENTE')}</strong> ${cliente.documento ? `<span>· ${osHtml(cliente.documento)}</span>` : ''}${cliente.telefone ? `<span>· ${osHtml(cliente.telefone)}</span>` : ''}<br><span>${osHtml(osAtual.unidade || cliente.unidade || '—')}</span>${cliente.email ? `<span> · ${osHtml(cliente.email)}</span>` : ''}</section>
+    <section class="os-doc-triplo"><div><span class="os-doc-label">Objeto</span><b>${osHtml([osAtual.equipamento, osAtual.marca_modelo].filter(Boolean).join(' · ') || '—')}</b></div><div><span class="os-doc-label">Usuário / solicitante</span><b>${osHtml(osAtual.solicitante || '—')}</b></div><div><span class="os-doc-label">Defeito relatado</span><b>${osHtml(osAtual.problema || '—')}</b></div></section>
+    <section class="os-doc-detalhes"><div><span class="os-doc-label">Diagnóstico</span><p>${osHtml(osAtual.diagnostico || '—')}</p></div><div><span class="os-doc-label">Serviço executado</span><p>${osHtml(osAtual.servico_executado || '—')}</p></div></section>
+    ${tabela('Peças / Produtos', pecas, 'Nenhuma peça informada.')}
+    ${tabela('Serviços', servicos, 'Nenhum serviço informado.')}
+    <section class="os-doc-resumo"><div><span>Peças / Produtos</span><b>${pecas.reduce((s,x)=>s+Number(x.quantidade||0),0)} un. · ${osMoeda(totalPecas)}</b></div><div><span>Serviços</span><b>${servicos.reduce((s,x)=>s+Number(x.quantidade||0),0)} item(ns) · ${osMoeda(totalServicos)}</b></div><div><span>Subtotal</span><b>${osMoeda(subtotal)}</b></div><div><span>Desconto</span><b>${osMoeda(desconto)}</b></div></section>
+    <div class="os-doc-total"><span>Total geral R$:</span><strong>${osMoeda(osAtual.total).replace('R$ ','').replace('R$','').trim()}</strong></div>
+    <section class="os-doc-assinaturas"><div>Data</div><div>${osHtml(osAtual.assinatura_nome || 'Assinatura do responsável / solicitante')}</div></section>
+    <div class="os-doc-rodape">Help Soluções Tecnológicas · ${osHtml(osAtual.numero)} · Documento gerado pelo CRM</div>
+  </main>`;
+  abrirDocumentoImpressao(osAtual.numero, corpo);
+};
