@@ -139,3 +139,60 @@ carregarContasFinanceiras = async function () {
   finContas = finContas.filter(x => x.ativo !== false);
   finPreencherContasBaixa();
 };
+
+/* Tema Dark / Light e correções visuais globais. */
+(function instalarTemaCRM() {
+  const chave = 'help-crm-tema';
+  const link = document.createElement('link');
+  if (!document.querySelector('link[href="tema.css"]')) {
+    link.rel = 'stylesheet';
+    link.href = 'tema.css?v=20260826-1';
+    document.head.appendChild(link);
+  }
+
+  function temaAtual() {
+    return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+  }
+
+  function atualizarBotaoTema() {
+    const botao = document.getElementById('btnTemaCRM');
+    if (!botao) return;
+    const claro = temaAtual() === 'light';
+    botao.title = claro ? 'Usar tema escuro' : 'Usar tema claro';
+    botao.setAttribute('aria-label', botao.title);
+    botao.innerHTML = `<i data-lucide="${claro ? 'moon' : 'sun'}"></i>`;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function aplicarTema(tema, salvar = true) {
+    const escolhido = tema === 'light' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = escolhido;
+    if (salvar) localStorage.setItem(chave, escolhido);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = escolhido === 'light' ? '#f3f6fb' : '#07182b';
+    atualizarBotaoTema();
+  }
+
+  window.alternarTemaCRM = function () {
+    aplicarTema(temaAtual() === 'light' ? 'dark' : 'light');
+  };
+
+  const salvo = localStorage.getItem(chave);
+  aplicarTema(salvo === 'light' ? 'light' : 'dark', false);
+
+  function instalarBotao() {
+    const box = document.getElementById('userBox');
+    if (!box || document.getElementById('btnTemaCRM')) return;
+    const sair = box.querySelector('button[title="Sair"]');
+    const botao = document.createElement('button');
+    botao.id = 'btnTemaCRM';
+    botao.type = 'button';
+    botao.className = 'theme-toggle';
+    botao.onclick = window.alternarTemaCRM;
+    if (sair) box.insertBefore(botao, sair); else box.appendChild(botao);
+    atualizarBotaoTema();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', instalarBotao, { once: true });
+  else instalarBotao();
+})();
