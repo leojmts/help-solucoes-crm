@@ -1,0 +1,196 @@
+/* Ajustes visuais do tema claro v2 — corrige áreas que mantinham estilos escuros. */
+html[data-theme="light"]{
+  --bg-main:#f4f7fb;
+  --bg-card:#ffffff;
+  --bg-sidebar:#ffffff;
+  --border-color:#dbe3ec;
+  --border-hover:#bdc9d7;
+  --text-main:#172033;
+  --text-primary:#172033;
+  --text-muted:#64748b;
+}
+
+html[data-theme="light"] body,
+html[data-theme="light"] #appContainer,
+html[data-theme="light"] .container,
+html[data-theme="light"] .content,
+html[data-theme="light"] .view-section{
+  background:#f4f7fb!important;
+  color:#172033!important;
+}
+
+html[data-theme="light"] .content{background:linear-gradient(180deg,#f7f9fc 0%,#f1f5f9 100%)!important}
+
+html[data-theme="light"] .sidebar{
+  background:#ffffff!important;
+  border-right:1px solid #dce4ed!important;
+  box-shadow:4px 0 18px rgba(15,23,42,.035)!important;
+}
+html[data-theme="light"] .sidebar nav li{color:#718096!important}
+html[data-theme="light"] .sidebar nav li:hover{background:#f1f5f9!important;color:#172033!important}
+html[data-theme="light"] .sidebar nav li.active{
+  color:#07865f!important;
+  background:#eaf8f2!important;
+  border-left-color:#10b981!important;
+}
+html[data-theme="light"] .sidebar-toggle,
+html[data-theme="light"] .theme-toggle,
+html[data-theme="light"] .user-box button{
+  background:#fff!important;
+  color:#64748b!important;
+  border-color:#dbe3ec!important;
+}
+html[data-theme="light"] .sidebar-toggle:hover,
+html[data-theme="light"] .theme-toggle:hover,
+html[data-theme="light"] .user-box button:hover{background:#eef3f8!important;color:#2563eb!important}
+
+/* Cabeçalho do dashboard */
+html[data-theme="light"] .dashboard-v2-header h1,
+html[data-theme="light"] .dashboard-v2-header h1 span{color:#172033!important}
+html[data-theme="light"] .dashboard-v2-header p{color:#64748b!important}
+html[data-theme="light"] .global-search{
+  background:#fff!important;
+  border:1px solid #d7e0ea!important;
+  box-shadow:0 2px 8px rgba(15,23,42,.035)!important;
+}
+html[data-theme="light"] .global-search svg{color:#718096!important}
+html[data-theme="light"] .global-search input{background:transparent!important;color:#172033!important}
+html[data-theme="light"] .notify-btn{
+  background:#fff!important;
+  color:#526174!important;
+  border:1px solid #d7e0ea!important;
+  box-shadow:0 2px 8px rgba(15,23,42,.035)!important;
+}
+html[data-theme="light"] .notify-btn:hover{background:#f3f7fb!important;color:#2563eb!important}
+
+/* Cards de indicadores */
+html[data-theme="light"] .cards-grid .card{
+  background:#fff!important;
+  border:1px solid #dce5ee!important;
+  box-shadow:0 5px 18px rgba(15,23,42,.055)!important;
+}
+html[data-theme="light"] .cards-grid .card:hover{border-color:#c5d1df!important;box-shadow:0 8px 22px rgba(15,23,42,.075)!important}
+html[data-theme="light"] .cards-grid .card h2{color:#111827!important}
+html[data-theme="light"] .cards-grid .card span{color:#66758a!important}
+html[data-theme="light"] .icon-total{background:#eef2f7!important;color:#64748b!important}
+html[data-theme="light"] .icon-blue{background:#eaf2ff!important;color:#3b82f6!important}
+html[data-theme="light"] .icon-green{background:#e8f8f2!important;color:#10b981!important}
+html[data-theme="light"] .icon-orange{background:#fff4df!important;color:#e39a17!important}
+html[data-theme="light"] .icon-red{background:#fdecec!important;color:#ef4444!important}
+
+/* Painel operacional — era a principal área que continuava escura */
+html[data-theme="light"] .dashboard-ops-section{
+  background:#ffffff!important;
+  color:#172033!important;
+  border:1px solid #dce5ee!important;
+  box-shadow:0 5px 18px rgba(15,23,42,.045)!important;
+}
+html[data-theme="light"] .dashboard-ops-head{border-color:#e2e8f0!important}
+html[data-theme="light"] .dashboard-ops-head h2{color:#172033!important}
+html[data-theme="light"] .dashboard-ops-head p,
+html[data-theme="light"] .dashboard-periodo span{color:#64748b!important}
+html[data-theme="light"] #dashboardWidgets,
+html[data-theme="light"] .dashboard-widgets-grid{background:transparent!important}
+html[data-theme="light"] #dashboardWidgets > *,
+html[data-theme="light"] .dashboard-widgets-grid > *,
+html[data-theme="light"] .dashboard-widget,
+html[data-theme="light"] .dashboard-widget-card,
+html[data-theme="light"] .widget-card{
+  background:#f9fbfd!important;
+  color:#172033!important;
+  border-color:#dce5ee!important;
+  box-shadow:none!important;
+}
+html[data-theme="light"] #dashboardWidgets h3,
+html[data-theme="light"] #dashboardWidgets h4,
+html[data-theme="light"] #dashboardWidgets b,
+html[data-theme="light"] #dashboardWidgets strong{color:#172033!important}
+html[data-theme="light"] #dashboardWidgets p,
+html[data-theme="light"] #dashboardWidgets small{color:#64748b!important}
+html[data-theme="light"] #dashboardWidgets a{color:#2563eb!important}
+
+/* Lista de atendimentos */
+html[data-theme="light"] .table-container{
+  background:#fff!important;
+  border:1px solid #dce5ee!important;
+  box-shadow:0 5px 18px rgba(15,23,42,.05)!important;
+}
+html[data-theme="light"] .table-header h3{color:#172033!important}
+html[data-theme="light"] .table-container thead tr,
+html[data-theme="light"] .financeiro-table-wrap thead tr{background:#edf3f8!important}
+html[data-theme="light"] .table-container th,
+html[data-theme="light"] .financeiro-table-wrap th{
+  background:#edf3f8!important;
+  color:#53657a!important;
+  border-color:#dce5ee!important;
+}
+html[data-theme="light"] .table-container td,
+html[data-theme="light"] .financeiro-table-wrap td{
+  background:#fff!important;
+  color:#243145!important;
+  border-color:#e5ebf1!important;
+}
+html[data-theme="light"] .table-container tbody tr:hover td,
+html[data-theme="light"] .financeiro-table-wrap tbody tr:hover td{background:#f7faff!important}
+html[data-theme="light"] a.protocolo{color:#2563eb!important}
+
+/* Badges continuam coloridos, mas com fundo adequado ao claro */
+html[data-theme="light"] .badge-normal,
+html[data-theme="light"] .badge-origem{background:#f4f7fa!important;color:#64748b!important;border-color:#d9e2ec!important}
+html[data-theme="light"] .badge-tecnico{background:#f4eefe!important;color:#8b5cf6!important;border-color:#dfd2fb!important}
+html[data-theme="light"] .badge-pendente{background:#fff5df!important;color:#d78a00!important;border-color:#f1d49d!important}
+html[data-theme="light"] .badge-resolvido{background:#eaf8f2!important;color:#07865f!important;border-color:#bce8d6!important}
+html[data-theme="light"] .badge-andamento{background:#eaf2ff!important;color:#2563eb!important;border-color:#cbdcff!important}
+html[data-theme="light"] .badge-alta{background:#fdecec!important;color:#dc3545!important;border-color:#f6c4ca!important}
+
+/* Inputs e botões */
+html[data-theme="light"] input,
+html[data-theme="light"] select,
+html[data-theme="light"] textarea{
+  background:#fff!important;
+  color:#172033!important;
+  border-color:#cfd9e4!important;
+  box-shadow:none!important;
+}
+html[data-theme="light"] input:focus,
+html[data-theme="light"] select:focus,
+html[data-theme="light"] textarea:focus{
+  border-color:#6ba3ea!important;
+  box-shadow:0 0 0 3px rgba(59,130,246,.1)!important;
+}
+html[data-theme="light"] .btn-secondary{background:#fff!important;color:#253247!important;border-color:#d3dce7!important}
+html[data-theme="light"] .btn-secondary:hover{background:#f2f6fa!important;border-color:#c4d0dd!important}
+html[data-theme="light"] .actions-cell button{background:#fff!important;color:#617086!important;border-color:#d5dfe9!important}
+html[data-theme="light"] .actions-cell button:hover{background:#eef4fa!important;color:#2563eb!important}
+
+/* Áreas gerais, modais e módulos */
+html[data-theme="light"] .modal,
+html[data-theme="light"] .crm-modal-content,
+html[data-theme="light"] .settings-card,
+html[data-theme="light"] .processo-resumo-card,
+html[data-theme="light"] .processos-toolbar,
+html[data-theme="light"] .crm-mini,
+html[data-theme="light"] .crm-actions,
+html[data-theme="light"] .crm-board,
+html[data-theme="light"] .financeiro-painel,
+html[data-theme="light"] .fin-extra,
+html[data-theme="light"] .fin-nav{
+  background:#fff!important;
+  color:#172033!important;
+  border-color:#dce5ee!important;
+  box-shadow:0 5px 16px rgba(15,23,42,.045)!important;
+}
+html[data-theme="light"] .os-coluna{background:#eef3f8!important}
+html[data-theme="light"] .os-card,
+html[data-theme="light"] .fin-cards article,
+html[data-theme="light"] .fin-ofx-item{background:#fff!important;color:#172033!important;border-color:#dce5ee!important}
+html[data-theme="light"] .fin-grafico,
+html[data-theme="light"] .fin-caixa-operacional,
+html[data-theme="light"] .fin-rel-filtros,
+html[data-theme="light"] .fin-rel-resumo article,
+html[data-theme="light"] .fin-kpis article{background:#f8fafc!important}
+html[data-theme="light"] .fin-contas article{background:linear-gradient(145deg,#fff,#f7fafc)!important}
+
+html[data-theme="light"] ::-webkit-scrollbar-track{background:#edf2f7}
+html[data-theme="light"] ::-webkit-scrollbar-thumb{background:#c3cfdd}
+html[data-theme="light"] ::-webkit-scrollbar-thumb:hover{background:#aebdce}
