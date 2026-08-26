@@ -55,7 +55,7 @@ window.imprimirOS = async function () {
 
     <section class="osv4-client">
       <div class="osv4-row"><span>Cliente</span><b>${osHtml(atual.cliente || '—')}</b></div>
-      <div class="osv4-row"><span>Unidade</span><div class="osv4-inline"><div><b>${osHtml(atual.unidade || cliente.unidade || '—')}</b></div><div><b>${cliente.documento ? 'Documento: ' + osHtml(cliente.documento) : 'Documento: —'}</b></div></div></div>
+      <div class="osv4-row"><span>Unidade</span><div class="osv4-inline"><div><b>${osHtml(atual.unidade || cliente.unidade || '—')}</b></div><div><b>${cliente.documento ? 'CNPJ: ' + osHtml(cliente.documento) : 'CNPJ: —'}</b></div></div></div>
       <div class="osv4-row"><span>Contato</span><div class="osv4-inline"><div>${cliente.telefone ? osHtml(cliente.telefone) : '—'}</div><div>${cliente.email ? osHtml(cliente.email) : '—'}</div></div></div>
     </section>
 
