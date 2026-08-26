@@ -1,0 +1,42 @@
+name: Ativar tema e pins financeiros
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/ativar-tema-pins-financeiro.yml'
+permissions:
+  contents: write
+jobs:
+  ativar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Carregar tema e pins
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          css='  <link rel="stylesheet" href="tema.css?v=20260826-3">\n  <link rel="stylesheet" href="tema-fixes.css?v=20260826-1">\n'
+          if 'tema.css' not in s:
+              s=s.replace('  <link rel="stylesheet" href="gerenciamento-contas.css">\n', '  <link rel="stylesheet" href="gerenciamento-contas.css">\n'+css)
+          elif 'tema-fixes.css' not in s:
+              s=s.replace('</head>', '  <link rel="stylesheet" href="tema-fixes.css?v=20260826-1">\n</head>')
+          if 'tema.js' not in s:
+              s=s.replace('  <script src="dashboard-financeiro.js?v=20260826-1"></script>', '  <script src="tema.js?v=20260826-1"></script>\n  <script src="dashboard-financeiro.js?v=20260826-2"></script>')
+          else:
+              s=s.replace('dashboard-financeiro.js?v=20260826-1','dashboard-financeiro.js?v=20260826-2')
+          p.write_text(s,encoding='utf-8')
+          PY
+          node --check tema.js
+          node --check dashboard-financeiro.js
+      - name: Publicar
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Carrega tema claro corrigido e pins financeiros"
+          git push
