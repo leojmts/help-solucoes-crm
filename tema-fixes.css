@@ -1,0 +1,151 @@
+/* Acabamento do tema claro — mantém o dark mode original intacto. */
+
+/* Marca/logo: nunca desenhar um bloco atrás da imagem. */
+.brand-icon{background:transparent!important;box-shadow:none!important;border-radius:0!important;overflow:visible!important}
+.brand-icon img,.login-v2-logo img{object-fit:contain!important;background:transparent!important}
+
+html[data-theme="light"]{
+  --help-line:#dbe4ee;
+}
+
+/* Kanban de chamados */
+html[data-theme="light"] .kanban-coluna{
+  background:#fff!important;border-color:#d9e3ed!important;
+  box-shadow:0 5px 16px rgba(15,23,42,.045)!important;
+}
+html[data-theme="light"] .kanban-coluna>header{
+  background:#f8fafc!important;border-color:#e0e7ef!important;color:#243247!important;
+}
+html[data-theme="light"] .kanban-coluna>header h3{color:#334155!important}
+html[data-theme="light"] .kanban-coluna>header b{background:#eaf2ff!important;color:#2563eb!important}
+html[data-theme="light"] .kanban-card{
+  background:#fff!important;border-color:#dbe4ee!important;color:#1f2937!important;
+  box-shadow:0 2px 7px rgba(15,23,42,.035)!important;
+}
+html[data-theme="light"] .kanban-card:hover{background:#fbfdff!important;border-color:#b9cbe0!important}
+html[data-theme="light"] .kanban-card h4{color:#1f2937!important}
+html[data-theme="light"] .kanban-card p,
+html[data-theme="light"] .kanban-card footer small,
+html[data-theme="light"] .kanban-card footer b{color:#64748b!important}
+html[data-theme="light"] .kanban-card>span{color:#2563eb!important}
+html[data-theme="light"] .kanban-card footer{border-color:#e7edf4!important}
+html[data-theme="light"] .kanban-vazio{background:#fbfdff!important;border-color:#cbd8e6!important;color:#718096!important}
+html[data-theme="light"] .kanban-filtros select,
+html[data-theme="light"] .kanban-filtros input{background:#fff!important;color:#243247!important;border-color:#cfd9e5!important}
+
+/* CRM Comercial */
+html[data-theme="light"] .crm-mini,
+html[data-theme="light"] .crm-stage,
+html[data-theme="light"] .crm-actions{
+  background:#fff!important;border-color:#dbe4ee!important;color:#1f2937!important;
+  box-shadow:0 4px 14px rgba(15,23,42,.04)!important;
+}
+html[data-theme="light"] .crm-stage.destino{background:#f0f7ff!important;border-color:#79a9e6!important;box-shadow:0 0 0 3px rgba(47,125,225,.08)!important}
+html[data-theme="light"] .crm-stage-head{color:#263449!important}
+html[data-theme="light"] .crm-stage-head small{color:#718096!important}
+html[data-theme="light"] .crm-stage-head b{background:#eaf2ff!important;color:#2563eb!important}
+html[data-theme="light"] .crm-stage-empty{background:#fbfdff!important;border-color:#cbd8e6!important;color:#718096!important}
+html[data-theme="light"] .crm-lead-card{background:#fff!important;border-color:#d7e1eb!important;color:#1f2937!important;box-shadow:0 2px 7px rgba(15,23,42,.035)!important}
+html[data-theme="light"] .crm-lead-card:hover{background:#fbfdff!important;border-color:#b9cbe0!important;box-shadow:0 8px 18px rgba(15,23,42,.07)!important}
+html[data-theme="light"] .crm-lead-card small,
+html[data-theme="light"] .crm-next span{color:#64748b!important}
+html[data-theme="light"] .crm-next{border-color:#e5ebf2!important}
+html[data-theme="light"] .crm-mobile-stage{background:#fff!important;color:#243247!important;border-color:#cfd9e5!important}
+
+/* Processos internos */
+html[data-theme="light"] .processo-resumo-card{background:#fff!important;border-color:#dbe4ee!important;color:#1f2937!important;box-shadow:0 4px 14px rgba(15,23,42,.04)!important}
+html[data-theme="light"] .processo-resumo-card span{color:#64748b!important}
+html[data-theme="light"] .processos-toolbar{background:transparent!important;box-shadow:none!important;border:0!important}
+html[data-theme="light"] .processos-toolbar select,
+html[data-theme="light"] .processos-busca{background:#fff!important;color:#243247!important;border-color:#cfd9e5!important;box-shadow:0 2px 8px rgba(15,23,42,.025)!important}
+html[data-theme="light"] .processos-busca input{background:transparent!important;color:#243247!important}
+html[data-theme="light"] .processos-busca .lucide{color:#64748b!important}
+html[data-theme="light"] .processo-card{background:#fff!important;border-color:#dbe4ee!important;border-left-color:#347fe8!important;color:#1f2937!important;box-shadow:0 5px 16px rgba(15,23,42,.045)!important}
+html[data-theme="light"] .processo-card.atrasado{border-left-color:#ef4444!important}
+html[data-theme="light"] .processo-card-top p,
+html[data-theme="light"] .processo-meta{color:#64748b!important}
+html[data-theme="light"] .processo-meta{border-color:#e5ebf2!important}
+html[data-theme="light"] .processo-check{background:#f8fafc!important;border-color:#dbe4ee!important;color:#334155!important}
+html[data-theme="light"] .processo-check input:checked+span{color:#94a3b8!important}
+html[data-theme="light"] .processo-card-acoes button{background:#fff!important;color:#64748b!important;border-color:#d6e0eb!important}
+html[data-theme="light"] .processo-card-acoes button:hover{background:#eef5ff!important;color:#2563eb!important;border-color:#9fc1eb!important}
+html[data-theme="light"] .processo-historico{border-color:#e5ebf2!important}
+html[data-theme="light"] .processo-historico>div span{color:#334155!important}
+html[data-theme="light"] .processo-historico small{color:#718096!important}
+html[data-theme="light"] .processo-modal{background:#fff!important;border-color:#d8e2ec!important;box-shadow:0 28px 75px rgba(15,23,42,.18)!important}
+html[data-theme="light"] .processo-modal .modal-header{background:#f8fbff!important}
+html[data-theme="light"] .processo-modal .modal-header p,
+html[data-theme="light"] .processo-modal .crm-field,
+html[data-theme="light"] .processo-modal .crm-field small{color:#64748b!important}
+html[data-theme="light"] .processo-modal .crm-field input,
+html[data-theme="light"] .processo-modal .crm-field textarea,
+html[data-theme="light"] .processo-modal .crm-field select{background-color:#fff!important;color:#1f2937!important;border-color:#cfd9e5!important;box-shadow:none!important;color-scheme:light!important}
+html[data-theme="light"] .processo-modal .crm-field select option{background:#fff!important;color:#1f2937!important}
+html[data-theme="light"] .processo-modal .crm-field input:focus,
+html[data-theme="light"] .processo-modal .crm-field textarea:focus,
+html[data-theme="light"] .processo-modal .crm-field select:focus{background:#fff!important;border-color:#6ba3ea!important;box-shadow:0 0 0 3px rgba(59,130,246,.1)!important}
+html[data-theme="light"] .processo-modal input[type="datetime-local"]{color-scheme:light!important}
+html[data-theme="light"] .processo-dias label{background:#f8fafc!important;color:#475569!important;border-color:#d4dee9!important}
+html[data-theme="light"] .processo-dias label:hover{background:#f0f6fc!important;border-color:#9db9d9!important}
+html[data-theme="light"] .processo-dias label:has(input:checked){background:#eaf2ff!important;color:#2563eb!important;border-color:#7ba9e2!important}
+html[data-theme="light"] .processo-dias input{background:#fff!important;border-color:#aab8c8!important}
+html[data-theme="light"] .processo-modal .modal-footer{background:#fbfdff!important;border-color:#e1e8f0!important}
+
+/* Meu trabalho / operacional */
+html[data-theme="light"] .meu-trabalho-resumo>div,
+html[data-theme="light"] .operacional-panel,
+html[data-theme="light"] .trabalho-card{background:#fff!important;color:#1f2937!important;border-color:#dbe4ee!important;box-shadow:0 4px 14px rgba(15,23,42,.04)!important}
+html[data-theme="light"] .operacional-panel-head{border-color:#e5ebf2!important}
+html[data-theme="light"] .operacional-panel-head p,
+html[data-theme="light"] .trabalho-card p,
+html[data-theme="light"] .trabalho-card footer{color:#64748b!important}
+html[data-theme="light"] .operacional-panel-head select{background:#fff!important;color:#243247!important;border-color:#cfd9e5!important}
+html[data-theme="light"] .trabalho-card footer{border-color:#e7edf4!important}
+
+/* Dashboard: avisos, atalhos e personalização não podem ficar pretos no claro. */
+html[data-theme="light"] .dashboard-aviso{background:#fff!important;border-color:#d5e1ed!important;border-left-color:#3b82f6!important;box-shadow:0 2px 7px rgba(15,23,42,.025)!important}
+html[data-theme="light"] .dashboard-aviso strong{color:#1f2937!important}
+html[data-theme="light"] .dashboard-aviso p{color:#475569!important}
+html[data-theme="light"] .dashboard-aviso small,
+html[data-theme="light"] .dashboard-aviso button{color:#718096!important}
+html[data-theme="light"] .dashboard-shortcuts button{background:#fff!important;color:#334155!important;border-color:#d8e2ec!important}
+html[data-theme="light"] .dashboard-shortcuts button:hover{background:#f3f7fc!important;border-color:#abc5e4!important}
+html[data-theme="light"] .dashboard-config-item{background:#fff!important;color:#334155!important;border-color:#dbe4ee!important}
+html[data-theme="light"] .dashboard-config-item select{background:#fff!important;color:#334155!important;border-color:#cfd9e5!important}
+html[data-theme="light"] .dashboard-order-buttons button{background:#fff!important;color:#64748b!important;border-color:#d6e0eb!important}
+html[data-theme="light"] .performance-row{color:#475569!important;border-color:#e5ebf2!important}
+html[data-theme="light"] .performance-row.header{background:#f3f7fb!important;color:#64748b!important}
+html[data-theme="light"] .performance-row strong{color:#1f2937!important}
+html[data-theme="light"] .dashboard-rank-item,
+html[data-theme="light"] .dashboard-list-item,
+html[data-theme="light"] .dashboard-agenda>div{border-color:#e5ebf2!important;color:#334155!important}
+html[data-theme="light"] .dashboard-list-item:hover{background:#f6f9fc!important}
+html[data-theme="light"] .dashboard-list-item small,
+html[data-theme="light"] .dashboard-rank-item small,
+html[data-theme="light"] .dashboard-agenda small,
+html[data-theme="light"] .dashboard-agenda time{color:#64748b!important}
+html[data-theme="light"] .dashboard-rank-item>b{background:#eaf2ff!important;color:#2563eb!important}
+
+/* Modal de avisos e seleção de destinatários */
+html[data-theme="light"] .dashboard-aviso-modal,
+html[data-theme="light"] .dashboard-aviso-modal .modal-header,
+html[data-theme="light"] .dashboard-aviso-modal .modal-footer{background:#fff!important;color:#1f2937!important}
+html[data-theme="light"] .aviso-todos-usuarios,
+html[data-theme="light"] .aviso-usuario-item{background:#f8fbff!important;border-color:#d9e3ed!important;color:#334155!important}
+html[data-theme="light"] .aviso-todos-usuarios strong,
+html[data-theme="light"] .aviso-usuario-item strong{color:#243247!important}
+html[data-theme="light"] .aviso-todos-usuarios small,
+html[data-theme="light"] .aviso-usuario-item small,
+html[data-theme="light"] .aviso-destinatarios-nota{color:#64748b!important}
+
+/* Pins financeiros */
+.dashboard-fin-kpi{display:flex;flex-direction:column;gap:7px;min-height:92px;justify-content:center}
+.dashboard-fin-kpi>span{font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em}
+.dashboard-fin-kpi>strong{font-size:1.9rem;line-height:1.05}
+.dashboard-fin-kpi>small{font-size:.68rem;color:var(--text-muted)}
+.dashboard-fin-kpi.receber>strong{color:#34d399}.dashboard-fin-kpi.pagar>strong{color:#fb7185}.dashboard-fin-kpi.saldo.positivo>strong{color:#34d399}.dashboard-fin-kpi.saldo.negativo>strong{color:#fb7185}
+.dashboard-fin-vencimentos,.dashboard-fin-contas{display:grid;gap:0}
+.dashboard-fin-linha{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 2px;border-top:1px solid rgba(123,157,199,.12)}
+.dashboard-fin-linha>span{display:flex;flex-direction:column;gap:3px;min-width:0}.dashboard-fin-linha strong{font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dashboard-fin-linha small{font-size:.64rem;color:var(--text-muted)}.dashboard-fin-linha>b{font-size:.7rem;white-space:nowrap}
+html[data-theme="light"] .dashboard-fin-linha{border-color:#e5ebf2!important}
+html[data-theme="light"] .dashboard-fin-linha strong{color:#334155!important}
