@@ -110,7 +110,7 @@ finRenderCaixa = async function () {
 
   blocoAtual.innerHTML = lista.map(c => {
     const historico = historicoMap.get(c.id) === true;
-    const saldo = c.ativo ? finSaldoConta(c) : Number(c.saldo_inicial || 0);
+    const saldo = finSaldoConta(c);
     const principal = String(c.nome).trim().toUpperCase() === 'CAIXA';
     const acao = c.ativo ? (historico || principal ? 'Desativar' : 'Excluir') : 'Reativar';
     const icone = c.ativo ? (acao === 'Excluir' ? 'trash-2' : 'archive') : 'rotate-ccw';
