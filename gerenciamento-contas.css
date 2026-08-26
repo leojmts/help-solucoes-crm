@@ -1,0 +1,8 @@
+/* Gerenciamento seguro das contas financeiras. */
+.fin-contas article{position:relative}
+.fin-conta-acoes{width:100%;margin-top:auto;padding-top:10px;display:flex;justify-content:flex-end}
+.fin-conta-acoes .btn{min-height:34px;padding:7px 10px;font-size:.75rem}
+.fin-conta-acoes .btn svg{width:15px;height:15px}
+.fin-conta-inativa{opacity:.68;border-style:dashed!important}
+.fin-conta-inativa>span{text-transform:uppercase}
+@media(max-width:720px){.fin-conta-acoes .btn{width:100%;justify-content:center}}
