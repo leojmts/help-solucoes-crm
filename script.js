@@ -898,6 +898,8 @@ async function carregarChamadosDaNuvem() {
         crm: 'CRM',
         cadastro: 'Cadastro',
         processos: 'Processos',
+        os: 'OrdensServico',
+        financeiro: 'Financeiro',
         relatorios: 'Relatorios',
         configuracoes: 'Configuracoes'
       };
@@ -920,6 +922,8 @@ async function carregarChamadosDaNuvem() {
         }
         if (aba === 'relatorios' && typeof atualizarRelatorios === 'function') atualizarRelatorios();
         if (aba === 'processos' && typeof carregarProcessos === 'function') carregarProcessos();
+        if (aba === 'os' && typeof renderizarOrdensServico === 'function') renderizarOrdensServico();
+        if (aba === 'financeiro' && typeof renderizarFinanceiro === 'function') renderizarFinanceiro();
         if (aba === 'configuracoes' && typeof carregarConfiguracoes === 'function') carregarConfiguracoes();
         if (aba === 'dashboard' && dashboardCarregado) renderizarDashboardPersonalizado();
         if (aba === 'meuTrabalho') renderizarMeuTrabalho();
@@ -1052,6 +1056,7 @@ async function carregarChamadosDaNuvem() {
 
     function abrirModalChamado() {
       linhaEdicaoChamado = null;
+      document.getElementById('btnGerarOSChamado')?.classList.add('hidden');
       atualizarDatalistClientes();
       document.getElementById('modalChamadoTitulo').innerText = "Abrir Novo Chamado";
       
@@ -1294,6 +1299,7 @@ async function carregarChamadosDaNuvem() {
 
     function visualizarChamado(btn) {
       linhaEdicaoChamado = btn.closest('tr');
+      document.getElementById('btnGerarOSChamado')?.classList.remove('hidden');
       const td = linhaEdicaoChamado.querySelectorAll('td');
       atualizarDatalistClientes();
 
