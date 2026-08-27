@@ -63,14 +63,21 @@
       return;
     }
 
-    const { error } = await supabaseClient
+    const { data: excluida, error } = await supabaseClient
       .from('ordens_servico')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .select('id')
+      .maybeSingle();
 
     if (error) {
       if (botao) botao.disabled = false;
       return avisarModulo('Não foi possível excluir a OS: ' + error.message);
+    }
+
+    if (!excluida) {
+      if (botao) botao.disabled = false;
+      return avisarModulo('A OS não foi excluída. Verifique se seu usuário possui permissão para essa ação.');
     }
 
     osAtual = null;

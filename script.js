@@ -2355,8 +2355,8 @@ async function converterLeadCliente(){
     }
     function dataNoPeriodo(data,periodo=dashboardPeriodoAtual){
       if(!data)return false;const d=new Date(data);if(Number.isNaN(d.getTime()))return false;if(periodo==='todos')return true;
-      const agora=new Date(),inicioHoje=new Date(agora.getFullYear(),agora.getMonth(),agora.getDate());
-      if(periodo==='hoje')return d>=inicioHoje;
+      const agora=new Date(),inicioHoje=new Date(agora.getFullYear(),agora.getMonth(),agora.getDate()),fimHoje=new Date(inicioHoje);fimHoje.setDate(fimHoje.getDate()+1);
+      if(periodo==='hoje')return d>=inicioHoje&&d<fimHoje;
       if(periodo==='semana'){const inicio=new Date(inicioHoje);inicio.setDate(inicio.getDate()-6);return d>=inicio}
       if(periodo==='mes')return d.getMonth()===agora.getMonth()&&d.getFullYear()===agora.getFullYear();return true;
     }
@@ -2391,7 +2391,7 @@ async function converterLeadCliente(){
       try{const [{data:pref},{data:interacoes},{data:processos},{data:avisos}]=await Promise.all([
         supabaseClient.from('dashboard_preferencias').select('widgets,periodo').eq('user_id',usuarioLogado.id).maybeSingle(),
         supabaseClient.from('chamado_interacoes').select('chamado_id,proximo_contato,descricao,tipo').not('proximo_contato','is',null).order('proximo_contato'),
-        supabaseClient.from('processos_internos').select('id,titulo,responsavel_nome,prioridade,status,proxima_execucao').order('proxima_execucao'),
+        supabaseClient.from('processos_internos').select('id,titulo,responsavel_nome,prioridade,status,proxima_execucao,criado_por').eq('criado_por',usuarioLogado.id).order('proxima_execucao'),
         supabaseClient.from('avisos_internos').select('*').or(`expira_em.is.null,expira_em.gt.${new Date().toISOString()}`).order('criado_em',{ascending:false})
       ]);dashboardConfig=normalizarDashboardConfig(pref?.widgets||dashboardConfig);dashboardPeriodoAtual=pref?.periodo||'hoje';dashboardInteracoes=interacoes||[];dashboardProcessos=processos||[];dashboardAvisos=avisos||[];dashboardCarregado=true;if(periodo)periodo.value=dashboardPeriodoAtual;renderizarDashboardPersonalizado()}catch(erro){console.error('Dashboard:',erro);renderizarDashboardPersonalizado()}
     }
