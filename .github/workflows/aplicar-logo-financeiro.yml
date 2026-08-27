@@ -1,0 +1,28 @@
+name: Aplicar logo e financeiro
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/aplicar-logo-financeiro.yml'
+permissions:
+  contents: write
+jobs:
+  aplicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Aplicar patch
+        run: python .github/patch-logo-financeiro.py
+      - name: Validar JavaScript
+        run: |
+          node --check dashboard-financeiro.js
+          node --check financeiro-resumo-mensal.js
+          grep -q 'help-logo-painel.svg?v=20260827-1' index.html
+          grep -q 'dashboard-financeiro.js?v=20260827-3' index.html
+      - name: Publicar
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html dashboard-financeiro.js financeiro-resumo-mensal.js
+          git commit -m "Sincroniza resumo financeiro e atualiza logo do painel"
+          git push
