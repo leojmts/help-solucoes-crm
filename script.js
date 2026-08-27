@@ -47,12 +47,15 @@ async function salvarChamadoNaNuvem(chamado) {
 }
 
 async function atualizarChamadoNaNuvem(protocolo, alteracoes) {
-  const { error } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from('chamados')
     .update(alteracoes)
-    .eq('protocolo', protocolo);
+    .eq('protocolo', protocolo)
+    .select('id')
+    .maybeSingle();
 
   if (error) throw error;
+  if (!data) throw new Error('O chamado não foi atualizado. Verifique sua permissão e tente novamente.');
 }
 
 async function excluirChamadoNaNuvem(protocolo) {
@@ -1500,22 +1503,20 @@ async function carregarChamadosDaNuvem() {
       const porTecnico = {}, porStatus = {};
 
       linhas.forEach(linha => {
-        if (linha.style.display !== 'none') {
-          total++;
-          const td = linha.querySelectorAll('td');
-          const status = td[11].innerText.trim();
-          const prioridade = td[10].innerText.trim();
-          const tecnico = td[7].innerText.trim();
-          const abertura = linha.getAttribute('data-abertura') || td[1].innerText.trim();
+        total++;
+        const td = linha.querySelectorAll('td');
+        const status = td[11].innerText.trim();
+        const prioridade = td[10].innerText.trim();
+        const tecnico = td[7].innerText.trim();
+        const abertura = linha.getAttribute('data-abertura') || td[1].innerText.trim();
 
-          if (status === 'Resolvido') resolvidos++;
-          if (status === 'Pendente') pendentes++;
-          if (prioridade === 'Alta Prioridade') alta++;
-          if (abertura.startsWith(hojeStr)) hoje++;
+        if (status === 'Resolvido') resolvidos++;
+        if (status !== 'Resolvido') pendentes++;
+        if (prioridade === 'Alta Prioridade') alta++;
+        if (abertura.startsWith(hojeStr)) hoje++;
 
-          porTecnico[tecnico] = (porTecnico[tecnico] || 0) + 1;
-          porStatus[status] = (porStatus[status] || 0) + 1;
-        }
+        porTecnico[tecnico] = (porTecnico[tecnico] || 0) + 1;
+        porStatus[status] = (porStatus[status] || 0) + 1;
       });
 
       document.getElementById('totalChamados').innerText = total;
@@ -1526,6 +1527,15 @@ async function carregarChamadosDaNuvem() {
 
       marcarChamadosCriticos();
       atualizarGraficos(porTecnico, porStatus);
+    }
+
+    function abrirChamadosResolvidos(){
+      const status=document.getElementById('filtroStatus'),periodo=document.getElementById('filtroData'),busca=document.getElementById('inputBusca');
+      if(status)status.value='resolvido';
+      if(periodo)periodo.value='todos';
+      if(busca)busca.value='';
+      filtrarChamados();
+      document.querySelector('.table-container')?.scrollIntoView({behavior:'smooth',block:'start'});
     }
 
     function atualizarGraficos(porTecnico, porStatus) {
@@ -2313,7 +2323,42 @@ async function converterLeadCliente(){
     function formatarMinutos(m){m=Math.max(0,Math.round(m||0));return m>=60?`${Math.floor(m/60)}h ${m%60}min`:`${m}min`}
     async function atualizarControleAtendimento(){if(!linhaEdicaoChamado)return;const area=document.getElementById('controleAtendimento'),id=await obterIdChamadoAtual();area.classList.remove('hidden');const{data,error}=await supabaseClient.from('chamado_tempos').select('*').eq('chamado_id',id).order('iniciado_em',{ascending:false});if(error)return;const total=(data||[]).reduce((s,x)=>s+(x.minutos||0),0),aberto=(data||[]).find(x=>!x.finalizado_em&&x.usuario_id===usuarioLogado.id);linhaEdicaoChamado.dataset.tempoMinutos=String(total);linhaEdicaoChamado.dataset.tempoAbertoId=aberto?.id||'';linhaEdicaoChamado.dataset.tempoIniciado=aberto?.iniciado_em||'';atualizarCronometroVisual();atualizarChecklistEncerramento()}
     function atualizarCronometroVisual(){if(!linhaEdicaoChamado)return;const total=Number(linhaEdicaoChamado.dataset.tempoMinutos||0),inicio=linhaEdicaoChamado.dataset.tempoIniciado,rodando=!!inicio,decorrido=rodando?Math.floor((Date.now()-new Date(inicio).getTime())/60000):0;document.getElementById('tempoChamadoResumo').textContent=`${formatarMinutos(total+decorrido)} ${rodando?'· em andamento':''}`;const b=document.getElementById('btnCronometroChamado');b.innerHTML=rodando?'<i data-lucide="square"></i>Finalizar atendimento':'<i data-lucide="play"></i>Iniciar atendimento';b.classList.toggle('cronometro-ativo',rodando);clearInterval(cronometroIntervalo);if(rodando)cronometroIntervalo=setInterval(atualizarCronometroVisual,30000);renderizarIcones()}
-    async function alternarCronometroChamado(){if(!linhaEdicaoChamado)return;const id=await obterIdChamadoAtual(),registro=linhaEdicaoChamado.dataset.tempoAbertoId;if(registro){const inicio=new Date(linhaEdicaoChamado.dataset.tempoIniciado),fim=new Date(),minutos=Math.max(1,Math.round((fim-inicio)/60000));const obs=prompt('O que foi feito neste período? (opcional)','');if(obs===null)return;const{error}=await supabaseClient.from('chamado_tempos').update({finalizado_em:fim.toISOString(),minutos,observacao:obs}).eq('id',registro);if(error){alert(error.message);return}}else{const{error}=await supabaseClient.from('chamado_tempos').insert({chamado_id:id,usuario_id:usuarioLogado.id,usuario_nome:usuarioLogado.usuario});if(error){alert(error.code==='23505'?'Você já possui outro atendimento em andamento. Finalize-o antes de iniciar este.':error.message);return}}await atualizarControleAtendimento()}
+    function prepararResolucaoAoFinalizarAtendimento(observacao){
+      const campoResolucao=document.getElementById('mResolucao'),campoStatus=document.getElementById('mStatus');
+      const texto=(observacao||'').trim();
+      if(campoResolucao&&texto){
+        const atual=campoResolucao.value.trim();
+        if(!atual)campoResolucao.value=texto;
+        else if(!atual.split('\n').map(x=>x.trim()).includes(texto))campoResolucao.value=`${atual}\n${texto}`;
+        campoResolucao.dispatchEvent(new Event('input',{bubbles:true}));
+      }
+      if(campoStatus){
+        campoStatus.value='Resolvido';
+        campoStatus.dispatchEvent(new Event('change',{bubbles:true}));
+      }
+      atualizarChecklistEncerramento();
+    }
+    async function alternarCronometroChamado(){
+      if(!linhaEdicaoChamado)return;
+      const id=await obterIdChamadoAtual(),registro=linhaEdicaoChamado.dataset.tempoAbertoId;
+      if(registro){
+        const inicio=new Date(linhaEdicaoChamado.dataset.tempoIniciado),fim=new Date(),minutos=Math.max(1,Math.round((fim-inicio)/60000));
+        const obs=prompt('O que foi feito neste período? (opcional)','');
+        if(obs===null)return;
+        const{data,error}=await supabaseClient.from('chamado_tempos').update({finalizado_em:fim.toISOString(),minutos,observacao:obs}).eq('id',registro).select('id').maybeSingle();
+        if(error){alert(error.message);return}
+        if(!data){alert('O atendimento não foi finalizado. Verifique sua permissão e tente novamente.');return}
+        prepararResolucaoAoFinalizarAtendimento(obs);
+        await atualizarControleAtendimento();
+        const resolucaoPreenchida=!!document.getElementById('mResolucao')?.value.trim();
+        const contatoConfirmado=!!document.getElementById('mContatoConfirmado')?.checked;
+        if(resolucaoPreenchida&&contatoConfirmado)await salvarChamado();
+      }else{
+        const{error}=await supabaseClient.from('chamado_tempos').insert({chamado_id:id,usuario_id:usuarioLogado.id,usuario_nome:usuarioLogado.usuario});
+        if(error){alert(error.code==='23505'?'Você já possui outro atendimento em andamento. Finalize-o antes de iniciar este.':error.message);return}
+        await atualizarControleAtendimento();
+      }
+    }
     function atualizarChecklistEncerramento(){const status=document.getElementById('mStatus')?.value,box=document.getElementById('checklistEncerramento');if(!box)return;box.classList.toggle('hidden',status!=='Resolvido');const resolucao=!!document.getElementById('mResolucao')?.value.trim(),tempo=Number(linhaEdicaoChamado?.dataset.tempoMinutos||0)>0;document.getElementById('checkResolucao').classList.toggle('ok',resolucao);document.getElementById('checkResolucao').querySelector('i')?.setAttribute('data-lucide',resolucao?'check-circle-2':'circle');document.getElementById('checkTempo').classList.toggle('ok',tempo);document.getElementById('checkTempo').querySelector('i')?.setAttribute('data-lucide',tempo?'check-circle-2':'circle');renderizarIcones()}
     function preencherMencoesEquipe(){const d=document.getElementById('listaMencoesEquipe');if(!d)return;const nomes=[...document.querySelectorAll('#mTecnico option')].map(o=>o.value).filter(Boolean);d.innerHTML=nomes.map(n=>`<option value="@${escaparHtml(n)} ">`).join('')}
     async function perfilPorNome(nome){const limpo=nome.replace(/^@/,'').trim().toLowerCase(),tecnico=tecnicosNuvem.find(t=>(t.nome||'').toLowerCase()===limpo);if(tecnico?.user_id)return{user_id:tecnico.user_id,nome:tecnico.nome};const{data}=await supabaseClient.from('perfis_usuarios').select('user_id,nome').eq('ativo',true);return(data||[]).find(p=>(p.nome||'').toLowerCase()===limpo||(p.nome||'').toLowerCase().startsWith(limpo))}
