@@ -11,7 +11,7 @@ window.imprimirOS = async function () {
     cliente = r.data?.[0] || {};
   } catch (_) {}
 
-  const logo = new URL('help-logo.png', window.location.href).href;
+  const logo = new URL('help-logo-transparent.svg', window.location.href).href;
   const totalPecas = pecas.reduce((s,x)=>s + Number(x.quantidade||0)*Number(x.valor_unitario||0), 0);
   const totalServicos = servicos.reduce((s,x)=>s + Number(x.quantidade||0)*Number(x.valor_unitario||0), 0);
   const subtotal = totalPecas + totalServicos;

@@ -442,7 +442,7 @@ const abrirModalOSAnterior = abrirModalOS;
 abrirModalOS = function (prefill = {}) { abrirModalOSAnterior(prefill); if (!clientesOSCache.length) carregarClientesOS().catch(e => avisarModulo(e.message)); };
 
 function marcaHelpDocumento() {
-  const logo = new URL('help-logo.png', window.location.href).href;
+  const logo = new URL('help-logo-transparent.svg', window.location.href).href;
   return `<div style="display:flex;align-items:center;gap:14px"><img src="${logo}" alt="Help Soluções Tecnológicas" style="width:72px;height:72px;object-fit:cover;border-radius:50%;display:block"><div><h1 style="margin:0;color:#1769e0;font-size:23px">Help Soluções Tecnológicas</h1><small style="color:#68778b">Sistemas de gestão empresarial e informática</small></div></div>`;
 }
 imprimirOS = function () {
@@ -451,7 +451,7 @@ imprimirOS = function () {
   const pecas = itens.filter(x => x.tipo === 'Peça');
   const servicos = itens.filter(x => x.tipo === 'Serviço');
   const cliente = clientesOSCache.find(c => String(c.nome || '').trim().toLocaleLowerCase('pt-BR') === String(osAtual.cliente || '').trim().toLocaleLowerCase('pt-BR')) || {};
-  const logo = new URL('help-logo.png', window.location.href).href;
+  const logo = new URL('help-logo-transparent.svg', window.location.href).href;
   const totalPecas = pecas.reduce((s, x) => s + Number(x.quantidade || 0) * Number(x.valor_unitario || 0), 0);
   const totalServicos = servicos.reduce((s, x) => s + Number(x.quantidade || 0) * Number(x.valor_unitario || 0), 0);
   const subtotal = totalPecas + totalServicos;
