@@ -479,10 +479,10 @@ async function carregarChamadosDaNuvem() {
     let audioContextoNotificacao = null;
     let intervaloNotificacoes = null;
 
-    const RECURSOS = ['dashboard', 'clientes', 'novoChamado', 'novoCliente', 'novoTecnico', 'usuarios', 'crm', 'os', 'financeiro', 'financeiroVisualizar', 'financeiroCriar', 'financeiroBaixar', 'financeiroExcluir', 'financeiroRelatorios', 'enviarEmail', 'backup', 'whatsapp', 'relatorios', 'configuracoes'];
+    const RECURSOS = ['dashboard', 'clientes', 'novoChamado', 'novoCliente', 'novoTecnico', 'usuarios', 'crm', 'os', 'osVisualizar', 'osCriar', 'osEditar', 'osExcluir', 'financeiro', 'financeiroVisualizar', 'financeiroCriar', 'financeiroBaixar', 'financeiroExcluir', 'financeiroRelatorios', 'enviarEmail', 'backup', 'whatsapp', 'relatorios', 'configuracoes'];
     const PERFIS_PADRAO = {
       admin: RECURSOS.reduce((acc, r) => { acc[r] = true; return acc; }, {}),
-      tecnico: { dashboard: true, clientes: true, novoChamado: true, novoCliente: false, novoTecnico: false, usuarios: false, crm: false, os: true, financeiro: false, financeiroVisualizar:false, financeiroCriar:false, financeiroBaixar:false, financeiroExcluir:false, financeiroRelatorios:false, enviarEmail: false, backup: false, whatsapp: false, relatorios: false, configuracoes: false }
+      tecnico: { dashboard: true, clientes: true, novoChamado: true, novoCliente: false, novoTecnico: false, usuarios: false, crm: false, os: true, osVisualizar:true, osCriar:true, osEditar:true, osExcluir:true, financeiro: false, financeiroVisualizar:false, financeiroCriar:false, financeiroBaixar:false, financeiroExcluir:false, financeiroRelatorios:false, enviarEmail: false, backup: false, whatsapp: false, relatorios: false, configuracoes: false }
     };
 
     // ---- Perfis e permissões na nuvem ----
@@ -603,6 +603,7 @@ async function carregarChamadosDaNuvem() {
 
     async function logout() {
       registrarLog('saiu do sistema');
+      if (canalProcessosEquipe) { await supabaseClient.removeChannel(canalProcessosEquipe); canalProcessosEquipe = null; }
       await supabaseClient.auth.signOut();
       usuarioLogado = null;
       document.getElementById('appContainer').classList.add('hidden');
@@ -759,7 +760,7 @@ async function carregarChamadosDaNuvem() {
       tbody.innerHTML = '';
       if (!usuarioLogado || !usuarioLogado.permissoes?.usuarios) return;
 
-      const rotulos = { dashboard: 'Dashboard', clientes: 'Clientes', novoChamado: 'Novo Chamado', novoCliente: 'Novo Cliente', novoTecnico: 'Novo Técnico', usuarios: 'Usuários', crm:'CRM Comercial', os:'Ordens de serviço', financeiro:'Financeiro', enviarEmail:'Enviar dossiês', backup:'Backup', whatsapp:'WhatsApp', relatorios: 'Relatórios', configuracoes:'Configurações' };
+      const rotulos = { dashboard: 'Dashboard', clientes: 'Clientes', novoChamado: 'Novo Chamado', novoCliente: 'Novo Cliente', novoTecnico: 'Novo Técnico', usuarios: 'Usuários', crm:'CRM Comercial', os:'Ordens de serviço', osVisualizar:'OS: visualizar', osCriar:'OS: criar', osEditar:'OS: editar', osExcluir:'OS: excluir próprias', financeiro:'Financeiro', financeiroVisualizar:'Financeiro: visualizar', financeiroCriar:'Financeiro: criar/editar', financeiroBaixar:'Financeiro: dar baixa', financeiroExcluir:'Financeiro: excluir', financeiroRelatorios:'Financeiro: relatórios', enviarEmail:'Enviar dossiês', backup:'Backup', whatsapp:'WhatsApp', relatorios: 'Relatórios', configuracoes:'Configurações' };
       try {
         const { perfis, convites } = await buscarUsuariosNuvem();
         const itens = [
@@ -811,6 +812,7 @@ async function carregarChamadosDaNuvem() {
 
     // ---- Backup real dos dados de negócio do Supabase ----
     const TABELAS_BACKUP = ['clientes','tecnicos','chamados','leads','lead_interacoes','chamado_interacoes','respostas_modelo','base_conhecimento','processos_internos','processo_execucoes','equipamentos','ordens_servico','os_itens','financeiro_lancamentos','financeiro_fornecedores','financeiro_recorrencias','financeiro_pagamentos','financeiro_anexos','financeiro_caixas','financeiro_caixa_movimentos','financeiro_contas','financeiro_transferencias','financeiro_ofx_importacoes','financeiro_ofx_movimentos','avisos_internos','chamado_tempos'];
+    TABELAS_BACKUP.splice(TABELAS_BACKUP.indexOf('processo_execucoes'),0,'processo_responsaveis','processo_checklist_itens','processo_checklist_historico');
     function podeGerenciarBackup(){return usuarioLogado?.perfil==='admin'||usuarioLogado?.permissoes?.backup===true}
     async function exportarBackup() {
       if(!podeGerenciarBackup())return alert('Somente administradores autorizados podem exportar o backup.');
@@ -872,6 +874,8 @@ async function carregarChamadosDaNuvem() {
         ]);
         renderizarUsuarios();
         renderizarLog();
+        await carregarProcessos(true);
+        await iniciarProcessosTempoReal();
         await carregarDashboardPersonalizado();
         await iniciarNotificacoesTempoReal();
       } catch (e) {
@@ -2192,7 +2196,7 @@ async function converterLeadCliente(){
       const ids=[...new Set((interacoes||[]).map(i=>i.chamado_id))];let protocolos={};
       if(ids.length){const{data:chamados}=await supabaseClient.from('chamados').select('id,protocolo').in('id',ids);(chamados||[]).forEach(c=>protocolos[c.id]=c.protocolo)}
       const retornos=(interacoes||[]).map(i=>{const vencido=new Date(i.proximo_contato).getTime()<agora;return{id:`retorno-${i.id}-${i.proximo_contato}`,tipo:vencido?'danger':'warning',titulo:vencido?'Retorno atrasado':'Próximo contato',texto:`Chamado ${protocolos[i.chamado_id]||'#'+i.chamado_id}: ${i.descricao.slice(0,100)}`,tempo:formatarDataHoraInteracao(i.proximo_contato),chamado_id:i.chamado_id}});
-      const tarefas=(processos||[]).filter(p=>pertenceAoUsuario(p.responsavel_nome)||usuarioLogado.perfil==='admin').map(p=>{const vencido=new Date(p.proxima_execucao).getTime()<agora;return{id:`processo-${p.id}-${p.proxima_execucao}`,tipo:vencido?'danger':'warning',titulo:vencido?'Processo atrasado':'Processo próximo',texto:p.titulo,tempo:formatarDataHoraInteracao(p.proxima_execucao)}});
+      const tarefas=(processos||[]).filter(p=>processoAtribuidoAoUsuario(processosInternos.find(x=>x.id===p.id))||podeAdministrarProcessos()).map(p=>{const vencido=new Date(p.proxima_execucao).getTime()<agora;return{id:`processo-${p.id}-${p.proxima_execucao}`,tipo:vencido?'danger':'warning',titulo:vencido?'Processo atrasado':'Processo próximo',texto:p.titulo,tempo:formatarDataHoraInteracao(p.proxima_execucao)}});
       const sla=todosChamadosOperacionais().filter(c=>c.status!=='Resolvido'&&c.abertura&&(pertenceAoUsuario(c.tecnico)||usuarioLogado.perfil==='admin')).map(c=>{const horas=(agora-new Date(c.abertura).getTime())/36e5,limite=c.prioridade.toLowerCase().includes('alta')?(Number(localStorage.getItem('help_crm_sla_critico'))||4):(Number(localStorage.getItem('help_crm_sla_normal'))||24);return{c,horas,limite}}).filter(x=>x.horas>=x.limite).map(x=>({id:`sla-${x.c.id}-${x.limite}`,tipo:'danger',titulo:'SLA ultrapassado',texto:`${x.c.protocolo} · ${x.c.cliente} está há ${Math.floor(x.horas)}h em aberto.`,tempo:'Ação necessária',chamado_id:x.c.id}));
       const nuvem=(persistidas||[]).map(n=>({id:n.id,tipo:n.tipo==='atribuicao'?'info':'warning',titulo:n.titulo,texto:n.mensagem,tempo:formatarDataHoraInteracao(n.criado_em),chamado_id:n.chamado_id,persistida:true}));
       notificacoesOperacionais=[...nuvem,...sla,...retornos,...tarefas];
@@ -2225,10 +2229,18 @@ async function converterLeadCliente(){
     });
     document.addEventListener('click',function(e){const wrap=document.querySelector('.notification-wrap');if(wrap&&!wrap.contains(e.target))fecharNotificacoes()});
 
-    // ---- Processos internos recorrentes ----
+    // ---- Processos internos recorrentes e colaborativos ----
     let processosInternos = [];
     let execucoesProcessos = [];
+    let usuariosAtivosProcessos = [];
+    let historicoChecklistProcessos = [];
     let processoEditandoId = null;
+    let responsaveisProcessoSelecionados = new Set();
+    let responsaveisProcessoOriginais = [];
+    let checklistProcessoOriginal = '';
+    let processosCarregados = false;
+    let canalProcessosEquipe = null;
+    let recarregarProcessosTimer = null;
 
     function dataLocalParaInput(valor) {
       if (!valor) return '';
@@ -2238,22 +2250,65 @@ async function converterLeadCliente(){
     function formatarExecucaoProcesso(valor) {
       return new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date(valor));
     }
+    function podeAdministrarProcessos(){return usuarioLogado?.perfil==='admin'||usuarioLogado?.permissoes?.usuarios===true}
+    function idsResponsaveisProcesso(p){return (p?.responsaveis||[]).map(r=>r.usuario_id)}
+    function processoAtribuidoAoUsuario(p){return idsResponsaveisProcesso(p).includes(usuarioLogado?.id)}
+    function podeEditarProcesso(p){return !!p&&(p.criado_por===usuarioLogado?.id||podeAdministrarProcessos())}
+    function podeInteragirChecklistProcesso(p){return !!p&&(processoAtribuidoAoUsuario(p)||podeAdministrarProcessos())}
+    function nomesResponsaveisProcesso(p){const nomes=(p?.responsaveis||[]).map(r=>r.nome).filter(Boolean);return nomes.length?nomes:(p?.responsavel_nome?[p.responsavel_nome]:[])}
     function preencherResponsaveisProcessos() {
-      const nomes=[...new Set([...document.querySelectorAll('#mTecnico option')].map(o=>o.value).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
-      if(usuarioLogado?.usuario&&!nomes.includes(usuarioLogado.usuario))nomes.unshift(usuarioLogado.usuario);
-      const select=document.getElementById('processoResponsavel'), filtro=document.getElementById('filtroProcessosResponsavel');
-      if(select){const atual=select.value;select.innerHTML=nomes.map(n=>`<option>${escaparHtml(n)}</option>`).join('');if(nomes.includes(atual))select.value=atual}
-      if(filtro){const atual=filtro.value;filtro.innerHTML='<option value="">Todos os responsáveis</option>'+nomes.map(n=>`<option>${escaparHtml(n)}</option>`).join('');if(nomes.includes(atual))filtro.value=atual}
+      const filtro=document.getElementById('filtroProcessosResponsavel');
+      if(filtro){
+        const atual=filtro.value;
+        filtro.innerHTML='<option value="">Todos os responsáveis</option>'+usuariosAtivosProcessos.map(u=>`<option value="${u.user_id}">${escaparHtml(u.nome)}</option>`).join('');
+        if(usuariosAtivosProcessos.some(u=>u.user_id===atual))filtro.value=atual;
+      }
+      renderizarSeletorResponsaveisProcesso();
     }
-    async function carregarProcessos() {
-      const lista=document.getElementById('listaProcessos');if(lista)lista.innerHTML='<div class="processos-vazio">Carregando processos...</div>';
+    function renderizarSeletorResponsaveisProcesso(){
+      const lista=document.getElementById('processoResponsaveisLista'),resumo=document.getElementById('processoResponsaveisResumo');if(!lista||!resumo)return;
+      lista.innerHTML=usuariosAtivosProcessos.map(u=>`<label class="processo-responsavel-opcao"><input type="checkbox" value="${u.user_id}" ${responsaveisProcessoSelecionados.has(u.user_id)?'checked':''} onchange="alternarResponsavelProcesso('${u.user_id}',this.checked)"><span>${escaparHtml(u.nome)}</span></label>`).join('')||'<span>Nenhum usuário ativo encontrado.</span>';
+      const nomes=usuariosAtivosProcessos.filter(u=>responsaveisProcessoSelecionados.has(u.user_id)).map(u=>u.nome);
+      resumo.textContent=nomes.length?`Selecionados: ${nomes.join(' • ')}`:'Selecione pelo menos um usuário ativo.';
+      const todos=usuariosAtivosProcessos.length>0&&nomes.length===usuariosAtivosProcessos.length,soEu=nomes.length===1&&responsaveisProcessoSelecionados.has(usuarioLogado?.id);
+      document.querySelectorAll('[data-responsaveis-rapido]').forEach(b=>b.classList.toggle('ativo',(b.dataset.responsaveisRapido==='eu'&&soEu)||(b.dataset.responsaveisRapido==='equipe'&&todos)||(b.dataset.responsaveisRapido==='selecionar'&&!soEu&&!todos&&nomes.length>0)));
+      renderizarIcones();
+    }
+    function alternarResponsavelProcesso(id,selecionado){if(selecionado)responsaveisProcessoSelecionados.add(id);else responsaveisProcessoSelecionados.delete(id);renderizarSeletorResponsaveisProcesso()}
+    function selecionarResponsaveisRapido(tipo){
+      if(tipo==='eu')responsaveisProcessoSelecionados=new Set(usuarioLogado?.id?[usuarioLogado.id]:[]);
+      else if(tipo==='equipe')responsaveisProcessoSelecionados=new Set(usuariosAtivosProcessos.map(u=>u.user_id));
+      else if(tipo==='selecionar'&&!responsaveisProcessoSelecionados.size)responsaveisProcessoSelecionados=new Set();
+      renderizarSeletorResponsaveisProcesso();
+      if(tipo==='selecionar')document.getElementById('processoResponsaveisLista')?.scrollIntoView({block:'nearest'});
+    }
+    function agendarRecargaProcessos(){clearTimeout(recarregarProcessosTimer);recarregarProcessosTimer=setTimeout(async()=>{await carregarProcessos(true);if(!document.getElementById('visaoMeuTrabalho')?.classList.contains('hidden'))renderizarMeuTrabalho()},180)}
+    async function iniciarProcessosTempoReal(){
+      if(!usuarioLogado)return;if(canalProcessosEquipe)await supabaseClient.removeChannel(canalProcessosEquipe);
+      canalProcessosEquipe=supabaseClient.channel(`processos-equipe-${usuarioLogado.id}`)
+        .on('postgres_changes',{event:'*',schema:'public',table:'processo_checklist_itens'},agendarRecargaProcessos)
+        .on('postgres_changes',{event:'*',schema:'public',table:'processo_responsaveis'},agendarRecargaProcessos)
+        .subscribe();
+    }
+    async function carregarProcessos(silencioso=false) {
+      const lista=document.getElementById('listaProcessos');if(lista&&!silencioso)lista.innerHTML='<div class="processos-vazio">Carregando processos...</div>';
       try{
-        preencherResponsaveisProcessos();
-        const [{data:p,error:ep},{data:e,error:ee}]=await Promise.all([
+        const [{data:p,error:ep},{data:e,error:ee},{data:r,error:er},{data:i,error:ei},{data:h,error:eh},{data:u,error:eu}]=await Promise.all([
           supabaseClient.from('processos_internos').select('*').order('proxima_execucao'),
-          supabaseClient.from('processo_execucoes').select('*').order('concluido_em',{ascending:false})
+          supabaseClient.from('processo_execucoes').select('*').order('concluido_em',{ascending:false}),
+          supabaseClient.from('processo_responsaveis').select('processo_id,usuario_id,atribuido_em'),
+          supabaseClient.from('processo_checklist_itens').select('*').order('ordem'),
+          supabaseClient.from('processo_checklist_historico').select('*').order('ocorrido_em',{ascending:false}).limit(500),
+          supabaseClient.rpc('listar_usuarios_ativos_processo')
         ]);
-        if(ep)throw ep;if(ee)throw ee;processosInternos=p||[];execucoesProcessos=e||[];renderizarProcessos();
+        if(ep)throw ep;if(ee)throw ee;if(er)throw er;if(ei)throw ei;if(eh)throw eh;if(eu)throw eu;
+        usuariosAtivosProcessos=u||[];const usuariosPorId=Object.fromEntries(usuariosAtivosProcessos.map(x=>[x.user_id,x]));
+        processosInternos=(p||[]).map(processo=>({
+          ...processo,
+          responsaveis:(r||[]).filter(x=>x.processo_id===processo.id).map(x=>({...x,nome:usuariosPorId[x.usuario_id]?.nome||'Usuário inativo'})),
+          checklistItens:(i||[]).filter(x=>x.processo_id===processo.id)
+        }));
+        execucoesProcessos=e||[];historicoChecklistProcessos=h||[];processosCarregados=true;preencherResponsaveisProcessos();renderizarProcessos();
       }catch(erro){console.error(erro);if(lista)lista.innerHTML=`<div class="processos-vazio erro">Não foi possível carregar os processos: ${escaparHtml(erro.message)}</div>`}
     }
     function atualizarResumoProcessos(){
@@ -2271,32 +2326,51 @@ async function converterLeadCliente(){
     function renderizarProcessos(){
       const lista=document.getElementById('listaProcessos');if(!lista)return;atualizarResumoProcessos();
       const termo=(document.getElementById('buscaProcessos')?.value||'').trim().toLowerCase(),status=document.getElementById('filtroProcessosStatus')?.value||'',resp=document.getElementById('filtroProcessosResponsavel')?.value||'';
-      const itens=processosInternos.filter(p=>(!termo||`${p.titulo} ${p.descricao} ${p.responsavel_nome}`.toLowerCase().includes(termo))&&(!status||p.status===status)&&(!resp||p.responsavel_nome===resp));
+      const itens=processosInternos.filter(p=>{const nomes=nomesResponsaveisProcesso(p);return(!termo||`${p.titulo} ${p.descricao} ${nomes.join(' ')}`.toLowerCase().includes(termo))&&(!status||p.status===status)&&(!resp||idsResponsaveisProcesso(p).includes(resp))});
       if(!itens.length){lista.innerHTML='<div class="processos-vazio"><i data-lucide="clipboard-list"></i><strong>Nenhum processo encontrado</strong><span>Crie uma rotina ou ajuste os filtros.</span></div>';renderizarIcones();return}
       lista.innerHTML='';itens.forEach(p=>{
-        const agora=new Date(), prazo=new Date(p.proxima_execucao), atrasado=!['Concluída','Pausada'].includes(p.status)&&prazo<agora, historico=execucoesProcessos.filter(e=>e.processo_id===p.id).slice(0,5);
+        const agora=new Date(), prazo=new Date(p.proxima_execucao), atrasado=!['Concluída','Pausada'].includes(p.status)&&prazo<agora, podeInteragir=podeInteragirChecklistProcesso(p),podeEditar=podeEditarProcesso(p),atribuido=processoAtribuidoAoUsuario(p);
+        const eventos=[...execucoesProcessos.filter(e=>e.processo_id===p.id).map(e=>({tipo:'execucao',data:e.concluido_em,nome:e.executado_por_nome,texto:e.observacao||'Execução concluída'})),...historicoChecklistProcessos.filter(e=>e.processo_id===p.id).map(e=>({tipo:'checklist',data:e.ocorrido_em,nome:e.usuario_nome,texto:`${e.acao==='marcou'?'Marcou':'Desmarcou'}: ${e.item_texto}`}))].sort((a,b)=>new Date(b.data)-new Date(a.data));
         const card=document.createElement('article');card.className=`processo-card ${atrasado?'atrasado':''}`;
-        const checklist=(p.checklist||[]).map((item,i)=>`<label class="processo-check"><input type="checkbox" data-processo-check="${p.id}" data-index="${i}" ${item.concluido?'checked':''}><span>${escaparHtml(item.texto)}</span></label>`).join('');
-        card.innerHTML=`<div class="processo-card-top"><div><div class="processo-badges"><span class="processo-status status-${p.status.replaceAll(' ','-').toLowerCase()}">${escaparHtml(p.status)}</span><span class="processo-prioridade prioridade-${p.prioridade.toLowerCase()}">${escaparHtml(p.prioridade)}</span>${atrasado?'<span class="processo-atrasado">Atrasado</span>':''}</div><h3>${escaparHtml(p.titulo)}</h3><p>${escaparHtml(p.descricao||'Sem descrição')}</p></div><div class="processo-card-acoes"><button title="Editar" onclick="abrirModalProcesso('${p.id}')"><i data-lucide="pencil"></i></button><button title="Excluir" onclick="excluirProcesso('${p.id}')"><i data-lucide="trash-2"></i></button></div></div><div class="processo-meta"><span><i data-lucide="user"></i>${escaparHtml(p.responsavel_nome)}</span><span><i data-lucide="calendar-clock"></i>${formatarExecucaoProcesso(p.proxima_execucao)}</span><span><i data-lucide="repeat-2"></i>${escaparHtml(rotuloRecorrencia(p))}</span></div>${checklist?`<div class="processo-checklist">${checklist}</div>`:''}${p.observacoes?`<div class="processo-observacoes"><i data-lucide="sticky-note"></i>${escaparHtml(p.observacoes)}</div>`:''}<div class="processo-card-rodape"><button class="btn btn-secondary" onclick="alterarStatusProcesso('${p.id}','${p.status==='Pausada'?'Pendente':'Pausada'}')"><i data-lucide="${p.status==='Pausada'?'play':'pause'}"></i>${p.status==='Pausada'?'Retomar':'Pausar'}</button><button class="btn btn-primary" onclick="concluirProcesso('${p.id}')"><i data-lucide="check"></i>Concluir execução</button></div>${historico.length?`<details class="processo-historico"><summary>Últimas execuções (${execucoesProcessos.filter(e=>e.processo_id===p.id).length})</summary>${historico.map(e=>`<div><i data-lucide="check-circle"></i><span><strong>${escaparHtml(e.executado_por_nome)}</strong><small>${formatarExecucaoProcesso(e.concluido_em)}${e.observacao?' · '+escaparHtml(e.observacao):''}</small></span></div>`).join('')}</details>`:''}`;
+        const checklist=(p.checklistItens||[]).map(item=>`<label class="processo-check ${podeInteragir?'':'bloqueado'}"><input type="checkbox" ${item.concluido?'checked':''} ${podeInteragir?'':'disabled'} onchange="alternarItemChecklistProcesso('${item.id}',this.checked,this)"><span>${escaparHtml(item.texto)}${item.concluido&&item.marcado_por_nome?`<small class="processo-check-detalhe">Marcado por ${escaparHtml(item.marcado_por_nome)} · ${formatarExecucaoProcesso(item.marcado_em)}</small>`:''}</span></label>`).join('');
+        const chips=nomesResponsaveisProcesso(p).map(n=>`<span class="processo-responsavel-chip"><i data-lucide="user"></i>${escaparHtml(n)}</span>`).join('');
+        card.innerHTML=`<div class="processo-card-top"><div><div class="processo-badges"><span class="processo-status status-${p.status.replaceAll(' ','-').toLowerCase()}">${escaparHtml(p.status)}</span><span class="processo-prioridade prioridade-${p.prioridade.toLowerCase()}">${escaparHtml(p.prioridade)}</span>${atrasado?'<span class="processo-atrasado">Atrasado</span>':''}${atribuido?'<span class="processo-status processo-atribuido-mim">Atribuído a mim</span>':''}</div><h3>${escaparHtml(p.titulo)}</h3><p>${escaparHtml(p.descricao||'Sem descrição')}</p></div>${podeEditar?`<div class="processo-card-acoes"><button title="Editar" onclick="abrirModalProcesso('${p.id}')"><i data-lucide="pencil"></i></button><button title="Excluir" onclick="excluirProcesso('${p.id}')"><i data-lucide="trash-2"></i></button></div>`:''}</div><div class="processo-meta"><span class="processo-responsaveis-chips"><strong>Responsáveis:</strong>${chips}</span><span><i data-lucide="calendar-clock"></i>${formatarExecucaoProcesso(p.proxima_execucao)}</span><span><i data-lucide="repeat-2"></i>${escaparHtml(rotuloRecorrencia(p))}</span></div>${checklist?`<div class="processo-checklist">${checklist}</div>`:''}${p.observacoes?`<div class="processo-observacoes"><i data-lucide="sticky-note"></i>${escaparHtml(p.observacoes)}</div>`:''}${podeInteragir?`<div class="processo-card-rodape"><button class="btn btn-secondary" onclick="alterarStatusProcesso('${p.id}','${p.status==='Pausada'?'Pendente':'Pausada'}')"><i data-lucide="${p.status==='Pausada'?'play':'pause'}"></i>${p.status==='Pausada'?'Retomar':'Pausar'}</button><button class="btn btn-primary" onclick="concluirProcesso('${p.id}')"><i data-lucide="check"></i>Concluir execução</button></div>`:''}${eventos.length?`<details class="processo-historico"><summary>Histórico recente (${eventos.length})</summary>${eventos.slice(0,8).map(e=>`<div class="${e.tipo==='checklist'?'evento-checklist':''}"><i data-lucide="${e.tipo==='checklist'?'list-checks':'check-circle'}"></i><span><strong>${escaparHtml(e.nome)}</strong><small>${formatarExecucaoProcesso(e.data)} · ${escaparHtml(e.texto)}</small></span></div>`).join('')}</details>`:''}`;
         lista.appendChild(card);
       });renderizarIcones();
     }
     function atualizarCamposRecorrencia(){const f=document.getElementById('processoFrequencia').value;document.getElementById('processoDiasWrap').classList.toggle('hidden',f!=='Semanal');document.getElementById('processoIntervaloWrap').classList.toggle('hidden',f!=='Personalizada')}
     function abrirModalProcesso(id=null){
-      processoEditandoId=id;preencherResponsaveisProcessos();const p=processosInternos.find(x=>x.id===id);
+      const p=processosInternos.find(x=>x.id===id);if(p&&!podeEditarProcesso(p)){alert('Somente o criador ou um administrador pode editar os dados deste processo.');return}
+      processoEditandoId=id;responsaveisProcessoOriginais=idsResponsaveisProcesso(p);responsaveisProcessoSelecionados=new Set(p?responsaveisProcessoOriginais:(usuarioLogado?.id?[usuarioLogado.id]:[]));preencherResponsaveisProcessos();
       document.getElementById('processoModalTitulo').textContent=p?'Editar processo interno':'Novo processo interno';
-      document.getElementById('processoTitulo').value=p?.titulo||'';document.getElementById('processoResponsavel').value=p?.responsavel_nome||usuarioLogado?.usuario||'';document.getElementById('processoPrioridade').value=p?.prioridade||'Normal';document.getElementById('processoFrequencia').value=p?.frequencia||'Única';document.getElementById('processoProximaExecucao').value=dataLocalParaInput(p?.proxima_execucao||new Date(Date.now()+3600000));document.getElementById('processoIntervalo').value=p?.intervalo_dias||7;document.getElementById('processoDescricao').value=p?.descricao||'';document.getElementById('processoChecklist').value=(p?.checklist||[]).map(i=>i.texto).join('\n');document.getElementById('processoObservacoes').value=p?.observacoes||'';
+      checklistProcessoOriginal=(p?.checklistItens||[]).map(i=>i.texto).join('\n');document.getElementById('processoTitulo').value=p?.titulo||'';document.getElementById('processoPrioridade').value=p?.prioridade||'Normal';document.getElementById('processoFrequencia').value=p?.frequencia||'Única';document.getElementById('processoProximaExecucao').value=dataLocalParaInput(p?.proxima_execucao||new Date(Date.now()+3600000));document.getElementById('processoIntervalo').value=p?.intervalo_dias||7;document.getElementById('processoDescricao').value=p?.descricao||'';document.getElementById('processoChecklist').value=checklistProcessoOriginal;document.getElementById('processoObservacoes').value=p?.observacoes||'';
       document.querySelectorAll('#processoDiasWrap input').forEach(c=>c.checked=(p?.dias_semana||[]).includes(Number(c.value)));atualizarCamposRecorrencia();document.getElementById('modalProcesso').classList.add('active');renderizarIcones();
     }
-    function fecharModalProcesso(){document.getElementById('modalProcesso')?.classList.remove('active');processoEditandoId=null}
+    function fecharModalProcesso(){document.getElementById('modalProcesso')?.classList.remove('active');processoEditandoId=null;responsaveisProcessoSelecionados=new Set();responsaveisProcessoOriginais=[];checklistProcessoOriginal=''}
+    async function sincronizarResponsaveisProcesso(id,novos,atuais=[]){
+      const adicionar=novos.filter(x=>!atuais.includes(x)),remover=atuais.filter(x=>!novos.includes(x));
+      if(adicionar.length){const{error}=await supabaseClient.from('processo_responsaveis').insert(adicionar.map(usuario_id=>({processo_id:id,usuario_id,atribuido_por:usuarioLogado.id})));if(error)throw error}
+      if(remover.length){const{error}=await supabaseClient.from('processo_responsaveis').delete().eq('processo_id',id).in('usuario_id',remover);if(error)throw error}
+    }
+    async function substituirChecklistProcesso(id,textos){
+      const{error:ed}=await supabaseClient.from('processo_checklist_itens').delete().eq('processo_id',id);if(ed)throw ed;
+      if(textos.length){const{error:ei}=await supabaseClient.from('processo_checklist_itens').insert(textos.map((texto,ordem)=>({processo_id:id,ordem,texto})));if(ei)throw ei}
+    }
     async function salvarProcesso(){
-      const titulo=document.getElementById('processoTitulo').value.trim(),responsavel=document.getElementById('processoResponsavel').value,valorData=document.getElementById('processoProximaExecucao').value,frequencia=document.getElementById('processoFrequencia').value;
-      if(!titulo||!responsavel||!valorData){alert('Preencha título, responsável e próxima execução.');return}
+      const titulo=document.getElementById('processoTitulo').value.trim(),responsaveis=[...responsaveisProcessoSelecionados],valorData=document.getElementById('processoProximaExecucao').value,frequencia=document.getElementById('processoFrequencia').value;
+      if(!titulo||!responsaveis.length||!valorData){alert('Preencha título, escolha ao menos um responsável e informe a próxima execução.');return}
       const dias=[...document.querySelectorAll('#processoDiasWrap input:checked')].map(c=>Number(c.value));if(frequencia==='Semanal'&&!dias.length){alert('Escolha pelo menos um dia da semana.');return}
-      const checklist=document.getElementById('processoChecklist').value.split('\n').map(x=>x.trim()).filter(Boolean).map(texto=>({texto,concluido:false}));
-      const dados={titulo,descricao:document.getElementById('processoDescricao').value.trim(),responsavel_nome:responsavel,prioridade:document.getElementById('processoPrioridade').value,frequencia,dias_semana:dias,intervalo_dias:frequencia==='Personalizada'?Number(document.getElementById('processoIntervalo').value):null,proxima_execucao:new Date(valorData).toISOString(),checklist,observacoes:document.getElementById('processoObservacoes').value.trim(),atualizado_em:new Date().toISOString()};
+      const textosChecklist=document.getElementById('processoChecklist').value.split('\n').map(x=>x.trim()).filter(Boolean),textoChecklistNormalizado=textosChecklist.join('\n');
+      const nomes=usuariosAtivosProcessos.filter(u=>responsaveis.includes(u.user_id)).map(u=>u.nome),dados={titulo,descricao:document.getElementById('processoDescricao').value.trim(),prioridade:document.getElementById('processoPrioridade').value,frequencia,dias_semana:dias,intervalo_dias:frequencia==='Personalizada'?Number(document.getElementById('processoIntervalo').value):null,proxima_execucao:new Date(valorData).toISOString(),observacoes:document.getElementById('processoObservacoes').value.trim(),atualizado_em:new Date().toISOString()};
       const botao=document.getElementById('btnSalvarProcesso');botao.disabled=true;
-      try{const q=processoEditandoId?supabaseClient.from('processos_internos').update(dados).eq('id',processoEditandoId):supabaseClient.from('processos_internos').insert({...dados,criado_por:usuarioLogado.id});const{error}=await q;if(error)throw error;registrarLog(`${processoEditandoId?'editou':'criou'} o processo ${titulo}`);fecharModalProcesso();await carregarProcessos()}
+      let id=processoEditandoId,criadoAgora=false;
+      try{
+        if(id){const{error}=await supabaseClient.from('processos_internos').update(dados).eq('id',id);if(error)throw error}
+        else{const legado=textosChecklist.map(texto=>({texto,concluido:false})),{data,error}=await supabaseClient.from('processos_internos').insert({...dados,responsavel_nome:nomes.join(' • '),checklist:legado,criado_por:usuarioLogado.id}).select('id').single();if(error)throw error;id=data.id;criadoAgora=true}
+        await sincronizarResponsaveisProcesso(id,responsaveis,criadoAgora?[]:responsaveisProcessoOriginais);
+        if(criadoAgora||textoChecklistNormalizado!==checklistProcessoOriginal)await substituirChecklistProcesso(id,textosChecklist);
+        registrarLog(`${processoEditandoId?'editou':'criou'} o processo ${titulo}`);fecharModalProcesso();await carregarProcessos();
+      }
       catch(erro){alert('Não foi possível salvar o processo.\n\n'+erro.message)}finally{botao.disabled=false}
     }
     function calcularProximaExecucao(p,base){
@@ -2304,19 +2378,33 @@ async function converterLeadCliente(){
       if(p.frequencia==='Diária')d.setDate(d.getDate()+1);else if(p.frequencia==='Quinzenal')d.setDate(d.getDate()+15);else if(p.frequencia==='Mensal')d.setMonth(d.getMonth()+1);else if(p.frequencia==='Personalizada')d.setDate(d.getDate()+(p.intervalo_dias||1));else if(p.frequencia==='Semanal'){do{d.setDate(d.getDate()+1)}while(!dias.includes(d.getDay()))}return d;
     }
     async function concluirProcesso(id){
-      const p=processosInternos.find(x=>x.id===id);if(!p)return;const checks=[...document.querySelectorAll(`[data-processo-check="${id}"]`)],checklist=(p.checklist||[]).map((item,i)=>({...item,concluido:checks[i]?.checked||false}));if(checklist.length&&checklist.some(i=>!i.concluido)&&!confirm('Ainda existem itens não marcados. Deseja concluir mesmo assim?'))return;
-      const observacao=prompt('Observação desta execução (opcional):','');if(observacao===null)return;const agora=new Date(),unica=p.frequencia==='Única',atualizacao={ultima_execucao:agora.toISOString(),status:unica?'Concluída':'Pendente',checklist:unica?checklist:checklist.map(i=>({...i,concluido:false})),atualizado_em:agora.toISOString()};if(!unica)atualizacao.proxima_execucao=calcularProximaExecucao(p,new Date(Math.max(agora,new Date(p.proxima_execucao)))).toISOString();
-      try{const{error:e1}=await supabaseClient.from('processo_execucoes').insert({processo_id:id,executado_por:usuarioLogado.id,executado_por_nome:usuarioLogado.usuario,observacao,checklist});if(e1)throw e1;const{error:e2}=await supabaseClient.from('processos_internos').update(atualizacao).eq('id',id);if(e2)throw e2;registrarLog(`concluiu o processo ${p.titulo}`);await carregarProcessos()}catch(erro){alert('Não foi possível concluir o processo.\n\n'+erro.message)}
+      const p=processosInternos.find(x=>x.id===id);if(!p||!podeInteragirChecklistProcesso(p))return;const checklist=(p.checklistItens||[]).map(item=>({id:item.id,texto:item.texto,concluido:item.concluido,marcado_por:item.marcado_por,marcado_por_nome:item.marcado_por_nome,marcado_em:item.marcado_em}));if(checklist.length&&checklist.some(i=>!i.concluido)&&!confirm('Ainda existem itens não marcados. Deseja concluir mesmo assim?'))return;
+      const observacao=prompt('Observação desta execução (opcional):','');if(observacao===null)return;const agora=new Date(),unica=p.frequencia==='Única',atualizacao={ultima_execucao:agora.toISOString(),status:unica?'Concluída':'Pendente',atualizado_em:agora.toISOString()};if(!unica)atualizacao.proxima_execucao=calcularProximaExecucao(p,new Date(Math.max(agora,new Date(p.proxima_execucao)))).toISOString();
+      try{const{error:e1}=await supabaseClient.from('processo_execucoes').insert({processo_id:id,executado_por:usuarioLogado.id,executado_por_nome:usuarioLogado.usuario,observacao,checklist});if(e1)throw e1;const{error:e2}=await supabaseClient.from('processos_internos').update(atualizacao).eq('id',id);if(e2)throw e2;if(!unica){const{error:e3}=await supabaseClient.from('processo_checklist_itens').update({concluido:false}).eq('processo_id',id).eq('concluido',true);if(e3)throw e3}registrarLog(`concluiu o processo ${p.titulo}`);await carregarProcessos()}catch(erro){alert('Não foi possível concluir o processo.\n\n'+erro.message)}
     }
-    async function alterarStatusProcesso(id,status){const{error}=await supabaseClient.from('processos_internos').update({status,atualizado_em:new Date().toISOString()}).eq('id',id);if(error)alert(error.message);else await carregarProcessos()}
-    async function excluirProcesso(id){const p=processosInternos.find(x=>x.id===id);if(!p||!confirm(`Excluir o processo "${p.titulo}" e todo o histórico dele?`))return;const{error}=await supabaseClient.from('processos_internos').delete().eq('id',id);if(error)alert('Não foi possível excluir.\n\n'+error.message);else{registrarLog(`excluiu o processo ${p.titulo}`);await carregarProcessos()}}
+    async function alternarItemChecklistProcesso(id,concluido,input){
+      if(input)input.disabled=true;const{data,error}=await supabaseClient.from('processo_checklist_itens').update({concluido}).eq('id',id).select('id').maybeSingle();
+      if(error||!data){if(input){input.checked=!concluido;input.disabled=false}alert(error?.message||'Você não tem permissão para alterar este checklist.');return}
+      await carregarProcessos(true);if(!document.getElementById('visaoMeuTrabalho')?.classList.contains('hidden'))renderizarMeuTrabalho();
+    }
+    async function alterarStatusProcesso(id,status){const p=processosInternos.find(x=>x.id===id);if(!podeInteragirChecklistProcesso(p))return;const{error}=await supabaseClient.from('processos_internos').update({status,atualizado_em:new Date().toISOString()}).eq('id',id);if(error)alert(error.message);else await carregarProcessos()}
+    async function excluirProcesso(id){const p=processosInternos.find(x=>x.id===id);if(!p||!podeEditarProcesso(p)||!confirm(`Excluir o processo "${p.titulo}" e todo o histórico dele?`))return;const{error}=await supabaseClient.from('processos_internos').delete().eq('id',id);if(error)alert('Não foi possível excluir.\n\n'+error.message);else{registrarLog(`excluiu o processo ${p.titulo}`);await carregarProcessos()}}
 
     // Fluxo diário: Meu trabalho, Kanban, cronômetro, menções e alertas nativos
     let canalNotificacoesEquipe=null, cronometroIntervalo=null;
     function todosChamadosOperacionais(){return [...document.querySelectorAll('#tabelaChamados tbody tr')].filter(l=>l.cells?.length>=13).map(l=>({el:l,id:l.dataset.idNuvem||'',protocolo:l.cells[0].innerText.trim(),abertura:l.dataset.aberturaIso||'',cliente:l.cells[2].innerText.trim(),unidade:l.cells[3].innerText.trim(),tecnico:l.cells[7].innerText.trim(),modulo:l.cells[8].innerText.trim(),prioridade:l.cells[10].innerText.trim(),status:l.cells[11].innerText.trim(),erro:l.dataset.erro||''}))}
     function pertenceAoUsuario(nome){const tecnico=tecnicosNuvem.find(t=>(t.nome||'').toLowerCase().trim()===(nome||'').toLowerCase().trim());if(tecnico?.user_id)return tecnico.user_id===usuarioLogado?.id;const alvo=(nome||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(),eu=(usuarioLogado?.usuario||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();return alvo.split(/\W+/).filter(x=>x.length>=4).some(x=>eu.includes(x)||x.includes(eu.replace(/\d/g,'')))}
     function cardOperacionalChamado(c){return `<article class="trabalho-card ${c.prioridade.toLowerCase().includes('alta')?'alta':''}" onclick="abrirChamadoDashboard('${c.id}')"><div><span>${escaparHtml(c.protocolo)}</span><b class="badge ${c.status==='Resolvido'?'badge-resolvido':c.status==='Em Andamento'?'badge-andamento':'badge-pendente'}">${escaparHtml(c.status)}</b></div><h3>${escaparHtml(c.cliente)}</h3><p>${escaparHtml(c.erro||c.modulo)}</p><footer><span><i data-lucide="box"></i>${escaparHtml(c.modulo)}</span><span><i data-lucide="calendar"></i>${c.abertura?formatarExecucaoProcesso(c.abertura):'—'}</span></footer></article>`}
-    async function renderizarMeuTrabalho(){const lista=document.getElementById('meuTrabalhoLista'),resumo=document.getElementById('meuTrabalhoResumo');if(!lista||!resumo)return;const filtro=document.getElementById('meuTrabalhoFiltro')?.value||'abertos',todos=todosChamadosOperacionais().filter(c=>pertenceAoUsuario(c.tecnico)),itens=todos.filter(c=>filtro==='todos'||(filtro==='resolvidos'?c.status==='Resolvido':c.status!=='Resolvido'));const alta=todos.filter(c=>c.status!=='Resolvido'&&c.prioridade.toLowerCase().includes('alta')).length;const andamento=todos.filter(c=>c.status==='Em Andamento').length;let minutos=0;try{const ids=todos.map(c=>c.id).filter(Boolean);if(ids.length){const{data}=await supabaseClient.from('chamado_tempos').select('minutos').in('chamado_id',ids).eq('usuario_id',usuarioLogado.id);minutos=(data||[]).reduce((s,x)=>s+(x.minutos||0),0)}}catch(e){console.warn(e)}resumo.innerHTML=`<div><span>Minha fila</span><strong>${todos.filter(c=>c.status!=='Resolvido').length}</strong></div><div><span>Em andamento</span><strong>${andamento}</strong></div><div class="alerta"><span>Alta prioridade</span><strong>${alta}</strong></div><div><span>Tempo registrado</span><strong>${formatarMinutos(minutos)}</strong></div>`;lista.innerHTML=itens.length?itens.map(cardOperacionalChamado).join(''):'<div class="operacional-vazio"><i data-lucide="check-circle-2"></i><strong>Tudo em dia</strong><span>Nenhum chamado nesta visualização.</span></div>';renderizarIcones()}
+    function cardOperacionalProcesso(p){return `<article class="trabalho-card processo-trabalho ${p.prioridade.toLowerCase()==='alta'?'alta':''}" onclick="trocarAba('processos')"><div><span>PROCESSO INTERNO</span><b class="badge ${p.status==='Concluída'?'badge-resolvido':p.status==='Em andamento'?'badge-andamento':'badge-pendente'}">${escaparHtml(p.status)}</b></div><h3>${escaparHtml(p.titulo)}</h3><p>${escaparHtml(p.descricao||nomesResponsaveisProcesso(p).join(' • '))}</p><footer><span class="atribuido-mim"><i data-lucide="user-check"></i>Atribuído a mim</span><span><i data-lucide="calendar"></i>${formatarExecucaoProcesso(p.proxima_execucao)}</span></footer></article>`}
+    async function renderizarMeuTrabalho(){
+      const lista=document.getElementById('meuTrabalhoLista'),resumo=document.getElementById('meuTrabalhoResumo');if(!lista||!resumo)return;if(!processosCarregados)await carregarProcessos(true);
+      const filtro=document.getElementById('meuTrabalhoFiltro')?.value||'abertos',chamados=todosChamadosOperacionais().filter(c=>pertenceAoUsuario(c.tecnico)),processos=processosInternos.filter(processoAtribuidoAoUsuario);
+      const chamadosFiltrados=chamados.filter(c=>filtro==='todos'||(filtro==='resolvidos'?c.status==='Resolvido':c.status!=='Resolvido')),processosFiltrados=processos.filter(p=>filtro==='todos'||(filtro==='resolvidos'?p.status==='Concluída':p.status!=='Concluída'));
+      const abertosChamados=chamados.filter(c=>c.status!=='Resolvido'),abertosProcessos=processos.filter(p=>p.status!=='Concluída'),alta=abertosChamados.filter(c=>c.prioridade.toLowerCase().includes('alta')).length+abertosProcessos.filter(p=>p.prioridade.toLowerCase()==='alta').length,andamento=chamados.filter(c=>c.status==='Em Andamento').length+processos.filter(p=>p.status==='Em andamento').length;
+      let minutos=0;try{const ids=chamados.map(c=>c.id).filter(Boolean);if(ids.length){const{data}=await supabaseClient.from('chamado_tempos').select('minutos').in('chamado_id',ids).eq('usuario_id',usuarioLogado.id);minutos=(data||[]).reduce((s,x)=>s+(x.minutos||0),0)}}catch(e){console.warn(e)}
+      resumo.innerHTML=`<div><span>Minha fila</span><strong>${abertosChamados.length+abertosProcessos.length}</strong></div><div><span>Em andamento</span><strong>${andamento}</strong></div><div class="alerta"><span>Alta prioridade</span><strong>${alta}</strong></div><div><span>Tempo registrado</span><strong>${formatarMinutos(minutos)}</strong></div>`;
+      const cards=[...chamadosFiltrados.map(cardOperacionalChamado),...processosFiltrados.map(cardOperacionalProcesso)];lista.innerHTML=cards.length?cards.join(''):'<div class="operacional-vazio"><i data-lucide="check-circle-2"></i><strong>Tudo em dia</strong><span>Nenhum chamado ou processo nesta visualização.</span></div>';renderizarIcones();
+    }
     function preencherFiltroKanban(){const s=document.getElementById('kanbanTecnico');if(!s)return;const atual=s.value,nomes=[...new Set(todosChamadosOperacionais().map(c=>c.tecnico).filter(x=>x&&x!=='-'))].sort();s.innerHTML='<option value="">Todos os técnicos</option>'+nomes.map(n=>`<option>${escaparHtml(n)}</option>`).join('');s.value=atual}
     function renderizarKanban(){const board=document.getElementById('kanbanChamados');if(!board)return;preencherFiltroKanban();const tecnico=document.getElementById('kanbanTecnico')?.value||'',busca=(document.getElementById('kanbanBusca')?.value||'').toLowerCase(),colunas=['Pendente','Em Andamento','Aguardando Cliente','Resolvido'];const chamados=todosChamadosOperacionais().filter(c=>(!tecnico||c.tecnico===tecnico)&&(!busca||`${c.protocolo} ${c.cliente} ${c.modulo}`.toLowerCase().includes(busca)));board.innerHTML=colunas.map(status=>{const itens=chamados.filter(c=>c.status===status||(status==='Pendente'&&c.status==='Aberto'));return `<section class="kanban-coluna" data-status="${status}" ondragover="event.preventDefault()" ondrop="soltarChamadoKanban(event,'${status}')"><header><span class="kanban-status-dot status-${status.toLowerCase().replaceAll(' ','-')}"></span><h3>${status}</h3><b>${itens.length}</b></header><div>${itens.map(c=>`<article class="kanban-card" draggable="true" data-id="${c.id}" ondragstart="event.dataTransfer.setData('text/plain','${c.id}')" onclick="abrirChamadoDashboard('${c.id}')"><span>${escaparHtml(c.protocolo)}</span><h4>${escaparHtml(c.cliente)}</h4><p>${escaparHtml(c.modulo)}</p><footer><small>${escaparHtml(c.tecnico)}</small><b class="${c.prioridade.toLowerCase().includes('alta')?'alta':''}">${escaparHtml(c.prioridade)}</b></footer></article>`).join('')||'<div class="kanban-vazio">Solte um chamado aqui</div>'}</div></section>`}).join('');renderizarIcones()}
     async function soltarChamadoKanban(event,status){const permitidos=['Pendente','Em Andamento','Aguardando Cliente','Resolvido'];if(!permitidos.includes(status))return;const id=event.dataTransfer.getData('text/plain'),c=todosChamadosOperacionais().find(x=>String(x.id)===String(id));if(!c||c.status===status)return;event.preventDefault();if(status==='Resolvido'){abrirChamadoDashboard(id);document.getElementById('mStatus').value='Resolvido';atualizarChecklistEncerramento();alert('Complete o checklist de encerramento antes de resolver.');return}const{error}=await supabaseClient.from('chamados').update({status,fechamento_em:null}).eq('id',id);if(error){alert(error.message);return}definirBadge(c.el.cells[11],status==='Em Andamento'?'badge-andamento':'badge-pendente',status);c.el.cells[12].innerText='-';c.el.dataset.fechamentoIso='';renderizarKanban();atualizarMetricas()}
@@ -2436,9 +2524,9 @@ async function converterLeadCliente(){
       try{const [{data:pref},{data:interacoes},{data:processos},{data:avisos}]=await Promise.all([
         supabaseClient.from('dashboard_preferencias').select('widgets,periodo').eq('user_id',usuarioLogado.id).maybeSingle(),
         supabaseClient.from('chamado_interacoes').select('chamado_id,proximo_contato,descricao,tipo').not('proximo_contato','is',null).order('proximo_contato'),
-        supabaseClient.from('processos_internos').select('id,titulo,responsavel_nome,prioridade,status,proxima_execucao,criado_por').eq('criado_por',usuarioLogado.id).order('proxima_execucao'),
+        supabaseClient.from('processos_internos').select('id,titulo,responsavel_nome,prioridade,status,proxima_execucao,criado_por').order('proxima_execucao'),
         supabaseClient.from('avisos_internos').select('*').or(`expira_em.is.null,expira_em.gt.${new Date().toISOString()}`).order('criado_em',{ascending:false})
-      ]);dashboardConfig=normalizarDashboardConfig(pref?.widgets||dashboardConfig);dashboardPeriodoAtual=pref?.periodo||'hoje';dashboardInteracoes=interacoes||[];dashboardProcessos=processos||[];dashboardAvisos=avisos||[];dashboardCarregado=true;if(periodo)periodo.value=dashboardPeriodoAtual;renderizarDashboardPersonalizado()}catch(erro){console.error('Dashboard:',erro);renderizarDashboardPersonalizado()}
+      ]);dashboardConfig=normalizarDashboardConfig(pref?.widgets||dashboardConfig);dashboardPeriodoAtual=pref?.periodo||'hoje';dashboardInteracoes=interacoes||[];dashboardProcessos=(processos||[]).filter(p=>processoAtribuidoAoUsuario(processosInternos.find(x=>x.id===p.id))||podeAdministrarProcessos());dashboardAvisos=avisos||[];dashboardCarregado=true;if(periodo)periodo.value=dashboardPeriodoAtual;renderizarDashboardPersonalizado()}catch(erro){console.error('Dashboard:',erro);renderizarDashboardPersonalizado()}
     }
     async function alterarPeriodoDashboard(valor){dashboardPeriodoAtual=valor;renderizarDashboardPersonalizado();if(usuarioLogado)await supabaseClient.from('dashboard_preferencias').upsert({user_id:usuarioLogado.id,widgets:dashboardConfig,periodo:valor,atualizado_em:new Date().toISOString()})}
     function abrirPersonalizacaoDashboard(){const modal=document.getElementById('modalDashboardPersonalizar');if(!modal)return;modal.classList.add('active');renderizarConfigDashboard();renderizarIcones()}

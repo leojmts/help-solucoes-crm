@@ -649,10 +649,19 @@
 
   <div id="modalProcesso" class="crm-modal-overlay" onclick="if(event.target===this) fecharModalProcesso()">
     <div class="crm-modal-content processo-modal" role="dialog" aria-modal="true" aria-labelledby="processoModalTitulo">
-      <div class="modal-header"><div><h2 id="processoModalTitulo">Novo processo interno</h2><p>Defina a rotina, o responsável e quando ela deve acontecer.</p></div><button class="modal-close" type="button" onclick="fecharModalProcesso()">×</button></div>
+      <div class="modal-header"><div><h2 id="processoModalTitulo">Novo processo interno</h2><p>Defina a rotina, os responsáveis e quando ela deve acontecer.</p></div><button class="modal-close" type="button" onclick="fecharModalProcesso()">×</button></div>
       <div class="processo-form-grid">
         <label class="crm-field processo-campo-largo"><span>Título *</span><input id="processoTitulo" maxlength="160" placeholder="Ex.: Manutenção preventiva na Ranhos"></label>
-        <label class="crm-field"><span>Responsável *</span><select id="processoResponsavel"></select></label>
+        <div class="crm-field processo-campo-largo processo-responsaveis-campo">
+          <span>Responsáveis *</span>
+          <div class="processo-responsaveis-atalhos" role="group" aria-label="Opções rápidas de responsáveis">
+            <button type="button" data-responsaveis-rapido="eu" onclick="selecionarResponsaveisRapido('eu')"><i data-lucide="user"></i>Só eu</button>
+            <button type="button" data-responsaveis-rapido="equipe" onclick="selecionarResponsaveisRapido('equipe')"><i data-lucide="users"></i>Toda a equipe</button>
+            <button type="button" data-responsaveis-rapido="selecionar" onclick="selecionarResponsaveisRapido('selecionar')"><i data-lucide="list-checks"></i>Selecionar usuários</button>
+          </div>
+          <div id="processoResponsaveisLista" class="processo-responsaveis-lista" aria-live="polite"></div>
+          <small id="processoResponsaveisResumo">Selecione pelo menos um usuário ativo.</small>
+        </div>
         <label class="crm-field"><span>Prioridade</span><select id="processoPrioridade"><option>Baixa</option><option selected>Normal</option><option>Alta</option></select></label>
         <label class="crm-field"><span>Frequência</span><select id="processoFrequencia" onchange="atualizarCamposRecorrencia()"><option>Única</option><option>Diária</option><option>Semanal</option><option>Quinzenal</option><option>Mensal</option><option>Personalizada</option></select></label>
         <label class="crm-field"><span>Próxima execução *</span><input id="processoProximaExecucao" type="datetime-local"></label>
@@ -727,6 +736,10 @@
           <label class="permissao-item"><input type="checkbox" id="permUsuarios" value="usuarios"> Gerenciar Usuários</label>
           <label class="permissao-item"><input type="checkbox" id="permCrm" value="crm"> CRM Comercial</label>
           <label class="permissao-item"><input type="checkbox" id="permOs" value="os"> Ordens de serviço</label>
+          <label class="permissao-item"><input type="checkbox" id="permOsVisualizar" value="osVisualizar"> OS: visualizar</label>
+          <label class="permissao-item"><input type="checkbox" id="permOsCriar" value="osCriar"> OS: criar</label>
+          <label class="permissao-item"><input type="checkbox" id="permOsEditar" value="osEditar"> OS: editar</label>
+          <label class="permissao-item"><input type="checkbox" id="permOsExcluir" value="osExcluir"> OS: excluir as próprias</label>
           <label class="permissao-item"><input type="checkbox" id="permFinanceiro" value="financeiro"> Financeiro</label>
           <label class="permissao-item"><input type="checkbox" id="permFinanceiroVisualizar" value="financeiroVisualizar"> Financeiro: visualizar</label>
           <label class="permissao-item"><input type="checkbox" id="permFinanceiroCriar" value="financeiroCriar"> Financeiro: criar/editar</label>
