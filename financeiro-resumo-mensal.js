@@ -59,9 +59,9 @@
     document.getElementById('finPeriodoInicio').value=localStorage.getItem(K_INICIO)||'';
     document.getElementById('finPeriodoFim').value=localStorage.getItem(K_FIM)||'';
     aplicarFiltro();
-    s.addEventListener('change',()=>{localStorage.setItem(K_PERIODO,s.value);aplicarFiltro();window.renderizarTabelaFinanceiro?.();window.finRenderResumo?.()});
-    document.getElementById('finPeriodoInicio').addEventListener('change',e=>{localStorage.setItem(K_INICIO,e.target.value||'');window.renderizarTabelaFinanceiro?.();window.finRenderResumo?.()});
-    document.getElementById('finPeriodoFim').addEventListener('change',e=>{localStorage.setItem(K_FIM,e.target.value||'');window.renderizarTabelaFinanceiro?.();window.finRenderResumo?.()});
+    s.addEventListener('change',()=>{localStorage.setItem(K_PERIODO,s.value);aplicarFiltro();window.renderizarTabelaFinanceiro?.();window.finRenderResumo?.();window.atualizarPinsFinanceiros?.()});
+    document.getElementById('finPeriodoInicio').addEventListener('change',e=>{localStorage.setItem(K_INICIO,e.target.value||'');window.renderizarTabelaFinanceiro?.();window.finRenderResumo?.();window.atualizarPinsFinanceiros?.()});
+    document.getElementById('finPeriodoFim').addEventListener('change',e=>{localStorage.setItem(K_FIM,e.target.value||'');window.renderizarTabelaFinanceiro?.();window.finRenderResumo?.();window.atualizarPinsFinanceiros?.()});
   }
 
   window.finRenderResumo=function(){

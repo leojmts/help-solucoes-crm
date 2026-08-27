@@ -27,12 +27,34 @@
   };
   const esc = valor => typeof escaparHtml === 'function' ? escaparHtml(String(valor ?? '')) : String(valor ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 
+  const padFin = n => String(n).padStart(2,'0');
+  const isoFin = d => `${d.getFullYear()}-${padFin(d.getMonth()+1)}-${padFin(d.getDate())}`;
+  function mesFinanceiro(offset=0) {
+    const a = new Date();
+    return { inicio: isoFin(new Date(a.getFullYear(), a.getMonth()+offset, 1)), fim: isoFin(new Date(a.getFullYear(), a.getMonth()+offset+1, 0)) };
+  }
+  function faixaFinanceiro() {
+    const p = localStorage.getItem('help-financeiro-periodo') || 'atual';
+    if (p === 'todos') return { periodo:p, inicio:'', fim:'' };
+    if (p === 'atual') return { periodo:p, ...mesFinanceiro(0) };
+    if (p === 'proximo') return { periodo:p, ...mesFinanceiro(1) };
+    if (p === 'anterior') return { periodo:p, ...mesFinanceiro(-1) };
+    if (p === 'atualProximo') { const a=mesFinanceiro(0), b=mesFinanceiro(1); return { periodo:p, inicio:a.inicio, fim:b.fim }; }
+    const a=mesFinanceiro(0);
+    return { periodo:'personalizado', inicio:localStorage.getItem('help-financeiro-periodo-inicio') || a.inicio, fim:localStorage.getItem('help-financeiro-periodo-fim') || a.fim };
+  }
+  function dentroFinanceiro(valor, faixa) {
+    if (faixa.periodo === 'todos') return true;
+    const d = String(valor || '').slice(0,10);
+    return !!d && (!faixa.inicio || d >= faixa.inicio) && (!faixa.fim || d <= faixa.fim);
+  }
+
   let cache = null;
   let carregando = null;
 
   async function buscarDados(forcar = false) {
-    if (cache && !forcar) return cache;
-    if (carregando && !forcar) return carregando;
+    cache = null; // sempre busca dados atuais ao redesenhar o Dashboard
+    if (carregando) return carregando;
     carregando = (async () => {
       const [lancRes, pagRes, contasRes, transfRes] = await Promise.all([
         supabaseClient.from('financeiro_lancamentos').select('id,tipo,descricao,valor,vencimento,status'),
@@ -47,6 +69,7 @@
       const pagamentos = pagRes.data || [];
       const contas = contasRes.data || [];
       const transferencias = transfRes.data || [];
+      const periodoFinanceiro = faixaFinanceiro();
       const porId = new Map(lancamentos.map(l => [String(l.id), l]));
       const pagoPorLanc = new Map();
       pagamentos.forEach(p => pagoPorLanc.set(String(p.lancamento_id), (pagoPorLanc.get(String(p.lancamento_id)) || 0) + Number(p.valor || 0)));
@@ -56,12 +79,14 @@
       lancamentos.forEach(l => {
         if (String(l.status || '').toLowerCase() === 'cancelado') return;
         const restante = Math.max(0, Number(l.valor || 0) - (pagoPorLanc.get(String(l.id)) || 0));
-        if (l.tipo === 'Receber') aReceber += restante;
-        if (l.tipo === 'Pagar') aPagar += restante;
-        if (restante > 0) pendentes.push({ ...l, restante });
+        if (dentroFinanceiro(l.vencimento, periodoFinanceiro)) {
+          if (l.tipo === 'Receber') aReceber += restante;
+          if (l.tipo === 'Pagar') aPagar += restante;
+          if (restante > 0) pendentes.push({ ...l, restante });
+        }
       });
       pagamentos.forEach(p => {
-        if (!p.pago_em || !dataNoPeriodo(p.pago_em)) return;
+        if (!p.pago_em || !dentroFinanceiro(p.pago_em, periodoFinanceiro)) return;
         const lanc = porId.get(String(p.lancamento_id));
         if (lanc?.tipo === 'Receber') recebido += Number(p.valor || 0);
         if (lanc?.tipo === 'Pagar') pago += Number(p.valor || 0);
@@ -85,7 +110,7 @@
         return { ...c, saldo: Number(c.saldo_inicial || 0) + movPag + movTransf };
       });
 
-      cache = { aReceber, aPagar, recebido, pago, saldoPeriodo, pendentes, saldosContas };
+      cache = { aReceber, aPagar, recebido, pago, saldoPeriodo, pendentes, saldosContas, periodoFinanceiro };
       return cache;
     })();
     try { return await carregando; }
@@ -184,7 +209,7 @@
     dashboardConfig.forEach(c => { if (IDS_FIN.includes(c.id)) { estados.set(c.id,c.visivel); c.visivel = false; } });
     renderDashboardOriginal();
     dashboardConfig.forEach(c => { if (estados.has(c.id)) c.visivel = estados.get(c.id); });
-    preencherPins(false);
+    preencherPins(true);
   };
 
   const renderConfigOriginal = renderizarConfigDashboard;
