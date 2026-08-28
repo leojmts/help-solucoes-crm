@@ -14,11 +14,6 @@ function instalarGestaoCrm(){
   menu.insertAdjacentHTML('afterend','<li id="menuGestaoCrm" class="nav-item" data-permissao="crm" onclick="trocarAba(\'gestaoCrm\')" title="Gestão integrada"><i data-lucide="panels-top-left"></i><span class="nav-label">Gestão integrada</span></li>');
   main.insertAdjacentHTML('beforeend',`<div id="visaoGestaoCrm" class="view-section hidden gestao-crm-view"><header class="header"><div><h1>Gestão integrada</h1><p>Cliente 360°, propostas, vendas, pendências, estoque e ativos.</p></div><div class="actions"><button class="btn btn-secondary" onclick="gcAtualizar()"><i data-lucide="refresh-cw"></i>Atualizar</button></div></header><nav class="gc-tabs"><button data-gc="cliente360" class="active" onclick="gcTrocarModulo('cliente360',this)"><i data-lucide="contact-round"></i>Cliente 360°</button><button data-gc="propostas" onclick="gcTrocarModulo('propostas',this)"><i data-lucide="file-check-2"></i>Propostas</button><button data-gc="desempenho" onclick="gcTrocarModulo('desempenho',this)"><i data-lucide="chart-no-axes-combined"></i>Vendas</button><button data-gc="pendencias" onclick="gcTrocarModulo('pendencias',this)"><i data-lucide="list-checks"></i>Pendências</button><button data-gc="ativos" onclick="gcTrocarModulo('ativos',this)"><i data-lucide="package-search"></i>Estoque e ativos</button></nav><section id="gcConteudo"><div class="gc-empty">Selecione uma área.</div></section></div>`);
   document.body.insertAdjacentHTML('beforeend',gcTemplates());
-  const trocarBase=trocarAba;trocarAba=function(aba){
-    if(aba!=='gestaoCrm')return trocarBase(aba);
-    document.querySelectorAll('.view-section').forEach(x=>x.classList.add('hidden'));document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
-    document.getElementById('visaoGestaoCrm').classList.remove('hidden');document.getElementById('menuGestaoCrm').classList.add('active');gcAtualizar();
-  };
   prepararCamposGestaoComercial();renderizarIcones();
 }
 

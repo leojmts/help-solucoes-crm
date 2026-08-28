@@ -898,6 +898,7 @@ async function carregarChamadosDaNuvem() {
         meuTrabalho: 'MeuTrabalho',
         kanban: 'Kanban',
         crm: 'CRM',
+        gestaoCrm: 'GestaoCrm',
         cadastro: 'Cadastro',
         processos: 'Processos',
         contratos: 'Contratos',
@@ -918,6 +919,7 @@ async function carregarChamadosDaNuvem() {
 
       try {
         if (aba === 'crm' && typeof renderizarCRM === 'function') renderizarCRM();
+        if (aba === 'gestaoCrm' && typeof gcAtualizar === 'function') gcAtualizar();
         if (aba === 'cadastro') {
           if (typeof renderizarUsuarios === 'function') renderizarUsuarios();
           if (typeof renderizarTecnicos === 'function') renderizarTecnicos();
