@@ -409,6 +409,12 @@ async function carregarClientesDaNuvem() {
     tr.dataset.idNuvem = c.id;
     tr.setAttribute('data-ie', c.ie || '');
     tr.setAttribute('data-obs', c.observacoes_tecnicas || '');
+    tr.dataset.endereco = c.endereco || '';
+    tr.dataset.cidade = c.cidade || '';
+    tr.dataset.uf = c.uf || '';
+    tr.dataset.cep = c.cep || '';
+    tr.dataset.representante = c.representante || '';
+    tr.dataset.representanteCpf = c.representante_cpf || '';
     [c.nome || '-', c.unidade || '-', c.documento || '-', c.telefone || '-', c.email || '-', c.regime || '-'].forEach(v => {
       const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
     });
@@ -479,7 +485,7 @@ async function carregarChamadosDaNuvem() {
     let audioContextoNotificacao = null;
     let intervaloNotificacoes = null;
 
-    const RECURSOS = ['dashboard', 'clientes', 'novoChamado', 'novoCliente', 'novoTecnico', 'usuarios', 'crm', 'os', 'osVisualizar', 'osCriar', 'osEditar', 'osExcluir', 'financeiro', 'financeiroVisualizar', 'financeiroCriar', 'financeiroBaixar', 'financeiroExcluir', 'financeiroRelatorios', 'enviarEmail', 'backup', 'whatsapp', 'relatorios', 'configuracoes'];
+    const RECURSOS = ['dashboard', 'clientes', 'novoChamado', 'novoCliente', 'novoTecnico', 'usuarios', 'crm', 'os', 'osVisualizar', 'osCriar', 'osEditar', 'osExcluir', 'financeiro', 'financeiroVisualizar', 'financeiroCriar', 'financeiroBaixar', 'financeiroExcluir', 'financeiroRelatorios', 'contratos', 'contratosVisualizar', 'contratosCriar', 'contratosEditar', 'contratosGerarDocumentos', 'contratosCancelar', 'contratosExcluir', 'contratosFinanceiro', 'enviarEmail', 'backup', 'whatsapp', 'relatorios', 'configuracoes'];
     const PERFIS_PADRAO = {
       admin: RECURSOS.reduce((acc, r) => { acc[r] = true; return acc; }, {}),
       tecnico: { dashboard: true, clientes: true, novoChamado: true, novoCliente: false, novoTecnico: false, usuarios: false, crm: false, os: true, osVisualizar:true, osCriar:true, osEditar:true, osExcluir:true, financeiro: false, financeiroVisualizar:false, financeiroCriar:false, financeiroBaixar:false, financeiroExcluir:false, financeiroRelatorios:false, enviarEmail: false, backup: false, whatsapp: false, relatorios: false, configuracoes: false }
@@ -811,7 +817,7 @@ async function carregarChamadosDaNuvem() {
     }
 
     // ---- Backup real dos dados de negócio do Supabase ----
-    const TABELAS_BACKUP = ['clientes','tecnicos','chamados','leads','lead_interacoes','chamado_interacoes','respostas_modelo','base_conhecimento','processos_internos','processo_execucoes','equipamentos','ordens_servico','os_itens','financeiro_lancamentos','financeiro_fornecedores','financeiro_recorrencias','financeiro_pagamentos','financeiro_anexos','financeiro_caixas','financeiro_caixa_movimentos','financeiro_contas','financeiro_transferencias','financeiro_ofx_importacoes','financeiro_ofx_movimentos','avisos_internos','chamado_tempos'];
+    const TABELAS_BACKUP = ['clientes','tecnicos','chamados','leads','lead_interacoes','chamado_interacoes','respostas_modelo','base_conhecimento','processos_internos','processo_execucoes','equipamentos','ordens_servico','os_itens','contratos','contrato_parcelas','contrato_documentos','contrato_anexos','contrato_historico','contrato_modelos','configuracoes_empresa','financeiro_lancamentos','financeiro_fornecedores','financeiro_recorrencias','financeiro_pagamentos','financeiro_anexos','financeiro_caixas','financeiro_caixa_movimentos','financeiro_contas','financeiro_transferencias','financeiro_ofx_importacoes','financeiro_ofx_movimentos','avisos_internos','chamado_tempos'];
     TABELAS_BACKUP.splice(TABELAS_BACKUP.indexOf('processo_execucoes'),0,'processo_responsaveis','processo_checklist_itens','processo_checklist_historico');
     function podeGerenciarBackup(){return usuarioLogado?.perfil==='admin'||usuarioLogado?.permissoes?.backup===true}
     async function exportarBackup() {
@@ -892,6 +898,7 @@ async function carregarChamadosDaNuvem() {
         crm: 'CRM',
         cadastro: 'Cadastro',
         processos: 'Processos',
+        contratos: 'Contratos',
         os: 'OrdensServico',
         financeiro: 'Financeiro',
         relatorios: 'Relatorios',
@@ -916,6 +923,7 @@ async function carregarChamadosDaNuvem() {
         }
         if (aba === 'relatorios' && typeof atualizarRelatorios === 'function') atualizarRelatorios();
         if (aba === 'processos' && typeof carregarProcessos === 'function') carregarProcessos();
+        if (aba === 'contratos' && typeof carregarContratos === 'function') carregarContratos();
         if (aba === 'os' && typeof renderizarOrdensServico === 'function') renderizarOrdensServico();
         if (aba === 'financeiro' && typeof renderizarFinanceiro === 'function') renderizarFinanceiro();
         if (aba === 'configuracoes' && typeof carregarConfiguracoes === 'function') carregarConfiguracoes();
@@ -1090,6 +1098,12 @@ async function carregarChamadosDaNuvem() {
       document.getElementById('cRegime').value = 'Simples Nacional';
       document.getElementById('cTelefone').value = '';
       document.getElementById('cEmail').value = '';
+      document.getElementById('cEndereco').value = '';
+      document.getElementById('cCidade').value = '';
+      document.getElementById('cUf').value = 'MS';
+      document.getElementById('cCep').value = '';
+      document.getElementById('cRepresentante').value = '';
+      document.getElementById('cRepresentanteCpf').value = '';
       document.getElementById('cObsTecnicas').value = '';
       document.getElementById('modalCliente').classList.add('active');
     }
@@ -1342,9 +1356,15 @@ async function carregarChamadosDaNuvem() {
       const tel = document.getElementById('cTelefone').value || '-';
       const email = document.getElementById('cEmail').value || '-';
       const obsTecnicas = document.getElementById('cObsTecnicas').value || '';
+      const endereco = document.getElementById('cEndereco').value.trim();
+      const cidade = document.getElementById('cCidade').value.trim();
+      const uf = document.getElementById('cUf').value.trim().toUpperCase();
+      const cep = document.getElementById('cCep').value.trim();
+      const representante = document.getElementById('cRepresentante').value.trim();
+      const representanteCpf = document.getElementById('cRepresentanteCpf').value.trim();
 
       if (!nome) { alert('Informe o nome do cliente'); return; }
-      const payload = { nome, unidade, documento: doc, ie, regime, telefone: tel, email, observacoes_tecnicas: obsTecnicas };
+      const payload = { nome, unidade, documento: doc, ie, regime, telefone: tel, email, endereco, cidade, uf, cep, representante, representante_cpf: representanteCpf, observacoes_tecnicas: obsTecnicas };
 
       try {
         if (linhaEdicaoCliente && linhaEdicaoCliente.dataset.idNuvem) {
@@ -1376,6 +1396,12 @@ async function carregarChamadosDaNuvem() {
       document.getElementById('cTelefone').value = td[3].innerText;
       document.getElementById('cEmail').value = td[4].innerText;
       document.getElementById('cObsTecnicas').value = linhaEdicaoCliente.getAttribute('data-obs') || '';
+      document.getElementById('cEndereco').value = linhaEdicaoCliente.dataset.endereco || '';
+      document.getElementById('cCidade').value = linhaEdicaoCliente.dataset.cidade || '';
+      document.getElementById('cUf').value = linhaEdicaoCliente.dataset.uf || 'MS';
+      document.getElementById('cCep').value = linhaEdicaoCliente.dataset.cep || '';
+      document.getElementById('cRepresentante').value = linhaEdicaoCliente.dataset.representante || '';
+      document.getElementById('cRepresentanteCpf').value = linhaEdicaoCliente.dataset.representanteCpf || '';
 
       document.getElementById('modalCliente').classList.add('active');
     }
@@ -1394,6 +1420,12 @@ async function carregarChamadosDaNuvem() {
       document.getElementById('cTelefone').value = td[3].innerText;
       document.getElementById('cEmail').value = td[4].innerText;
       document.getElementById('cObsTecnicas').value = tr.getAttribute('data-obs') || '';
+      document.getElementById('cEndereco').value = tr.dataset.endereco || '';
+      document.getElementById('cCidade').value = tr.dataset.cidade || '';
+      document.getElementById('cUf').value = tr.dataset.uf || 'MS';
+      document.getElementById('cCep').value = tr.dataset.cep || '';
+      document.getElementById('cRepresentante').value = tr.dataset.representante || '';
+      document.getElementById('cRepresentanteCpf').value = tr.dataset.representanteCpf || '';
 
       document.getElementById('modalCliente').classList.add('active');
     }
@@ -2475,11 +2507,17 @@ async function converterLeadCliente(){
       avisos: { titulo:'Avisos internos', icone:'megaphone', tamanho:'medio' },
       atalhos: { titulo:'Atalhos rápidos', icone:'zap', tamanho:'medio' },
       graficoTecnico: { titulo:'Chamados por técnico', icone:'bar-chart-3', tamanho:'medio' },
-      graficoStatus: { titulo:'Chamados por status', icone:'pie-chart', tamanho:'medio' }
+      graficoStatus: { titulo:'Chamados por status', icone:'pie-chart', tamanho:'medio' },
+      contratosAtivos: { titulo:'Contratos ativos', icone:'file-check-2', tamanho:'pequeno' },
+      contratosVencendo: { titulo:'Contratos vencendo', icone:'calendar-warning', tamanho:'pequeno' },
+      contratosAtraso: { titulo:'Contratos em atraso', icone:'badge-alert', tamanho:'pequeno' },
+      receitaContratada: { titulo:'Receita mensal contratada', icone:'circle-dollar-sign', tamanho:'pequeno' },
+      contratosVencimentos: { titulo:'Próximos vencimentos de contratos', icone:'calendar-clock', tamanho:'medio' },
+      contratosRenovar: { titulo:'Contratos para renovar', icone:'refresh-cw', tamanho:'medio' }
     };
     const DASHBOARD_PADRAO = ['sla','contatos','processos','minhaFila','semTecnico','prioridade','agenda','recentes','avisos','atalhos','desempenho','recorrentes'];
     let dashboardConfig = DASHBOARD_PADRAO.map(id=>({id,visivel:true,tamanho:DASHBOARD_WIDGETS[id].tamanho}));
-    let dashboardPeriodoAtual = 'hoje', dashboardInteracoes = [], dashboardProcessos = [], dashboardAvisos = [], dashboardCarregado = false;
+    let dashboardPeriodoAtual = 'hoje', dashboardInteracoes = [], dashboardProcessos = [], dashboardAvisos = [], dashboardContratos = [], dashboardContratosLancamentos = [], dashboardCarregado = false;
 
     function normalizarDashboardConfig(widgets){
       const recebidos=Array.isArray(widgets)?widgets:[], usados=new Set(), saida=[];
@@ -2512,21 +2550,32 @@ async function converterLeadCliente(){
     function widgetAgenda(){const eventos=[];dashboardInteracoes.filter(i=>i.proximo_contato&&dataNoPeriodo(i.proximo_contato)).forEach(i=>{const c=linhasDashboard().find(x=>x.id===i.chamado_id);eventos.push({data:i.proximo_contato,titulo:c?.protocolo||'Retorno de chamado',sub:'Próximo contato',icone:'phone'})});dashboardProcessos.filter(p=>!['Concluída','Pausada'].includes(p.status)&&dataNoPeriodo(p.proxima_execucao)).forEach(p=>eventos.push({data:p.proxima_execucao,titulo:p.titulo,sub:`Processo · ${p.responsavel_nome}`,icone:'list-checks'}));eventos.sort((a,b)=>new Date(a.data)-new Date(b.data));return tituloWidget('agenda')+(eventos.length?`<div class="dashboard-agenda">${eventos.slice(0,8).map(e=>`<div><i data-lucide="${e.icone}"></i><span><strong>${escaparHtml(e.titulo)}</strong><small>${escaparHtml(e.sub)}</small></span><time>${formatarExecucaoProcesso(e.data)}</time></div>`).join('')}</div>`:dashboardVazio('Sua agenda está livre neste período.'))}
     function widgetAvisos(){const pode=usuarioLogado?.perfil==='admin';return tituloWidget('avisos',pode?`<button class="dashboard-head-action" onclick="abrirModalAviso()"><i data-lucide="plus"></i>Novo</button>`:'')+(dashboardAvisos.length?dashboardAvisos.map(a=>`<article class="dashboard-aviso"><div><strong>${escaparHtml(a.titulo)}</strong>${(pode||a.criado_por===usuarioLogado?.id)?`<button onclick="excluirAvisoInterno('${a.id}')" title="Excluir"><i data-lucide="trash-2"></i></button>`:''}</div><p>${escaparHtml(a.mensagem)}</p><small>${escaparHtml(a.criado_por_nome)} · ${formatarExecucaoProcesso(a.criado_em)}</small></article>`).join(''):dashboardVazio('Nenhum comunicado ativo.'))}
     function widgetAtalhos(){return tituloWidget('atalhos')+`<div class="dashboard-shortcuts"><button onclick="abrirModalChamado()"><i data-lucide="plus-circle"></i><span>Novo chamado</span></button><button onclick="abrirModalCliente()"><i data-lucide="building-2"></i><span>Novo cliente</span></button><button onclick="trocarAba('processos');setTimeout(()=>abrirModalProcesso(),80)"><i data-lucide="list-plus"></i><span>Novo processo</span></button><button onclick="trocarAba('configuracoes');setTimeout(()=>document.getElementById('buscaConhecimento')?.focus(),80)"><i data-lucide="book-open"></i><span>Base de conhecimento</span></button></div>`}
+    function fimDashboardContrato(c){const d=new Date(`${c.inicio}T12:00:00`);d.setMonth(d.getMonth()+Number(c.duracao_meses||0));return d}
+    function contratosDashboardAtivos(){return dashboardContratos.filter(c=>['Ativo','Vencendo'].includes(c.status)&&fimDashboardContrato(c)>=new Date())}
+    function widgetContratoKpi(id,valor,rotulo,classe=''){return tituloWidget(id)+`<div class="dashboard-kpi ${classe}"><strong>${valor}</strong><span>${rotulo}</span></div><button class="dashboard-head-action" onclick="trocarAba('contratos')">Ver contratos</button>`}
+    function widgetContratosAtivos(){const n=contratosDashboardAtivos().length;return widgetContratoKpi('contratosAtivos',n,`contrato${n===1?'':'s'} em vigência`,n?'success':'')}
+    function widgetContratosVencendo(){const agora=new Date(),limite=new Date();limite.setDate(limite.getDate()+45);const n=contratosDashboardAtivos().filter(c=>fimDashboardContrato(c)>=agora&&fimDashboardContrato(c)<=limite).length;return widgetContratoKpi('contratosVencendo',n,'vencem em até 45 dias',n?'warning':'success')}
+    function widgetContratosAtraso(){const n=dashboardContratosLancamentos.filter(x=>x.status==='Pendente'&&x.vencimento<new Date().toISOString().slice(0,10)).length;return widgetContratoKpi('contratosAtraso',n,'parcela(s) atrasada(s)',n?'danger':'success')}
+    function widgetReceitaContratada(){const v=contratosDashboardAtivos().filter(c=>c.parte_tipo==='Cliente').reduce((s,c)=>s+Number(c.valor_mensal||0),0);return widgetContratoKpi('receitaContratada',v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}),'por mês em contratos ativos','success')}
+    function widgetContratosVencimentos(){const itens=dashboardContratosLancamentos.filter(x=>x.status==='Pendente'&&x.vencimento>=new Date().toISOString().slice(0,10)).sort((a,b)=>a.vencimento.localeCompare(b.vencimento)).slice(0,6);return tituloWidget('contratosVencimentos',`<button class="dashboard-head-action" onclick="trocarAba('contratos')">Ver todos</button>`)+(itens.length?itens.map(x=>`<button class="dashboard-list-item" onclick="trocarAba('contratos')"><span><strong>${escaparHtml(x.contratos?.numero||'Contrato')}</strong><small>${escaparHtml(x.descricao)}</small></span><b>${new Date(`${x.vencimento}T12:00:00`).toLocaleDateString('pt-BR')}</b></button>`).join(''):dashboardVazio('Nenhum vencimento futuro.'))}
+    function widgetContratosRenovar(){const agora=new Date(),limite=new Date();limite.setDate(limite.getDate()+45);const itens=dashboardContratos.filter(c=>['Ativo','Vencendo'].includes(c.status)&&fimDashboardContrato(c)>=agora&&fimDashboardContrato(c)<=limite).sort((a,b)=>fimDashboardContrato(a)-fimDashboardContrato(b));return tituloWidget('contratosRenovar',`<button class="dashboard-head-action" onclick="trocarAba('contratos')">Abrir módulo</button>`)+(itens.length?itens.slice(0,6).map(c=>`<button class="dashboard-list-item" onclick="trocarAba('contratos')"><span><strong>${escaparHtml(c.numero)}</strong><small>${escaparHtml(c.tipo_contrato)}</small></span><b>${fimDashboardContrato(c).toLocaleDateString('pt-BR')}</b></button>`).join(''):dashboardVazio('Nenhuma renovação próxima.'))}
     function widgetGrafico(id){const tecnico=id==='graficoTecnico';return tituloWidget(id)+`<div class="dashboard-chart-box"><div id="${tecnico?'graficoTecnico':'graficoStatus'}" class="${tecnico?'bar-chart':'donut-chart'}"></div></div>`}
     function renderizarDashboardPersonalizado(){
       const alvo=document.getElementById('dashboardWidgets');if(!alvo)return;const chamados=linhasDashboard();
-      const renderers={sla:()=>widgetSla(chamados),contatos:widgetContatos,processos:widgetProcessos,minhaFila:()=>widgetFila(chamados),semTecnico:()=>widgetSemTecnico(chamados),prioridade:()=>widgetPrioridade(chamados),recentes:()=>widgetRecentes(chamados),recorrentes:()=>widgetRecorrentes(chamados),desempenho:()=>widgetDesempenho(chamados),agenda:widgetAgenda,avisos:widgetAvisos,atalhos:widgetAtalhos,graficoTecnico:()=>widgetGrafico('graficoTecnico'),graficoStatus:()=>widgetGrafico('graficoStatus')};
+      const renderers={sla:()=>widgetSla(chamados),contatos:widgetContatos,processos:widgetProcessos,minhaFila:()=>widgetFila(chamados),semTecnico:()=>widgetSemTecnico(chamados),prioridade:()=>widgetPrioridade(chamados),recentes:()=>widgetRecentes(chamados),recorrentes:()=>widgetRecorrentes(chamados),desempenho:()=>widgetDesempenho(chamados),agenda:widgetAgenda,avisos:widgetAvisos,atalhos:widgetAtalhos,graficoTecnico:()=>widgetGrafico('graficoTecnico'),graficoStatus:()=>widgetGrafico('graficoStatus'),contratosAtivos:widgetContratosAtivos,contratosVencendo:widgetContratosVencendo,contratosAtraso:widgetContratosAtraso,receitaContratada:widgetReceitaContratada,contratosVencimentos:widgetContratosVencimentos,contratosRenovar:widgetContratosRenovar};
       alvo.innerHTML=dashboardConfig.filter(x=>x.visivel).map(x=>`<article class="dashboard-widget tamanho-${x.tamanho}" data-widget="${x.id}">${renderers[x.id]()}</article>`).join('')||dashboardVazio('Escolha ao menos um bloco em Personalizar painel.');renderizarIcones();
       if(dashboardConfig.some(x=>x.visivel&&x.id.startsWith('grafico'))){const porTecnico={},porStatus={};chamados.forEach(c=>{porTecnico[c.tecnico]=(porTecnico[c.tecnico]||0)+1;porStatus[c.status]=(porStatus[c.status]||0)+1});setTimeout(()=>atualizarGraficos(porTecnico,porStatus),0)}
     }
     async function carregarDashboardPersonalizado(){
       if(!usuarioLogado)return;const periodo=document.getElementById('dashboardPeriodo');
-      try{const [{data:pref},{data:interacoes},{data:processos},{data:avisos}]=await Promise.all([
+      try{const [{data:pref},{data:interacoes},{data:processos},{data:avisos},{data:contratos},{data:lancamentosContrato}]=await Promise.all([
         supabaseClient.from('dashboard_preferencias').select('widgets,periodo').eq('user_id',usuarioLogado.id).maybeSingle(),
         supabaseClient.from('chamado_interacoes').select('chamado_id,proximo_contato,descricao,tipo').not('proximo_contato','is',null).order('proximo_contato'),
         supabaseClient.from('processos_internos').select('id,titulo,responsavel_nome,prioridade,status,proxima_execucao,criado_por').order('proxima_execucao'),
-        supabaseClient.from('avisos_internos').select('*').or(`expira_em.is.null,expira_em.gt.${new Date().toISOString()}`).order('criado_em',{ascending:false})
-      ]);dashboardConfig=normalizarDashboardConfig(pref?.widgets||dashboardConfig);dashboardPeriodoAtual=pref?.periodo||'hoje';dashboardInteracoes=interacoes||[];dashboardProcessos=(processos||[]).filter(p=>processoAtribuidoAoUsuario(processosInternos.find(x=>x.id===p.id))||podeAdministrarProcessos());dashboardAvisos=avisos||[];dashboardCarregado=true;if(periodo)periodo.value=dashboardPeriodoAtual;renderizarDashboardPersonalizado()}catch(erro){console.error('Dashboard:',erro);renderizarDashboardPersonalizado()}
+        supabaseClient.from('avisos_internos').select('*').or(`expira_em.is.null,expira_em.gt.${new Date().toISOString()}`).order('criado_em',{ascending:false}),
+        supabaseClient.from('contratos').select('id,numero,parte_tipo,tipo_contrato,valor_mensal,inicio,duracao_meses,status'),
+        supabaseClient.from('financeiro_lancamentos').select('id,contrato_id,descricao,valor,valor_pago,vencimento,status,contratos(numero)').not('contrato_id','is',null)
+      ]);dashboardConfig=normalizarDashboardConfig(pref?.widgets||dashboardConfig);dashboardPeriodoAtual=pref?.periodo||'hoje';dashboardInteracoes=interacoes||[];dashboardProcessos=(processos||[]).filter(p=>processoAtribuidoAoUsuario(processosInternos.find(x=>x.id===p.id))||podeAdministrarProcessos());dashboardAvisos=avisos||[];dashboardContratos=contratos||[];dashboardContratosLancamentos=lancamentosContrato||[];dashboardCarregado=true;if(periodo)periodo.value=dashboardPeriodoAtual;renderizarDashboardPersonalizado()}catch(erro){console.error('Dashboard:',erro);renderizarDashboardPersonalizado()}
     }
     async function alterarPeriodoDashboard(valor){dashboardPeriodoAtual=valor;renderizarDashboardPersonalizado();if(usuarioLogado)await supabaseClient.from('dashboard_preferencias').upsert({user_id:usuarioLogado.id,widgets:dashboardConfig,periodo:valor,atualizado_em:new Date().toISOString()})}
     function abrirPersonalizacaoDashboard(){const modal=document.getElementById('modalDashboardPersonalizar');if(!modal)return;modal.classList.add('active');renderizarConfigDashboard();renderizarIcones()}

@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="os-financeiro.css">
   <link rel="stylesheet" href="financeiro-avancado.css">
+  <link rel="stylesheet" href="contratos.css?v=20260827-1">
   <link rel="stylesheet" href="crm-correcoes.css">
   <link rel="stylesheet" href="gerenciamento-contas.css">
   <link rel="stylesheet" href="tema.css?v=20260826-3">
@@ -35,6 +36,7 @@
           <li id="menuCRM" class="nav-item" data-permissao="crm" onclick="trocarAba('crm')" title="CRM Comercial"><i data-lucide="briefcase"></i><span class="nav-label">CRM Comercial</span></li>
           <li id="menuCadastro" class="nav-item" data-permissao="clientes" onclick="trocarAba('cadastro')" title="Cadastros"><i data-lucide="database"></i><span class="nav-label">Cadastro</span></li>
           <li id="menuProcessos" class="nav-item" onclick="trocarAba('processos')" title="Processos internos"><i data-lucide="list-checks"></i><span class="nav-label">Processos</span></li>
+          <li id="menuContratos" class="nav-item" data-permissao="contratos" onclick="trocarAba('contratos')" title="Gestão de contratos"><i data-lucide="file-signature"></i><span class="nav-label">Contratos</span></li>
           <li id="menuOrdensServico" class="nav-item" data-permissao="os" onclick="trocarAba('os')" title="Ordens de serviço"><i data-lucide="clipboard-list"></i><span class="nav-label">Ordens de serviço</span></li>
           <li id="menuFinanceiro" class="nav-item" data-permissao="financeiro" onclick="trocarAba('financeiro')" title="Financeiro"><i data-lucide="wallet-cards"></i><span class="nav-label">Financeiro</span></li>
           <li id="menuRelatorios" class="nav-item" data-permissao="relatorios" onclick="trocarAba('relatorios')" title="Relatórios"><i data-lucide="line-chart"></i><span class="nav-label">Relatórios</span></li>
@@ -746,6 +748,14 @@
           <label class="permissao-item"><input type="checkbox" id="permFinanceiroBaixar" value="financeiroBaixar"> Financeiro: dar baixa/caixa</label>
           <label class="permissao-item"><input type="checkbox" id="permFinanceiroExcluir" value="financeiroExcluir"> Financeiro: excluir</label>
           <label class="permissao-item"><input type="checkbox" id="permFinanceiroRelatorios" value="financeiroRelatorios"> Financeiro: relatórios</label>
+          <label class="permissao-item"><input type="checkbox" id="permContratos" value="contratos"> Contratos</label>
+          <label class="permissao-item"><input type="checkbox" id="permContratosVisualizar" value="contratosVisualizar"> Contratos: visualizar</label>
+          <label class="permissao-item"><input type="checkbox" id="permContratosCriar" value="contratosCriar"> Contratos: criar</label>
+          <label class="permissao-item"><input type="checkbox" id="permContratosEditar" value="contratosEditar"> Contratos: editar</label>
+          <label class="permissao-item"><input type="checkbox" id="permContratosGerarDocumentos" value="contratosGerarDocumentos"> Contratos: gerar documentos</label>
+          <label class="permissao-item"><input type="checkbox" id="permContratosCancelar" value="contratosCancelar"> Contratos: cancelar</label>
+          <label class="permissao-item"><input type="checkbox" id="permContratosExcluir" value="contratosExcluir"> Contratos: excluir</label>
+          <label class="permissao-item"><input type="checkbox" id="permContratosFinanceiro" value="contratosFinanceiro"> Contratos: informações financeiras</label>
           <label class="permissao-item"><input type="checkbox" id="permEnviarEmail" value="enviarEmail"> Enviar dossiês</label>
           <label class="permissao-item"><input type="checkbox" id="permBackup" value="backup"> Backup da nuvem</label>
           <label class="permissao-item"><input type="checkbox" id="permWhatsapp" value="whatsapp"> WhatsApp</label>
@@ -917,6 +927,30 @@
           <input type="email" id="cEmail" placeholder="cliente@empresa.com">
         </div>
         <div class="form-group full">
+          <label>Endereço completo</label>
+          <input type="text" id="cEndereco" placeholder="Rua, número, complemento e bairro">
+        </div>
+        <div class="form-group">
+          <label>Cidade</label>
+          <input type="text" id="cCidade" placeholder="Ex.: Jardim">
+        </div>
+        <div class="form-group">
+          <label>UF</label>
+          <input type="text" id="cUf" maxlength="2" placeholder="MS">
+        </div>
+        <div class="form-group">
+          <label>CEP</label>
+          <input type="text" id="cCep" placeholder="00000-000">
+        </div>
+        <div class="form-group">
+          <label>Representante legal</label>
+          <input type="text" id="cRepresentante" placeholder="Nome completo">
+        </div>
+        <div class="form-group">
+          <label>CPF do representante</label>
+          <input type="text" id="cRepresentanteCpf" placeholder="000.000.000-00">
+        </div>
+        <div class="form-group full">
           <label>Observações Técnicas (equipamentos, rede e orientações)</label>
           <div class="campo-senha-wrap" id="wrapObsTecnicas">
             <button type="button" class="btn-revelar" onclick="alternarRevelarObs()"><i data-lucide="eye"></i>Revelar</button>
@@ -950,6 +984,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.75.1/dist/umd/supabase.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <script src="script.js?v=20260827-2"></script>
   <script src="os-financeiro.js"></script>
   <script src="financeiro-avancado.js"></script>
@@ -962,5 +997,7 @@
   <script src="avisos-destinatarios.js?v=20260826-1"></script>
   <script src="os-exclusao.js?v=20260827-1"></script>
   <script src="financeiro-resumo-mensal.js?v=20260827-3"></script>
+  <script src="contratos-pdf.js?v=20260827-1"></script>
+  <script src="contratos.js?v=20260827-1"></script>
 </body>
 </html>
