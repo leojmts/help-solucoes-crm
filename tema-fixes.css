@@ -8,6 +8,34 @@ html[data-theme="light"]{
   --help-line:#dbe4ee;
 }
 
+/* O login e uma tela institucional escura e nao herda controles claros. */
+html[data-theme="light"] #telaLogin,
+html[data-theme="light"] #telaLogin .login-v2-shell{color-scheme:dark!important;background:#061426!important;color:#e9f0fb!important}
+html[data-theme="light"] #telaLogin .login-v2-brand{background:radial-gradient(circle at 20% 18%,rgba(40,116,220,.20),transparent 36%),linear-gradient(145deg,#07192d,#061426)!important;border-color:rgba(123,164,218,.15)!important}
+html[data-theme="light"] #telaLogin .login-v2-panel{background:radial-gradient(circle at 78% 18%,rgba(38,111,211,.15),transparent 32%),linear-gradient(155deg,#0b1d33,#061426)!important}
+html[data-theme="light"] #telaLogin h1,
+html[data-theme="light"] #telaLogin h2{color:#f8fbff!important}
+html[data-theme="light"] #telaLogin .login-v2-copy p{color:#b8c6d9!important}
+html[data-theme="light"] #telaLogin .login-v2-card>p,
+html[data-theme="light"] #telaLogin .login-options{color:#aab9cc!important}
+html[data-theme="light"] #telaLogin .login-v2-fields label{color:#dbe6f5!important}
+html[data-theme="light"] #telaLogin input[type="email"],
+html[data-theme="light"] #telaLogin input[type="password"]{background:rgba(255,255,255,.035)!important;color:#fff!important;border-color:#314861!important;color-scheme:dark!important;box-shadow:none!important}
+html[data-theme="light"] #telaLogin input[type="email"]::placeholder,
+html[data-theme="light"] #telaLogin input[type="password"]::placeholder{color:#718096!important}
+html[data-theme="light"] #telaLogin input[type="email"]:focus,
+html[data-theme="light"] #telaLogin input[type="password"]:focus{border-color:#2d79e4!important;box-shadow:0 0 0 4px rgba(45,121,228,.12)!important}
+html[data-theme="light"] #telaLogin input[type="checkbox"]{color-scheme:dark!important;accent-color:#1768d6!important}
+
+/* Botao de avisos/notificacoes com contraste completo no tema claro. */
+html[data-theme="light"] .notify-btn{background:#fff!important;color:#334155!important;border-color:#cbd8e6!important;box-shadow:0 3px 10px rgba(15,23,42,.09)!important;cursor:pointer}
+html[data-theme="light"] .notify-btn svg{color:#334155!important;stroke:#334155!important}
+html[data-theme="light"] .notify-btn:hover{background:#edf5ff!important;color:#1768d6!important;border-color:#8eb7e8!important;box-shadow:0 4px 12px rgba(37,99,235,.14)!important}
+html[data-theme="light"] .notify-btn:hover svg{color:#1768d6!important;stroke:#1768d6!important}
+html[data-theme="light"] .notify-btn b{background:#dc2626!important;color:#fff!important;border:2px solid #fff!important;box-shadow:0 2px 5px rgba(153,27,27,.28)!important}
+html[data-theme="light"] .dashboard-widget-head .dashboard-head-action{background:#eaf2ff!important;color:#1768d6!important;border:1px solid #c6dcf8!important;border-radius:7px!important;padding:6px 9px!important}
+html[data-theme="light"] .dashboard-widget-head .dashboard-head-action:hover{background:#dbeafe!important;border-color:#9fc3ef!important}
+
 /* Kanban de chamados */
 html[data-theme="light"] .kanban-coluna{
   background:#fff!important;border-color:#d9e3ed!important;
