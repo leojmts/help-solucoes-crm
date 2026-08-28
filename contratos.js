@@ -177,10 +177,19 @@ async function salvarContrato() {
     let salvo;
     if(contratoEditandoId){const r=await supabaseClient.from('contratos').update({...p,atualizado_em:new Date().toISOString()}).eq('id',contratoEditandoId).select('id,numero,status').single();if(r.error)throw r.error;salvo=r.data;}
     else{const status=ctValor('ctStatus')||'Ativo';const r=await supabaseClient.from('contratos').insert({...p,status,renovado_de_id:contratoRenovandoDe||null,criado_por:usuarioLogado.id}).select('id,numero,status').single();if(r.error)throw r.error;salvo=r.data;}
-    if(salvo.status!=='Rascunho'){const sync=await supabaseClient.rpc('sincronizar_parcelas_contrato',{p_contrato_id:salvo.id});if(sync.error)throw sync.error;}
+    if(salvo.status!=='Rascunho'){const sync=await supabaseClient.rpc('sincronizar_parcelas_contrato',{p_contrato_id:salvo.id});if(sync.error)throw sync.error;await criarOnboardingContrato(salvo.id,p);}
     if(contratoRenovandoDe){const rr=await supabaseClient.rpc('marcar_contrato_renovado',{p_anterior_id:contratoRenovandoDe,p_novo_id:salvo.id});if(rr.error)throw rr.error;}
-    fecharModalContrato();await carregarContratos();avisarModulo(`Contrato ${salvo.numero} salvo e integrado ao Financeiro.`);setTimeout(()=>abrirDetalheContrato(salvo.id),120);
+    document.dispatchEvent(new CustomEvent('contrato:salvo',{detail:salvo}));fecharModalContrato();await carregarContratos();avisarModulo(`Contrato ${salvo.numero} salvo e integrado ao Financeiro.`);setTimeout(()=>abrirDetalheContrato(salvo.id),120);
   }catch(e){avisarModulo(e.message)}finally{botao.disabled=false;}
+}
+
+async function criarOnboardingContrato(contratoId,payload){
+  if(!contratoId||payload.parte_tipo!=='Cliente')return;
+  const existente=await supabaseClient.from('processos_internos').select('id').eq('contrato_id',contratoId).maybeSingle();if(existente.data||existente.error)return;
+  const cliente=contratosClientes.find(x=>Number(x.id)===Number(payload.cliente_id)),textos=['Confirmar dados cadastrais e contatos','Agendar implantação/instalação','Configurar sistemas e licenças','Realizar treinamento inicial','Validar operação com o cliente'];
+  const r=await supabaseClient.from('processos_internos').insert({titulo:`Onboarding · ${cliente?.nome||'Novo contrato'}`,descricao:`Implantação vinculada ao contrato ${contratoId}`,contrato_id:contratoId,responsavel_nome:contratosUsuarios.find(x=>x.user_id===payload.responsavel_id)?.nome||'',prioridade:'Alta',status:'Pendente',frequencia:'Única',proxima_execucao:new Date(`${payload.data_instalacao||payload.inicio}T12:00:00`).toISOString(),checklist:textos.map(texto=>({texto,concluido:false})),criado_por:usuarioLogado.id}).select('id').single();
+  if(r.error)return console.warn('Contrato salvo, mas o onboarding não foi criado:',r.error);
+  await Promise.all([supabaseClient.from('processo_responsaveis').insert({processo_id:r.data.id,usuario_id:payload.responsavel_id,atribuido_por:usuarioLogado.id}),supabaseClient.from('processo_checklist_itens').insert(textos.map((texto,ordem)=>({processo_id:r.data.id,texto,ordem})))])
 }
 
 async function abrirDetalheContrato(id) {

@@ -419,9 +419,11 @@ async function carregarClientesDaNuvem() {
       const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
     });
     const tdAcoes = document.createElement('td'); tdAcoes.className = 'actions-cell';
+    const btn360 = document.createElement('button'); btn360.title='Visão 360°'; definirIcone(btn360, 'contact-round'); btn360.onclick=()=>gcAbrir360(c.id);
     const btnEditar = document.createElement('button'); btnEditar.title='Editar Cliente'; definirIcone(btnEditar, 'pencil'); btnEditar.onclick=()=>editarCliente(btnEditar);
     const btnClonar = document.createElement('button'); btnClonar.title='Clonar Cliente'; definirIcone(btnClonar, 'copy'); btnClonar.onclick=()=>clonarCliente(btnClonar);
     const btnExcluir = document.createElement('button'); btnExcluir.title='Excluir'; definirIcone(btnExcluir, 'trash-2'); btnExcluir.onclick=()=>excluirLinha(btnExcluir);
+    if(usuarioLogado?.perfil==='admin'||usuarioLogado?.permissoes?.crm)tdAcoes.append(btn360);
     tdAcoes.append(btnEditar, btnClonar, btnExcluir); tr.appendChild(tdAcoes);
   });
   atualizarDatalistClientes();
@@ -2098,6 +2100,7 @@ async function migrarLeadsLocaisSeExistirem(){
 async function renderizarCRM(){
   try{
     prepararCamposAgendaCRM();
+    if(typeof prepararCamposGestaoComercial==='function')await prepararCamposGestaoComercial();
     await migrarLeadsLocaisSeExistirem();
     const a=await carregarCrmDaNuvem();
     const hoje=new Date().toISOString().slice(0,10);
@@ -2108,7 +2111,7 @@ async function renderizarCRM(){
     document.getElementById('crmBoard').innerHTML=crmEtapas.map(e=>{
       const ls=a.filter(x=>x.etapa===e&&!x.convertido);
       const valor=ls.reduce((s,x)=>s+(Number(x.valor)||0),0);
-      return `<section class="crm-stage" data-etapa="${e}" ondragover="permitirSoltarLead(event)" ondragleave="sairDestinoLead(event)" ondrop="soltarLeadComercial(event,'${e}')"><div class="crm-stage-head"><div><span>${e}</span><small>${valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</small></div><b>${ls.length}</b></div><div class="crm-stage-list">${ls.map(x=>`<article class="crm-lead-card" draggable="true" data-lead-id="${x.id}" ondragstart="iniciarArrastoLead(event,'${x.id}')" ondragend="finalizarArrastoLead(event)" onclick="editarLead('${x.id}')"><div class="crm-lead-top"><strong>${escaparHtml(x.nome)}</strong><i data-lucide="grip-vertical"></i></div><small>${escaparHtml(x.responsavel||x.cidade||'Sem contato')}</small><span class="crm-tag">${escaparHtml(x.interesse||'-')}</span>${x.proxima?`<span class="crm-lead-date"><i data-lucide="calendar"></i>${escaparHtml(x.proxima_tipo||'Follow-up')} · ${new Date(x.proxima+'T12:00:00').toLocaleDateString('pt-BR')}${x.proxima_hora?' às '+String(x.proxima_hora).slice(0,5):''}</span>`:''}<select class="crm-mobile-stage" aria-label="Mover ${escaparHtml(x.nome)} para outra etapa" onclick="event.stopPropagation()" onchange="moverLeadParaEtapa('${x.id}',this.value);event.stopPropagation()">${crmEtapas.map(et=>`<option value="${et}" ${et===e?'selected':''}>${et}</option>`).join('')}</select></article>`).join('')||'<div class="crm-stage-empty">Solte uma oportunidade aqui</div>'}</div></section>`;
+      return `<section class="crm-stage" data-etapa="${e}" ondragover="permitirSoltarLead(event)" ondragleave="sairDestinoLead(event)" ondrop="soltarLeadComercial(event,'${e}')"><div class="crm-stage-head"><div><span>${e}</span><small>${valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</small></div><b>${ls.length}</b></div><div class="crm-stage-list">${ls.map(x=>`<article class="crm-lead-card" draggable="true" data-lead-id="${x.id}" ondragstart="iniciarArrastoLead(event,'${x.id}')" ondragend="finalizarArrastoLead(event)" onclick="editarLead('${x.id}')"><div class="crm-lead-top"><strong>${escaparHtml(x.nome)}</strong><i data-lucide="grip-vertical"></i></div><small>${escaparHtml(x.responsavel||x.cidade||'Sem contato')}</small><span class="crm-tag">${escaparHtml(x.interesse||'-')}</span><span class="crm-tag">${Number(x.probabilidade||0)}% · ${Number(x.valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>${x.fechamento_previsto?`<span class="crm-lead-date"><i data-lucide="target"></i>Fechamento ${new Date(x.fechamento_previsto+'T12:00:00').toLocaleDateString('pt-BR')}</span>`:''}${x.proxima?`<span class="crm-lead-date"><i data-lucide="calendar"></i>${escaparHtml(x.proxima_tipo||'Follow-up')} · ${new Date(x.proxima+'T12:00:00').toLocaleDateString('pt-BR')}${x.proxima_hora?' às '+String(x.proxima_hora).slice(0,5):''}</span>`:''}<select class="crm-mobile-stage" aria-label="Mover ${escaparHtml(x.nome)} para outra etapa" onclick="event.stopPropagation()" onchange="moverLeadParaEtapa('${x.id}',this.value);event.stopPropagation()">${crmEtapas.map(et=>`<option value="${et}" ${et===e?'selected':''}>${et}</option>`).join('')}</select></article>`).join('')||'<div class="crm-stage-empty">Solte uma oportunidade aqui</div>'}</div></section>`;
     }).join('');
     const p=a.filter(x=>x.proxima&&!x.convertido).sort((x,y)=>String(x.proxima).localeCompare(String(y.proxima)));
     document.getElementById('crmProximas').innerHTML=p.length?p.map(x=>`<div class="crm-next"><strong>${escaparHtml(x.proxima_tipo||'Follow-up')} · ${escaparHtml(x.nome)}</strong><span>${new Date(x.proxima+'T12:00:00').toLocaleDateString('pt-BR')}${x.proxima_hora?' às '+String(x.proxima_hora).slice(0,5):''} · ${escaparHtml(x.cidade||x.interesse||'-')}</span></div>`).join(''):'<div class="crm-next">Nenhuma ação pendente</div>';
@@ -2129,8 +2132,8 @@ async function moverLeadParaEtapa(id,novaEtapa){
   if(!lead||!crmEtapas.includes(novaEtapa)||lead.etapa===novaEtapa)return;
   const etapaAnterior=lead.etapa;lead.etapa=novaEtapa;
   try{
-    const uid=await crmUsuarioId(),agora=new Date().toISOString();
-    const{error}=await supabaseClient.from('leads').update({etapa:novaEtapa,atualizado_em:agora}).eq('id',id);if(error)throw error;
+    const uid=await crmUsuarioId(),agora=new Date().toISOString(),probabilidades={Novo:10,Contato:20,'Demonstração':40,Proposta:60,'Negociação':80,Fechado:100};
+    const{error}=await supabaseClient.from('leads').update({etapa:novaEtapa,probabilidade:probabilidades[novaEtapa]??lead.probabilidade,atualizado_em:agora}).eq('id',id);if(error)throw error;
     const{error:histErro}=await supabaseClient.from('lead_interacoes').insert({lead_id:id,texto:`Etapa alterada de ${etapaAnterior} para ${novaEtapa}.`,criado_por:uid});if(histErro)console.warn('Etapa salva, mas o histórico não foi registrado:',histErro);
     await renderizarCRM();
   }catch(e){lead.etapa=etapaAnterior;await renderizarCRM();alert('Não foi possível mover a oportunidade.\n\n'+e.message)}
@@ -2138,9 +2141,12 @@ async function moverLeadParaEtapa(id,novaEtapa){
 
 function abrirModalLead(){
   prepararCamposAgendaCRM();
+  if(typeof prepararCamposGestaoComercial==='function')prepararCamposGestaoComercial();
   crmEditandoId=null;
   document.getElementById('crmModalTitulo').textContent='Novo lead';
-  ['crmNome','crmResponsavel','crmTelefone','crmCidade','crmProximaAcao','crmProximaHora','crmValor','crmObs','crmNovaInteracao'].forEach(i=>{const el=document.getElementById(i);if(el)el.value=''});
+  ['crmNome','crmResponsavel','crmTelefone','crmCidade','crmProximaAcao','crmProximaHora','crmFechamentoPrevisto','crmValor','crmObs','crmNovaInteracao'].forEach(i=>{const el=document.getElementById(i);if(el)el.value=''});
+  if(document.getElementById('crmResponsavel'))document.getElementById('crmResponsavel').value=usuarioLogado?.id||'';
+  if(document.getElementById('crmProbabilidade'))document.getElementById('crmProbabilidade').value='10';
   document.getElementById('crmProximaTipo').value='Follow-up';
   document.getElementById('crmInteresse').selectedIndex=0;
   document.getElementById('crmEtapa').value='Novo';
@@ -2152,11 +2158,13 @@ function fecharModalLead(){document.getElementById('modalLead').classList.remove
 
 async function editarLead(id){
   prepararCamposAgendaCRM();
+  if(typeof prepararCamposGestaoComercial==='function')await prepararCamposGestaoComercial();
   const x=crmCache.find(a=>a.id===id) || (await supabaseClient.from('leads').select('*').eq('id',id).single()).data;
   if(!x)return;
   crmEditandoId=id;
   document.getElementById('crmModalTitulo').textContent='Editar lead';
-  for(const [k,v] of Object.entries({crmNome:x.nome,crmResponsavel:x.responsavel,crmTelefone:x.telefone,crmCidade:x.cidade,crmInteresse:x.interesse,crmEtapa:x.etapa,crmProximaTipo:x.proxima_tipo||'Follow-up',crmProximaAcao:x.proxima,crmProximaHora:x.proxima_hora?String(x.proxima_hora).slice(0,5):'',crmValor:x.valor,crmObs:x.obs}))document.getElementById(k).value=v||'';
+  for(const [k,v] of Object.entries({crmNome:x.nome,crmResponsavel:x.responsavel_id||'',crmTelefone:x.telefone,crmCidade:x.cidade,crmInteresse:x.interesse,crmEtapa:x.etapa,crmProbabilidade:x.probabilidade||10,crmFechamentoPrevisto:x.fechamento_previsto,crmProximaTipo:x.proxima_tipo||'Follow-up',crmProximaAcao:x.proxima,crmProximaHora:x.proxima_hora?String(x.proxima_hora).slice(0,5):'',crmValor:x.valor,crmObs:x.obs,crmMotivoPerda:x.motivo_perda}))if(document.getElementById(k))document.getElementById(k).value=v||'';
+  const perdaBox=document.getElementById('crmMotivoPerdaBox');if(perdaBox)perdaBox.style.display=x.motivo_perda?'block':'none';
   const {data:hist,error}=await supabaseClient.from('lead_interacoes').select('*').eq('lead_id',id).order('criado_em',{ascending:false});
   if(error){alert('Não foi possível carregar o histórico do lead.\n\n'+error.message);return}
   document.getElementById('crmHistoricoArea').style.display='block';
@@ -2172,11 +2180,13 @@ async function salvarLead(){
   try{
     const uid=await crmUsuarioId();
     const id=crmEditandoId||('lead-'+Date.now());
+    const responsavelEl=document.getElementById('crmResponsavel'),responsavelId=responsavelEl?.value||null,responsavelNome=responsavelEl?.selectedOptions?.[0]?.textContent||'';
     const payload={
-      id,nome,responsavel:document.getElementById('crmResponsavel').value,telefone:document.getElementById('crmTelefone').value,
+      id,nome,responsavel_id:responsavelId,responsavel:responsavelNome==='Selecione'?'':responsavelNome,telefone:document.getElementById('crmTelefone').value,
       cidade:document.getElementById('crmCidade').value,interesse:document.getElementById('crmInteresse').value,
       etapa:document.getElementById('crmEtapa').value,proxima:document.getElementById('crmProximaAcao').value||null,
       proxima_tipo:document.getElementById('crmProximaTipo').value||'Follow-up',proxima_hora:document.getElementById('crmProximaHora').value||null,
+      probabilidade:Number(document.getElementById('crmProbabilidade')?.value)||10,fechamento_previsto:document.getElementById('crmFechamentoPrevisto')?.value||null,
       valor:Number(document.getElementById('crmValor').value)||0,obs:document.getElementById('crmObs').value,
       atualizado_em:new Date().toISOString()
     };
@@ -2224,11 +2234,13 @@ async function converterLeadCliente(){
     const uid=await crmUsuarioId();
     const {data:existente,error:buscaErr}=await supabaseClient.from('clientes').select('id').ilike('nome',x.nome).limit(1);
     if(buscaErr)throw buscaErr;
-    if(!existente?.length){
-      const {error:cErr}=await supabaseClient.from('clientes').insert({nome:x.nome,unidade:x.cidade||'-',documento:'-',ie:'-',regime:'-',telefone:x.telefone||'-',email:'-',observacoes_tecnicas:'Lead convertido pelo CRM'});
+    let clienteId=existente?.[0]?.id||null;
+    if(!clienteId){
+      const {data:novo,error:cErr}=await supabaseClient.from('clientes').insert({nome:x.nome,unidade:x.cidade||'-',documento:'-',ie:'-',regime:'-',telefone:x.telefone||'-',email:'-',observacoes_tecnicas:'Lead convertido pelo CRM'}).select('id').single();
       if(cErr)throw cErr;
+      clienteId=novo.id;
     }
-    const {error:lErr}=await supabaseClient.from('leads').update({convertido:true,etapa:'Fechado',atualizado_em:new Date().toISOString()}).eq('id',x.id); if(lErr)throw lErr;
+    const {error:lErr}=await supabaseClient.from('leads').update({convertido:true,cliente_id:clienteId,etapa:'Fechado',probabilidade:100,motivo_perda:'',atualizado_em:new Date().toISOString()}).eq('id',x.id); if(lErr)throw lErr;
     await supabaseClient.from('lead_interacoes').insert({lead_id:x.id,texto:'Convertido em cliente.',criado_por:uid});
     await carregarClientesDaNuvem();
     fecharModalLead();
