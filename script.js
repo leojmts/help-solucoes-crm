@@ -2044,8 +2044,23 @@ async function carregarChamadosDaNuvem() {
     
 // CRM comercial — Supabase
 const crmEtapas=['Novo','Contato','Demonstração','Proposta','Negociação','Fechado'];
+const crmTiposProximaAcao=['Follow-up','Visita','Ligação','Reunião','Demonstração','WhatsApp','Proposta','Outro'];
 let crmEditandoId=null;
 let crmCache=[];
+
+function prepararCamposAgendaCRM(){
+  const dataCampo=document.getElementById('crmProximaAcao')?.closest('div');
+  const grade=dataCampo?.parentElement;
+  if(!dataCampo||!grade||document.getElementById('crmProximaTipo'))return;
+  const tipoCampo=document.createElement('div'),tipoLabel=document.createElement('label'),tipoSelect=document.createElement('select');
+  tipoLabel.textContent='Tipo da próxima ação';tipoSelect.id='crmProximaTipo';
+  crmTiposProximaAcao.forEach(tipo=>{const option=document.createElement('option');option.value=tipo;option.textContent=tipo;tipoSelect.appendChild(option)});
+  tipoCampo.append(tipoLabel,tipoSelect);
+  const horaCampo=document.createElement('div'),horaLabel=document.createElement('label'),horaInput=document.createElement('input');
+  horaLabel.textContent='Horário';horaInput.id='crmProximaHora';horaInput.type='time';
+  horaCampo.append(horaLabel,horaInput);
+  grade.insertBefore(tipoCampo,dataCampo);dataCampo.after(horaCampo);
+}
 
 async function crmUsuarioId(){
   const { data } = await supabaseClient.auth.getUser();
@@ -2068,6 +2083,7 @@ async function migrarLeadsLocaisSeExistirem(){
     const payload={
       id:x.id||('lead-'+Date.now()), nome:x.nome||'Lead sem nome', responsavel:x.responsavel||'', telefone:x.telefone||'',
       cidade:x.cidade||'', interesse:x.interesse||'ERP / Gestão', etapa:x.etapa||'Novo', proxima:x.proxima||null,
+      proxima_tipo:x.proxima_tipo||'Follow-up', proxima_hora:x.proxima_hora||null,
       valor:Number(x.valor)||0, obs:x.obs||'', convertido:!!x.convertido, criado_por:uid, atualizado_em:new Date().toISOString()
     };
     const { error }=await supabaseClient.from('leads').upsert(payload,{onConflict:'id'});
@@ -2081,6 +2097,7 @@ async function migrarLeadsLocaisSeExistirem(){
 
 async function renderizarCRM(){
   try{
+    prepararCamposAgendaCRM();
     await migrarLeadsLocaisSeExistirem();
     const a=await carregarCrmDaNuvem();
     const hoje=new Date().toISOString().slice(0,10);
@@ -2091,10 +2108,10 @@ async function renderizarCRM(){
     document.getElementById('crmBoard').innerHTML=crmEtapas.map(e=>{
       const ls=a.filter(x=>x.etapa===e&&!x.convertido);
       const valor=ls.reduce((s,x)=>s+(Number(x.valor)||0),0);
-      return `<section class="crm-stage" data-etapa="${e}" ondragover="permitirSoltarLead(event)" ondragleave="sairDestinoLead(event)" ondrop="soltarLeadComercial(event,'${e}')"><div class="crm-stage-head"><div><span>${e}</span><small>${valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</small></div><b>${ls.length}</b></div><div class="crm-stage-list">${ls.map(x=>`<article class="crm-lead-card" draggable="true" data-lead-id="${x.id}" ondragstart="iniciarArrastoLead(event,'${x.id}')" ondragend="finalizarArrastoLead(event)" onclick="editarLead('${x.id}')"><div class="crm-lead-top"><strong>${escaparHtml(x.nome)}</strong><i data-lucide="grip-vertical"></i></div><small>${escaparHtml(x.responsavel||x.cidade||'Sem contato')}</small><span class="crm-tag">${escaparHtml(x.interesse||'-')}</span>${x.proxima?`<span class="crm-lead-date"><i data-lucide="calendar"></i>${new Date(x.proxima+'T12:00:00').toLocaleDateString('pt-BR')}</span>`:''}<select class="crm-mobile-stage" aria-label="Mover ${escaparHtml(x.nome)} para outra etapa" onclick="event.stopPropagation()" onchange="moverLeadParaEtapa('${x.id}',this.value);event.stopPropagation()">${crmEtapas.map(et=>`<option value="${et}" ${et===e?'selected':''}>${et}</option>`).join('')}</select></article>`).join('')||'<div class="crm-stage-empty">Solte uma oportunidade aqui</div>'}</div></section>`;
+      return `<section class="crm-stage" data-etapa="${e}" ondragover="permitirSoltarLead(event)" ondragleave="sairDestinoLead(event)" ondrop="soltarLeadComercial(event,'${e}')"><div class="crm-stage-head"><div><span>${e}</span><small>${valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</small></div><b>${ls.length}</b></div><div class="crm-stage-list">${ls.map(x=>`<article class="crm-lead-card" draggable="true" data-lead-id="${x.id}" ondragstart="iniciarArrastoLead(event,'${x.id}')" ondragend="finalizarArrastoLead(event)" onclick="editarLead('${x.id}')"><div class="crm-lead-top"><strong>${escaparHtml(x.nome)}</strong><i data-lucide="grip-vertical"></i></div><small>${escaparHtml(x.responsavel||x.cidade||'Sem contato')}</small><span class="crm-tag">${escaparHtml(x.interesse||'-')}</span>${x.proxima?`<span class="crm-lead-date"><i data-lucide="calendar"></i>${escaparHtml(x.proxima_tipo||'Follow-up')} · ${new Date(x.proxima+'T12:00:00').toLocaleDateString('pt-BR')}${x.proxima_hora?' às '+String(x.proxima_hora).slice(0,5):''}</span>`:''}<select class="crm-mobile-stage" aria-label="Mover ${escaparHtml(x.nome)} para outra etapa" onclick="event.stopPropagation()" onchange="moverLeadParaEtapa('${x.id}',this.value);event.stopPropagation()">${crmEtapas.map(et=>`<option value="${et}" ${et===e?'selected':''}>${et}</option>`).join('')}</select></article>`).join('')||'<div class="crm-stage-empty">Solte uma oportunidade aqui</div>'}</div></section>`;
     }).join('');
     const p=a.filter(x=>x.proxima&&!x.convertido).sort((x,y)=>String(x.proxima).localeCompare(String(y.proxima)));
-    document.getElementById('crmProximas').innerHTML=p.length?p.map(x=>`<div class="crm-next"><strong>${escaparHtml(x.nome)}</strong><span>${new Date(x.proxima+'T12:00:00').toLocaleDateString('pt-BR')} · ${escaparHtml(x.interesse||'-')}</span></div>`).join(''):'<div class="crm-next">Nenhuma ação pendente</div>';
+    document.getElementById('crmProximas').innerHTML=p.length?p.map(x=>`<div class="crm-next"><strong>${escaparHtml(x.proxima_tipo||'Follow-up')} · ${escaparHtml(x.nome)}</strong><span>${new Date(x.proxima+'T12:00:00').toLocaleDateString('pt-BR')}${x.proxima_hora?' às '+String(x.proxima_hora).slice(0,5):''} · ${escaparHtml(x.cidade||x.interesse||'-')}</span></div>`).join(''):'<div class="crm-next">Nenhuma ação pendente</div>';
     renderizarIcones();
   }catch(e){
     console.error('Erro ao carregar CRM:',e);
@@ -2120,9 +2137,11 @@ async function moverLeadParaEtapa(id,novaEtapa){
 }
 
 function abrirModalLead(){
+  prepararCamposAgendaCRM();
   crmEditandoId=null;
   document.getElementById('crmModalTitulo').textContent='Novo lead';
-  ['crmNome','crmResponsavel','crmTelefone','crmCidade','crmProximaAcao','crmValor','crmObs','crmNovaInteracao'].forEach(i=>{const el=document.getElementById(i);if(el)el.value=''});
+  ['crmNome','crmResponsavel','crmTelefone','crmCidade','crmProximaAcao','crmProximaHora','crmValor','crmObs','crmNovaInteracao'].forEach(i=>{const el=document.getElementById(i);if(el)el.value=''});
+  document.getElementById('crmProximaTipo').value='Follow-up';
   document.getElementById('crmInteresse').selectedIndex=0;
   document.getElementById('crmEtapa').value='Novo';
   document.getElementById('crmHistoricoArea').style.display='none';
@@ -2132,11 +2151,12 @@ function abrirModalLead(){
 function fecharModalLead(){document.getElementById('modalLead').classList.remove('active')}
 
 async function editarLead(id){
+  prepararCamposAgendaCRM();
   const x=crmCache.find(a=>a.id===id) || (await supabaseClient.from('leads').select('*').eq('id',id).single()).data;
   if(!x)return;
   crmEditandoId=id;
   document.getElementById('crmModalTitulo').textContent='Editar lead';
-  for(const [k,v] of Object.entries({crmNome:x.nome,crmResponsavel:x.responsavel,crmTelefone:x.telefone,crmCidade:x.cidade,crmInteresse:x.interesse,crmEtapa:x.etapa,crmProximaAcao:x.proxima,crmValor:x.valor,crmObs:x.obs}))document.getElementById(k).value=v||'';
+  for(const [k,v] of Object.entries({crmNome:x.nome,crmResponsavel:x.responsavel,crmTelefone:x.telefone,crmCidade:x.cidade,crmInteresse:x.interesse,crmEtapa:x.etapa,crmProximaTipo:x.proxima_tipo||'Follow-up',crmProximaAcao:x.proxima,crmProximaHora:x.proxima_hora?String(x.proxima_hora).slice(0,5):'',crmValor:x.valor,crmObs:x.obs}))document.getElementById(k).value=v||'';
   const {data:hist,error}=await supabaseClient.from('lead_interacoes').select('*').eq('lead_id',id).order('criado_em',{ascending:false});
   if(error){alert('Não foi possível carregar o histórico do lead.\n\n'+error.message);return}
   document.getElementById('crmHistoricoArea').style.display='block';
@@ -2156,6 +2176,7 @@ async function salvarLead(){
       id,nome,responsavel:document.getElementById('crmResponsavel').value,telefone:document.getElementById('crmTelefone').value,
       cidade:document.getElementById('crmCidade').value,interesse:document.getElementById('crmInteresse').value,
       etapa:document.getElementById('crmEtapa').value,proxima:document.getElementById('crmProximaAcao').value||null,
+      proxima_tipo:document.getElementById('crmProximaTipo').value||'Follow-up',proxima_hora:document.getElementById('crmProximaHora').value||null,
       valor:Number(document.getElementById('crmValor').value)||0,obs:document.getElementById('crmObs').value,
       atualizado_em:new Date().toISOString()
     };
@@ -2504,6 +2525,7 @@ async function converterLeadCliente(){
       recorrentes: { titulo:'Clientes recorrentes', icone:'repeat-2', tamanho:'medio' },
       desempenho: { titulo:'Desempenho da equipe', icone:'chart-no-axes-combined', tamanho:'grande' },
       agenda: { titulo:'Agenda operacional', icone:'calendar-clock', tamanho:'grande' },
+      crmAgenda: { titulo:'Agenda comercial', icone:'handshake', tamanho:'medio' },
       avisos: { titulo:'Avisos internos', icone:'megaphone', tamanho:'medio' },
       atalhos: { titulo:'Atalhos rápidos', icone:'zap', tamanho:'medio' },
       graficoTecnico: { titulo:'Chamados por técnico', icone:'bar-chart-3', tamanho:'medio' },
@@ -2517,7 +2539,7 @@ async function converterLeadCliente(){
     };
     const DASHBOARD_PADRAO = ['sla','contatos','processos','minhaFila','semTecnico','prioridade','agenda','recentes','avisos','atalhos','desempenho','recorrentes'];
     let dashboardConfig = DASHBOARD_PADRAO.map(id=>({id,visivel:true,tamanho:DASHBOARD_WIDGETS[id].tamanho}));
-    let dashboardPeriodoAtual = 'hoje', dashboardInteracoes = [], dashboardProcessos = [], dashboardAvisos = [], dashboardContratos = [], dashboardContratosLancamentos = [], dashboardCarregado = false;
+    let dashboardPeriodoAtual = 'hoje', dashboardInteracoes = [], dashboardProcessos = [], dashboardLeads = [], dashboardAvisos = [], dashboardContratos = [], dashboardContratosLancamentos = [], dashboardCarregado = false;
 
     function normalizarDashboardConfig(widgets){
       const recebidos=Array.isArray(widgets)?widgets:[], usados=new Set(), saida=[];
@@ -2531,15 +2553,30 @@ async function converterLeadCliente(){
       if(periodo==='semana'){const inicio=new Date(inicioHoje);inicio.setDate(inicio.getDate()-6);return d>=inicio}
       if(periodo==='mes')return d.getMonth()===agora.getMonth()&&d.getFullYear()===agora.getFullYear();return true;
     }
-    function linhasDashboard(){return [...document.querySelectorAll('#tabelaChamados tr')].filter(l=>l.cells?.length>=13).map(l=>({
+    function todosChamadosDashboard(){return [...document.querySelectorAll('#tabelaChamados tr')].filter(l=>l.cells?.length>=13).map(l=>({
       el:l,id:l.dataset.idNuvem||'',protocolo:l.cells[0]?.innerText.trim()||'',abertura:l.dataset.aberturaIso||'',fechamento:l.dataset.fechamentoIso||'',cliente:l.cells[2]?.innerText.trim()||'-',unidade:l.cells[3]?.innerText.trim()||'-',tecnico:l.cells[7]?.innerText.trim()||'-',modulo:l.cells[8]?.innerText.trim()||'-',prioridade:l.cells[10]?.innerText.trim()||'',status:l.cells[11]?.innerText.trim()||''
-    })).filter(x=>dataNoPeriodo(x.abertura))}
+    }))}
+    function linhasDashboard(){return todosChamadosDashboard().filter(x=>dataNoPeriodo(x.abertura))}
     function dashboardVazio(texto){return `<div class="dashboard-widget-vazio"><i data-lucide="check-circle-2"></i><span>${escaparHtml(texto)}</span></div>`}
     function abrirChamadoDashboard(id){const linha=[...document.querySelectorAll('#tabelaChamados tr')].find(l=>l.dataset.idNuvem===id);const alvo=linha?.querySelector('.protocolo, [onclick*="visualizarChamado"], td:first-child');if(alvo)visualizarChamado(alvo)}
+    function abrirLeadDashboard(id){trocarAba('crm');setTimeout(()=>editarLead(id),160)}
+    function abrirEventoAgendaDashboard(tipo,id){if(tipo==='chamado')abrirChamadoDashboard(id);else if(tipo==='crm')abrirLeadDashboard(id);else if(tipo==='processo')trocarAba('processos')}
+    function podeUsarCrmDashboard(){return usuarioLogado?.perfil==='admin'||!!usuarioLogado?.permissoes?.crm}
+    function widgetDashboardPermitido(id){return id!=='crmAgenda'||podeUsarCrmDashboard()}
+    function normalizarTextoDashboard(valor){return String(valor||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase()}
+    function leadPertenceAoUsuarioDashboard(lead){
+      if(usuarioLogado?.perfil==='admin')return true;
+      if(String(lead.criado_por||'')===String(usuarioLogado?.id||''))return true;
+      const responsavel=normalizarTextoDashboard(lead.responsavel),nomes=[usuarioLogado?.nome,usuarioLogado?.usuario].map(normalizarTextoDashboard).filter(Boolean);
+      return !!responsavel&&nomes.some(nome=>responsavel===nome||nome.split(/\s+/).filter(p=>p.length>=3).some(parte=>responsavel.split(/\s+/).includes(parte)));
+    }
+    function dataHoraLeadDashboard(lead){return lead?.proxima?`${lead.proxima}T${String(lead.proxima_hora||'12:00:00').slice(0,8)}`:''}
+    function iconeAcaoComercial(tipo){const t=normalizarTextoDashboard(tipo);return t==='visita'?'map-pin':t==='ligacao'?'phone':t==='reuniao'?'users-round':t==='demonstracao'?'monitor-play':t==='whatsapp'?'message-circle':'briefcase-business'}
+    function resumoClienteLeadDashboard(lead){return [lead.cidade,lead.interesse,lead.telefone].filter(Boolean).join(' · ')||'Sem informações adicionais'}
     function itemChamadoDashboard(c,extra=''){return `<button class="dashboard-list-item" type="button" onclick="abrirChamadoDashboard('${c.id}')"><span><strong>${escaparHtml(c.protocolo)}</strong><small>${escaparHtml(c.cliente)} · ${escaparHtml(c.modulo)}</small></span>${extra||`<b>${escaparHtml(c.status)}</b>`}</button>`}
     function tituloWidget(id,acoes=''){const w=DASHBOARD_WIDGETS[id];return `<div class="dashboard-widget-head"><div><span class="dashboard-widget-icon"><i data-lucide="${w.icone}"></i></span><h3>${w.titulo}</h3></div>${acoes}</div>`}
     function widgetSla(chamados){const agora=Date.now(),limiteNormal=Number(localStorage.getItem('help_crm_sla_normal')||24),limiteCritico=Number(localStorage.getItem('help_crm_sla_critico')||4);const atrasados=chamados.filter(c=>!c.status.toLowerCase().includes('resolvido')&&c.abertura).map(c=>{const h=(agora-new Date(c.abertura).getTime())/36e5,lim=c.prioridade.toLowerCase().includes('alta')?limiteCritico:limiteNormal;return {...c,horas:h}}).filter(c=>c.horas>(c.prioridade.toLowerCase().includes('alta')?limiteCritico:limiteNormal)).sort((a,b)=>b.horas-a.horas);return tituloWidget('sla')+`<div class="dashboard-kpi ${atrasados.length?'danger':'success'}"><strong>${atrasados.length}</strong><span>chamado${atrasados.length===1?'':'s'} fora do prazo</span></div>`+(atrasados.length?atrasados.slice(0,3).map(c=>itemChamadoDashboard(c,`<b>${Math.floor(c.horas)}h</b>`)).join(''):dashboardVazio('Nenhum SLA estourado.'))}
-    function widgetContatos(){const itens=dashboardInteracoes.filter(i=>i.proximo_contato&&dataNoPeriodo(i.proximo_contato)).sort((a,b)=>new Date(a.proximo_contato)-new Date(b.proximo_contato));return tituloWidget('contatos')+(itens.length?itens.slice(0,5).map(i=>{const c=linhasDashboard().find(x=>x.id===i.chamado_id)||{id:i.chamado_id,protocolo:'Chamado',cliente:'',modulo:''};return itemChamadoDashboard(c,`<b>${formatarExecucaoProcesso(i.proximo_contato)}</b>`)}).join(''):dashboardVazio('Nenhum retorno agendado no período.'))}
+    function widgetContatos(){const itens=dashboardInteracoes.filter(i=>i.proximo_contato&&dataNoPeriodo(i.proximo_contato)).sort((a,b)=>new Date(a.proximo_contato)-new Date(b.proximo_contato));return tituloWidget('contatos')+(itens.length?itens.slice(0,5).map(i=>{const c=todosChamadosDashboard().find(x=>x.id===String(i.chamado_id))||{id:String(i.chamado_id),protocolo:'Chamado',cliente:'Cliente não localizado',modulo:i.tipo||'Próximo contato'};return itemChamadoDashboard(c,`<b>${formatarExecucaoProcesso(i.proximo_contato)}</b>`)}).join(''):dashboardVazio('Nenhum retorno agendado no período.'))}
     function widgetProcessos(){const itens=dashboardProcessos.filter(p=>!['Concluída','Pausada'].includes(p.status)&&dataNoPeriodo(p.proxima_execucao)).sort((a,b)=>new Date(a.proxima_execucao)-new Date(b.proxima_execucao));return tituloWidget('processos',`<button class="dashboard-head-action" onclick="trocarAba('processos')">Ver todos</button>`)+(itens.length?itens.slice(0,5).map(p=>`<button class="dashboard-list-item" onclick="trocarAba('processos')"><span><strong>${escaparHtml(p.titulo)}</strong><small>${escaparHtml(p.responsavel_nome)} · ${escaparHtml(p.prioridade)}</small></span><b>${formatarExecucaoProcesso(p.proxima_execucao)}</b></button>`).join(''):dashboardVazio('Nenhum processo previsto no período.'))}
     function widgetFila(chamados){const nome=(usuarioLogado?.nome||usuarioLogado?.usuario||'').toLowerCase(),tokens=nome.split(/\s+/).filter(x=>x.length>2),itens=chamados.filter(c=>!c.status.toLowerCase().includes('resolvido')&&(c.tecnico.toLowerCase()===nome||tokens.some(t=>c.tecnico.toLowerCase().includes(t))));return tituloWidget('minhaFila')+(itens.length?itens.slice(0,5).map(c=>itemChamadoDashboard(c)).join(''):dashboardVazio('Nenhum chamado atribuído a você.'))}
     function widgetSemTecnico(chamados){const itens=chamados.filter(c=>['','-','não atribuído','sem técnico'].includes(c.tecnico.toLowerCase())&&!c.status.toLowerCase().includes('resolvido'));return tituloWidget('semTecnico')+`<div class="dashboard-kpi ${itens.length?'warning':'success'}"><strong>${itens.length}</strong><span>aguardando atribuição</span></div>`+(itens.length?itens.slice(0,3).map(c=>itemChamadoDashboard(c)).join(''):dashboardVazio('Todos os chamados têm responsável.'))}
@@ -2547,7 +2584,22 @@ async function converterLeadCliente(){
     function widgetRecentes(chamados){const itens=[...chamados].sort((a,b)=>new Date(b.fechamento||b.abertura)-new Date(a.fechamento||a.abertura));return tituloWidget('recentes')+(itens.length?itens.slice(0,5).map(c=>itemChamadoDashboard(c,`<b>${formatarExecucaoProcesso(c.fechamento||c.abertura)}</b>`)).join(''):dashboardVazio('Nenhum atendimento no período.'))}
     function widgetRecorrentes(chamados){const mapa={};chamados.forEach(c=>{const k=c.cliente.toLowerCase();if(!mapa[k])mapa[k]={nome:c.cliente,total:0,abertos:0};mapa[k].total++;if(!c.status.toLowerCase().includes('resolvido'))mapa[k].abertos++});const itens=Object.values(mapa).filter(x=>x.total>=2).sort((a,b)=>b.total-a.total);return tituloWidget('recorrentes')+(itens.length?itens.slice(0,6).map(x=>`<div class="dashboard-rank-item"><span><strong>${escaparHtml(x.nome)}</strong><small>${x.abertos} em aberto</small></span><b>${x.total}</b></div>`).join(''):dashboardVazio('Sem clientes reincidentes no período.'))}
     function widgetDesempenho(chamados){const mapa={};chamados.forEach(c=>{if(!mapa[c.tecnico])mapa[c.tecnico]={nome:c.tecnico,total:0,resolvidos:0,horas:0,medidos:0};const x=mapa[c.tecnico];x.total++;if(c.status.toLowerCase().includes('resolvido'))x.resolvidos++;if(c.abertura&&c.fechamento){x.horas+=(new Date(c.fechamento)-new Date(c.abertura))/36e5;x.medidos++}});const itens=Object.values(mapa).filter(x=>x.nome&&x.nome!=='-').sort((a,b)=>b.resolvidos-a.resolvidos);return tituloWidget('desempenho')+(itens.length?`<div class="dashboard-performance-table"><div class="performance-row header"><span>Técnico</span><span>Resolvidos</span><span>Em aberto</span><span>Tempo médio</span></div>${itens.map(x=>`<div class="performance-row"><strong>${escaparHtml(x.nome)}</strong><span>${x.resolvidos}</span><span>${x.total-x.resolvidos}</span><span>${x.medidos?(x.horas/x.medidos).toFixed(1)+'h':'—'}</span></div>`).join('')}</div>`:dashboardVazio('Sem dados suficientes para comparar.'))}
-    function widgetAgenda(){const eventos=[];dashboardInteracoes.filter(i=>i.proximo_contato&&dataNoPeriodo(i.proximo_contato)).forEach(i=>{const c=linhasDashboard().find(x=>x.id===i.chamado_id);eventos.push({data:i.proximo_contato,titulo:c?.protocolo||'Retorno de chamado',sub:'Próximo contato',icone:'phone'})});dashboardProcessos.filter(p=>!['Concluída','Pausada'].includes(p.status)&&dataNoPeriodo(p.proxima_execucao)).forEach(p=>eventos.push({data:p.proxima_execucao,titulo:p.titulo,sub:`Processo · ${p.responsavel_nome}`,icone:'list-checks'}));eventos.sort((a,b)=>new Date(a.data)-new Date(b.data));return tituloWidget('agenda')+(eventos.length?`<div class="dashboard-agenda">${eventos.slice(0,8).map(e=>`<div><i data-lucide="${e.icone}"></i><span><strong>${escaparHtml(e.titulo)}</strong><small>${escaparHtml(e.sub)}</small></span><time>${formatarExecucaoProcesso(e.data)}</time></div>`).join('')}</div>`:dashboardVazio('Sua agenda está livre neste período.'))}
+    function leadsAgendaDashboard(){return dashboardLeads.filter(l=>l.proxima&&!l.convertido&&leadPertenceAoUsuarioDashboard(l)&&dataNoPeriodo(dataHoraLeadDashboard(l))).sort((a,b)=>new Date(dataHoraLeadDashboard(a))-new Date(dataHoraLeadDashboard(b)))}
+    function widgetCrmAgenda(){
+      const itens=leadsAgendaDashboard();
+      return tituloWidget('crmAgenda',`<button class="dashboard-head-action" onclick="trocarAba('crm')">Abrir CRM</button>`)+(itens.length?itens.slice(0,6).map(l=>`<button class="dashboard-list-item dashboard-crm-item" type="button" onclick="abrirLeadDashboard('${l.id}')"><span><strong>${escaparHtml(l.proxima_tipo||'Follow-up')} · ${escaparHtml(l.nome)}</strong><small>${escaparHtml(resumoClienteLeadDashboard(l))}</small></span><b>${String(l.proxima_hora||'').slice(0,5)||new Date(`${l.proxima}T12:00:00`).toLocaleDateString('pt-BR')}</b></button>`).join(''):dashboardVazio('Nenhuma ação comercial prevista no período.'))
+    }
+    function widgetAgenda(){
+      const eventos=[],chamados=todosChamadosDashboard();
+      dashboardInteracoes.filter(i=>i.proximo_contato&&dataNoPeriodo(i.proximo_contato)).forEach(i=>{
+        const c=chamados.find(x=>x.id===String(i.chamado_id));
+        eventos.push({data:i.proximo_contato,titulo:c?.protocolo||'Retorno de chamado',sub:c?`Chamado · ${c.cliente} · ${c.modulo}`:`Chamado · ${i.tipo||'Próximo contato'}`,icone:'phone',tipo:'chamado',id:String(i.chamado_id)});
+      });
+      dashboardProcessos.filter(p=>!['Concluída','Pausada'].includes(p.status)&&dataNoPeriodo(p.proxima_execucao)).forEach(p=>eventos.push({data:p.proxima_execucao,titulo:p.titulo,sub:`Processo · ${p.responsavel_nome}`,icone:'list-checks',tipo:'processo',id:p.id}));
+      leadsAgendaDashboard().forEach(l=>eventos.push({data:dataHoraLeadDashboard(l),titulo:`${l.proxima_tipo||'Follow-up'} · ${l.nome}`,sub:`CRM · ${resumoClienteLeadDashboard(l)}`,icone:iconeAcaoComercial(l.proxima_tipo),tipo:'crm',id:l.id}));
+      eventos.sort((a,b)=>new Date(a.data)-new Date(b.data));
+      return tituloWidget('agenda')+(eventos.length?`<div class="dashboard-agenda">${eventos.slice(0,10).map(e=>`<button class="dashboard-agenda-item tipo-${e.tipo}" type="button" onclick="abrirEventoAgendaDashboard('${e.tipo}','${e.id}')"><i data-lucide="${e.icone}"></i><span><strong>${escaparHtml(e.titulo)}</strong><small>${escaparHtml(e.sub)}</small></span><time>${formatarExecucaoProcesso(e.data)}</time></button>`).join('')}</div>`:dashboardVazio('Sua agenda está livre neste período.'))
+    }
     function widgetAvisos(){const pode=usuarioLogado?.perfil==='admin';return tituloWidget('avisos',pode?`<button class="dashboard-head-action" onclick="abrirModalAviso()"><i data-lucide="plus"></i>Novo</button>`:'')+(dashboardAvisos.length?dashboardAvisos.map(a=>`<article class="dashboard-aviso"><div><strong>${escaparHtml(a.titulo)}</strong>${(pode||a.criado_por===usuarioLogado?.id)?`<button onclick="excluirAvisoInterno('${a.id}')" title="Excluir"><i data-lucide="trash-2"></i></button>`:''}</div><p>${escaparHtml(a.mensagem)}</p><small>${escaparHtml(a.criado_por_nome)} · ${formatarExecucaoProcesso(a.criado_em)}</small></article>`).join(''):dashboardVazio('Nenhum comunicado ativo.'))}
     function widgetAtalhos(){return tituloWidget('atalhos')+`<div class="dashboard-shortcuts"><button onclick="abrirModalChamado()"><i data-lucide="plus-circle"></i><span>Novo chamado</span></button><button onclick="abrirModalCliente()"><i data-lucide="building-2"></i><span>Novo cliente</span></button><button onclick="trocarAba('processos');setTimeout(()=>abrirModalProcesso(),80)"><i data-lucide="list-plus"></i><span>Novo processo</span></button><button onclick="trocarAba('configuracoes');setTimeout(()=>document.getElementById('buscaConhecimento')?.focus(),80)"><i data-lucide="book-open"></i><span>Base de conhecimento</span></button></div>`}
     function fimDashboardContrato(c){const d=new Date(`${c.inicio}T12:00:00`);d.setMonth(d.getMonth()+Number(c.duracao_meses||0));return d}
@@ -2562,25 +2614,27 @@ async function converterLeadCliente(){
     function widgetGrafico(id){const tecnico=id==='graficoTecnico';return tituloWidget(id)+`<div class="dashboard-chart-box"><div id="${tecnico?'graficoTecnico':'graficoStatus'}" class="${tecnico?'bar-chart':'donut-chart'}"></div></div>`}
     function renderizarDashboardPersonalizado(){
       const alvo=document.getElementById('dashboardWidgets');if(!alvo)return;const chamados=linhasDashboard();
-      const renderers={sla:()=>widgetSla(chamados),contatos:widgetContatos,processos:widgetProcessos,minhaFila:()=>widgetFila(chamados),semTecnico:()=>widgetSemTecnico(chamados),prioridade:()=>widgetPrioridade(chamados),recentes:()=>widgetRecentes(chamados),recorrentes:()=>widgetRecorrentes(chamados),desempenho:()=>widgetDesempenho(chamados),agenda:widgetAgenda,avisos:widgetAvisos,atalhos:widgetAtalhos,graficoTecnico:()=>widgetGrafico('graficoTecnico'),graficoStatus:()=>widgetGrafico('graficoStatus'),contratosAtivos:widgetContratosAtivos,contratosVencendo:widgetContratosVencendo,contratosAtraso:widgetContratosAtraso,receitaContratada:widgetReceitaContratada,contratosVencimentos:widgetContratosVencimentos,contratosRenovar:widgetContratosRenovar};
-      alvo.innerHTML=dashboardConfig.filter(x=>x.visivel).map(x=>`<article class="dashboard-widget tamanho-${x.tamanho}" data-widget="${x.id}">${renderers[x.id]()}</article>`).join('')||dashboardVazio('Escolha ao menos um bloco em Personalizar painel.');renderizarIcones();
+      const renderers={sla:()=>widgetSla(chamados),contatos:widgetContatos,processos:widgetProcessos,minhaFila:()=>widgetFila(chamados),semTecnico:()=>widgetSemTecnico(chamados),prioridade:()=>widgetPrioridade(chamados),recentes:()=>widgetRecentes(chamados),recorrentes:()=>widgetRecorrentes(chamados),desempenho:()=>widgetDesempenho(chamados),agenda:widgetAgenda,crmAgenda:widgetCrmAgenda,avisos:widgetAvisos,atalhos:widgetAtalhos,graficoTecnico:()=>widgetGrafico('graficoTecnico'),graficoStatus:()=>widgetGrafico('graficoStatus'),contratosAtivos:widgetContratosAtivos,contratosVencendo:widgetContratosVencendo,contratosAtraso:widgetContratosAtraso,receitaContratada:widgetReceitaContratada,contratosVencimentos:widgetContratosVencimentos,contratosRenovar:widgetContratosRenovar};
+      alvo.innerHTML=dashboardConfig.filter(x=>x.visivel&&widgetDashboardPermitido(x.id)).map(x=>`<article class="dashboard-widget tamanho-${x.tamanho}" data-widget="${x.id}">${renderers[x.id]()}</article>`).join('')||dashboardVazio('Escolha ao menos um bloco em Personalizar painel.');renderizarIcones();
       if(dashboardConfig.some(x=>x.visivel&&x.id.startsWith('grafico'))){const porTecnico={},porStatus={};chamados.forEach(c=>{porTecnico[c.tecnico]=(porTecnico[c.tecnico]||0)+1;porStatus[c.status]=(porStatus[c.status]||0)+1});setTimeout(()=>atualizarGraficos(porTecnico,porStatus),0)}
     }
     async function carregarDashboardPersonalizado(){
       if(!usuarioLogado)return;const periodo=document.getElementById('dashboardPeriodo');
-      try{const [{data:pref},{data:interacoes},{data:processos},{data:avisos},{data:contratos},{data:lancamentosContrato}]=await Promise.all([
+      const consultaLeads=podeUsarCrmDashboard()?supabaseClient.from('leads').select('id,nome,responsavel,telefone,cidade,interesse,etapa,proxima,proxima_tipo,proxima_hora,convertido,criado_por').not('proxima','is',null).eq('convertido',false).order('proxima'):Promise.resolve({data:[],error:null});
+      try{const [{data:pref},{data:interacoes},{data:processos},{data:leads},{data:avisos},{data:contratos},{data:lancamentosContrato}]=await Promise.all([
         supabaseClient.from('dashboard_preferencias').select('widgets,periodo').eq('user_id',usuarioLogado.id).maybeSingle(),
         supabaseClient.from('chamado_interacoes').select('chamado_id,proximo_contato,descricao,tipo').not('proximo_contato','is',null).order('proximo_contato'),
         supabaseClient.from('processos_internos').select('id,titulo,responsavel_nome,prioridade,status,proxima_execucao,criado_por').order('proxima_execucao'),
+        consultaLeads,
         supabaseClient.from('avisos_internos').select('*').or(`expira_em.is.null,expira_em.gt.${new Date().toISOString()}`).order('criado_em',{ascending:false}),
         supabaseClient.from('contratos').select('id,numero,parte_tipo,tipo_contrato,valor_mensal,inicio,duracao_meses,status'),
         supabaseClient.from('financeiro_lancamentos').select('id,contrato_id,descricao,valor,valor_pago,vencimento,status,contratos(numero)').not('contrato_id','is',null)
-      ]);dashboardConfig=normalizarDashboardConfig(pref?.widgets||dashboardConfig);dashboardPeriodoAtual=pref?.periodo||'hoje';dashboardInteracoes=interacoes||[];dashboardProcessos=(processos||[]).filter(p=>processoAtribuidoAoUsuario(processosInternos.find(x=>x.id===p.id))||podeAdministrarProcessos());dashboardAvisos=avisos||[];dashboardContratos=contratos||[];dashboardContratosLancamentos=lancamentosContrato||[];dashboardCarregado=true;if(periodo)periodo.value=dashboardPeriodoAtual;renderizarDashboardPersonalizado()}catch(erro){console.error('Dashboard:',erro);renderizarDashboardPersonalizado()}
+      ]);dashboardConfig=normalizarDashboardConfig(pref?.widgets||dashboardConfig);dashboardPeriodoAtual=pref?.periodo||'hoje';dashboardInteracoes=interacoes||[];dashboardProcessos=(processos||[]).filter(p=>processoAtribuidoAoUsuario(processosInternos.find(x=>x.id===p.id))||podeAdministrarProcessos());dashboardLeads=leads||[];dashboardAvisos=avisos||[];dashboardContratos=contratos||[];dashboardContratosLancamentos=lancamentosContrato||[];dashboardCarregado=true;if(periodo)periodo.value=dashboardPeriodoAtual;renderizarDashboardPersonalizado()}catch(erro){console.error('Dashboard:',erro);renderizarDashboardPersonalizado()}
     }
     async function alterarPeriodoDashboard(valor){dashboardPeriodoAtual=valor;renderizarDashboardPersonalizado();if(usuarioLogado)await supabaseClient.from('dashboard_preferencias').upsert({user_id:usuarioLogado.id,widgets:dashboardConfig,periodo:valor,atualizado_em:new Date().toISOString()})}
     function abrirPersonalizacaoDashboard(){const modal=document.getElementById('modalDashboardPersonalizar');if(!modal)return;modal.classList.add('active');renderizarConfigDashboard();renderizarIcones()}
     function fecharPersonalizacaoDashboard(){document.getElementById('modalDashboardPersonalizar')?.classList.remove('active')}
-    function renderizarConfigDashboard(){const lista=document.getElementById('dashboardConfigLista');if(!lista)return;lista.innerHTML=dashboardConfig.map((x,i)=>`<div class="dashboard-config-item" draggable="true" data-index="${i}"><span class="dashboard-drag"><i data-lucide="grip-vertical"></i></span><label class="dashboard-config-toggle"><input type="checkbox" ${x.visivel?'checked':''} onchange="dashboardConfig[${i}].visivel=this.checked"><span></span></label><div class="dashboard-config-name"><i data-lucide="${DASHBOARD_WIDGETS[x.id].icone}"></i><strong>${DASHBOARD_WIDGETS[x.id].titulo}</strong></div><select onchange="dashboardConfig[${i}].tamanho=this.value"><option value="pequeno" ${x.tamanho==='pequeno'?'selected':''}>Pequeno</option><option value="medio" ${x.tamanho==='medio'?'selected':''}>Médio</option><option value="grande" ${x.tamanho==='grande'?'selected':''}>Grande</option></select><div class="dashboard-order-buttons"><button ${i===0?'disabled':''} onclick="moverWidgetDashboard(${i},-1)"><i data-lucide="chevron-up"></i></button><button ${i===dashboardConfig.length-1?'disabled':''} onclick="moverWidgetDashboard(${i},1)"><i data-lucide="chevron-down"></i></button></div></div>`).join('');ativarDragDashboard();renderizarIcones()}
+    function renderizarConfigDashboard(){const lista=document.getElementById('dashboardConfigLista');if(!lista)return;lista.innerHTML=dashboardConfig.map((x,i)=>widgetDashboardPermitido(x.id)?`<div class="dashboard-config-item" draggable="true" data-index="${i}"><span class="dashboard-drag"><i data-lucide="grip-vertical"></i></span><label class="dashboard-config-toggle"><input type="checkbox" ${x.visivel?'checked':''} onchange="dashboardConfig[${i}].visivel=this.checked"><span></span></label><div class="dashboard-config-name"><i data-lucide="${DASHBOARD_WIDGETS[x.id].icone}"></i><strong>${DASHBOARD_WIDGETS[x.id].titulo}</strong></div><select onchange="dashboardConfig[${i}].tamanho=this.value"><option value="pequeno" ${x.tamanho==='pequeno'?'selected':''}>Pequeno</option><option value="medio" ${x.tamanho==='medio'?'selected':''}>Médio</option><option value="grande" ${x.tamanho==='grande'?'selected':''}>Grande</option></select><div class="dashboard-order-buttons"><button ${i===0?'disabled':''} onclick="moverWidgetDashboard(${i},-1)"><i data-lucide="chevron-up"></i></button><button ${i===dashboardConfig.length-1?'disabled':''} onclick="moverWidgetDashboard(${i},1)"><i data-lucide="chevron-down"></i></button></div></div>`:'').join('');ativarDragDashboard();renderizarIcones()}
     function moverWidgetDashboard(i,d){const n=i+d;if(n<0||n>=dashboardConfig.length)return;[dashboardConfig[i],dashboardConfig[n]]=[dashboardConfig[n],dashboardConfig[i]];renderizarConfigDashboard()}
     function ativarDragDashboard(){let origem=null;document.querySelectorAll('.dashboard-config-item').forEach(item=>{item.addEventListener('dragstart',()=>{origem=Number(item.dataset.index);item.classList.add('dragging')});item.addEventListener('dragend',()=>item.classList.remove('dragging'));item.addEventListener('dragover',e=>e.preventDefault());item.addEventListener('drop',e=>{e.preventDefault();const destino=Number(item.dataset.index);if(origem===null||origem===destino)return;const [movido]=dashboardConfig.splice(origem,1);dashboardConfig.splice(destino,0,movido);renderizarConfigDashboard()})})}
     function restaurarDashboardPadrao(){dashboardConfig=normalizarDashboardConfig(DASHBOARD_PADRAO.map(id=>({id,visivel:true,tamanho:DASHBOARD_WIDGETS[id].tamanho})));renderizarConfigDashboard()}
