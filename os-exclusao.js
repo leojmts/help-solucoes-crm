@@ -7,7 +7,7 @@
     const botao = document.createElement('button');
     botao.id = 'btnExcluirOS';
     botao.type = 'button';
-    botao.className = 'btn btn-danger os-btn-excluir hidden';
+    botao.className = 'btn os-btn-excluir';
     botao.innerHTML = '<i data-lucide="trash-2"></i>Excluir OS';
     botao.addEventListener('click', excluirOSAtual);
     actions.insertBefore(botao, actions.firstChild);
@@ -31,7 +31,7 @@
     const administrador = usuarioLogado?.perfil === 'admin';
     const propria = criador && criador === String(usuarioLogado?.id || '');
     const permitido = administrador || (usuarioLogado?.permissoes?.osExcluir === true && propria);
-    botao.classList.toggle('hidden', !id || !permitido);
+    botao.style.display = id && permitido ? 'inline-flex' : 'none';
   }
 
   async function excluirOSAtual() {
