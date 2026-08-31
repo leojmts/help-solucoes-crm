@@ -56,11 +56,10 @@ function finAba(aba,btn){document.querySelectorAll('[data-fin-painel]').forEach(
 function finAtualizarSelectFornecedores(){const s=document.getElementById('finFornecedor');if(s)s.innerHTML='<option value="">Nenhum</option>'+finFornecedores.map(x=>`<option value="${x.id}">${osHtml(x.nome)}</option>`).join('')}
 
 async function finGerarRecorrenciasPendentes(){
- if(!finPermissao('financeiroCriar'))return;const hoje=finHoje();let gerou=false;
- for(const r of finRecorrencias.filter(x=>x.ativa&&x.inicio<=hoje&&(!x.fim||x.fim>=hoje))){
-  const limite=new Date();limite.setMonth(limite.getMonth()+2);
+ if(!finPermissao('financeiroCriar'))return;const hoje=finHoje(),limite=new Date(`${hoje}T12:00:00`);limite.setMonth(limite.getMonth()+2);const limiteData=limite.toISOString().slice(0,10);let gerou=false;
+ for(const r of finRecorrencias.filter(x=>x.ativa&&x.inicio<=limiteData&&(!x.fim||x.fim>=hoje))){
   let d=new Date(`${r.inicio}T12:00:00`);d.setDate(Math.min(r.dia_vencimento,28));
-  while(d<=limite){const venc=d.toISOString().slice(0,10);if((!r.fim||venc<=r.fim)&&venc>=r.inicio){const{data}=await supabaseClient.from('financeiro_lancamentos').select('id').eq('recorrencia_id',r.id).eq('vencimento',venc).maybeSingle();if(!data){const{error}=await supabaseClient.from('financeiro_lancamentos').insert({tipo:r.tipo,descricao:r.descricao,categoria:r.categoria,fornecedor_id:r.fornecedor_id,valor:r.valor,vencimento:venc,status:'Pendente',forma_pagamento:r.forma_pagamento,observacoes:r.observacoes,recorrencia_id:r.id});if(!error)gerou=true}}
+  while(d<=limite){const venc=d.toISOString().slice(0,10);if((!r.fim||venc<=r.fim)&&venc>=r.inicio){const{data,error:erroConsulta}=await supabaseClient.from('financeiro_lancamentos').select('id').eq('recorrencia_id',r.id).eq('vencimento',venc).maybeSingle();if(erroConsulta)return avisarModulo('Não foi possível conferir a recorrência: '+erroConsulta.message);if(!data){const{error}=await supabaseClient.from('financeiro_lancamentos').insert({tipo:r.tipo,descricao:r.descricao,categoria:r.categoria,fornecedor_id:r.fornecedor_id,valor:r.valor,vencimento:venc,status:'Pendente',forma_pagamento:r.forma_pagamento,observacoes:r.observacoes,recorrencia_id:r.id});if(error)return avisarModulo('Não foi possível gerar a conta recorrente: '+error.message);gerou=true}}
    d.setMonth(d.getMonth()+1);d.setDate(Math.min(r.dia_vencimento,28));
   }
   await supabaseClient.from('financeiro_recorrencias').update({ultima_geracao:hoje,atualizado_em:new Date().toISOString()}).eq('id',r.id);
