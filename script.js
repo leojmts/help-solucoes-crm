@@ -59,12 +59,15 @@ async function atualizarChamadoNaNuvem(protocolo, alteracoes) {
 }
 
 async function excluirChamadoNaNuvem(protocolo) {
-  const { error } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from('chamados')
     .delete()
-    .eq('protocolo', protocolo);
+    .eq('protocolo', protocolo)
+    .select('id')
+    .maybeSingle();
 
   if (error) throw error;
+  if (!data) throw new Error('O chamado não foi excluído. Somente administradores podem realizar esta ação.');
 }
 
 async function obterIdChamadoAtual() {
@@ -392,7 +395,8 @@ function adicionarChamadoNuvemNaTabela(chamado) {
   const btnWhats = document.createElement('button'); btnWhats.title = 'Enviar WhatsApp'; definirIcone(btnWhats, 'message-circle'); btnWhats.onclick = function () { enviarWhatsappChamado(this); };
   const btnVer = document.createElement('button'); btnVer.title = 'Editar/Visualizar'; definirIcone(btnVer, 'eye'); btnVer.onclick = function () { visualizarChamado(this); };
   const btnExcluir = document.createElement('button'); btnExcluir.title = 'Excluir'; definirIcone(btnExcluir, 'trash-2'); btnExcluir.onclick = function () { excluirChamado(this); };
-  tdAcoes.append(btnWhats, btnVer, btnExcluir);
+  tdAcoes.append(btnWhats, btnVer);
+  if (usuarioLogado?.perfil === 'admin' || usuarioLogado?.permissoes?.usuarios === true) tdAcoes.append(btnExcluir);
   novaLinha.appendChild(tdAcoes);
   finalizarInterfaceDinamica();
 }
@@ -1299,7 +1303,8 @@ async function carregarChamadosDaNuvem() {
         const btnWhats = document.createElement('button'); btnWhats.title = 'Enviar WhatsApp'; definirIcone(btnWhats, 'message-circle'); btnWhats.onclick = function () { enviarWhatsappChamado(this); };
         const btnVer = document.createElement('button'); btnVer.title = 'Editar/Visualizar'; definirIcone(btnVer, 'eye'); btnVer.onclick = function () { visualizarChamado(this); };
         const btnExcluir = document.createElement('button'); btnExcluir.title = 'Excluir'; definirIcone(btnExcluir, 'trash-2'); btnExcluir.onclick = function () { excluirChamado(this); };
-        tdAcoes.append(btnWhats, btnVer, btnExcluir);
+        tdAcoes.append(btnWhats, btnVer);
+        if (usuarioLogado?.perfil === 'admin' || usuarioLogado?.permissoes?.usuarios === true) tdAcoes.append(btnExcluir);
 
         novaLinha.append(tdProtocolo, tdAbertura, tdCliente, tdUnidade, tdOrigem, tdSerial, tdSolicitante, tdTecnico, tdModulo, tdTipo, tdPrioridade, tdStatus, tdFechamento, tdAcoes);
 
@@ -2510,7 +2515,7 @@ async function converterLeadCliente(){
         if(resolucaoPreenchida&&contatoConfirmado)await salvarChamado();
       }else{
         const{error}=await supabaseClient.from('chamado_tempos').insert({chamado_id:id,usuario_id:usuarioLogado.id,usuario_nome:usuarioLogado.usuario});
-        if(error){alert(error.code==='23505'?'Você já possui outro atendimento em andamento. Finalize-o antes de iniciar este.':error.message);return}
+        if(error){alert('Não foi possível iniciar este atendimento.\n\n'+error.message);return}
         await atualizarControleAtendimento();
       }
     }

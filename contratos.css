@@ -4,7 +4,11 @@
 
 /* Tokens do modulo de contratos em ambos os temas. */
 .contratos-view,.contrato-modal,.contrato-detalhe,.ct-modal-pequeno{--surface:#0c1d32;--surface-soft:#091829;--border:#294460;--text-primary:#e7f1fd}
-.contratos-toolbar .crm-search-wrap{background:var(--surface);border-color:var(--border)}
+.contratos-toolbar .crm-search-wrap{position:relative;display:flex;align-items:center;flex:1;min-width:250px;height:44px;margin:0;padding:0 13px 0 42px;background:var(--surface);border:1px solid var(--border);border-radius:11px;color:var(--text-primary);box-shadow:inset 0 1px 2px rgba(0,0,0,.16)}
+.contratos-toolbar .crm-search-wrap>svg{position:absolute;left:14px;top:50%;width:17px;height:17px;transform:translateY(-50%);color:var(--text-muted);pointer-events:none}
+.contratos-toolbar .crm-search-wrap input{width:100%;height:100%;margin:0;padding:0;border:0!important;background:transparent!important;color:var(--text-primary)!important;font:inherit;outline:0;box-shadow:none!important}
+.contratos-toolbar .crm-search-wrap input::placeholder{color:var(--text-muted);opacity:.82}.contratos-toolbar .crm-search-wrap:focus-within{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.14)}
+.contratos-toolbar select{height:44px;padding:0 38px 0 12px;border:1px solid var(--border);border-radius:11px;background:var(--surface);color:var(--text-primary);font:inherit;outline:0;color-scheme:dark}.contratos-toolbar select:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.14)}
 .ct-painel{background:var(--surface)}
 .ct-valor-total,.ct-parte-aviso{background:rgba(217,119,6,.12);border-color:rgba(251,146,60,.32);color:#fdba74}
 html:not([data-theme="light"]) .contratos-kpi.alerta strong{color:#fb923c}
@@ -12,5 +16,6 @@ html:not([data-theme="light"]) .contratos-kpi.atraso strong{color:#fb7185}
 html[data-theme="light"] .contratos-view,html[data-theme="light"] .contrato-modal,html[data-theme="light"] .contrato-detalhe,html[data-theme="light"] .ct-modal-pequeno{--surface:#fff;--surface-soft:#f5f8fc;--border:#d8e2ec;--text-primary:#172033}
 html[data-theme="light"] .contratos-kpi,html[data-theme="light"] .contrato-card,html[data-theme="light"] .contratos-vazio,html[data-theme="light"] .contrato-form-section,html[data-theme="light"] .ct-painel{background:#fff!important;color:#172033!important;border-color:#d8e2ec!important;box-shadow:0 5px 18px rgba(15,23,42,.05)!important}
 html[data-theme="light"] .contratos-toolbar .crm-search-wrap,html[data-theme="light"] .ct-resumo-fin article,html[data-theme="light"] .contrato-card-resumo{background:#f7f9fc!important;border-color:#dfe7ef!important;color:#172033!important}
+html[data-theme="light"] .contratos-toolbar select{background:#fff!important;color:#172033!important;border-color:#cfd9e5!important;color-scheme:light}
 html[data-theme="light"] .ct-valor-total,html[data-theme="light"] .ct-parte-aviso{background:#fff7ed!important;border-color:#fed7aa!important;color:#9a3412!important}
 html[data-theme="light"] .ct-doc-item button,html[data-theme="light"] .ct-anexo-item button{color:#1768d6!important}

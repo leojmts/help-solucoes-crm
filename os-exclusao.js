@@ -27,12 +27,21 @@
     const botao = document.getElementById('btnExcluirOS');
     if (!botao) return;
     const id = Number(document.getElementById('osId')?.value || 0);
-    botao.classList.toggle('hidden', !id);
+    const criador = String(osAtual?.criado_por || '');
+    const administrador = usuarioLogado?.perfil === 'admin';
+    const propria = criador && criador === String(usuarioLogado?.id || '');
+    const permitido = administrador || (usuarioLogado?.permissoes?.osExcluir === true && propria);
+    botao.classList.toggle('hidden', !id || !permitido);
   }
 
   async function excluirOSAtual() {
     const id = Number(osAtual?.id || document.getElementById('osId')?.value || 0);
     if (!id) return avisarModulo('Abra uma ordem de serviço salva antes de excluir.');
+    const administrador = usuarioLogado?.perfil === 'admin';
+    const propria = String(osAtual?.criado_por || '') === String(usuarioLogado?.id || '');
+    if (!administrador && !(usuarioLogado?.permissoes?.osExcluir === true && propria)) {
+      return avisarModulo('Você só pode excluir ordens de serviço criadas pelo seu próprio usuário.');
+    }
 
     const numero = osAtual?.numero || document.getElementById('osModalTitulo')?.textContent || `OS #${id}`;
     const botao = document.getElementById('btnExcluirOS');
