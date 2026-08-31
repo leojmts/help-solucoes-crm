@@ -20,7 +20,8 @@
   outline:none;
   color-scheme:dark;
 }
-.os-toolbar input{padding-left:38px}
+.os-busca svg{z-index:1;pointer-events:none}
+.os-toolbar .os-busca input,.financeiro-toolbar .os-busca input{padding-left:42px!important}
 .os-toolbar input::placeholder,.financeiro-toolbar input::placeholder{color:var(--text-muted)}
 .os-toolbar input:focus,.os-toolbar select:focus,.financeiro-toolbar input:focus,.financeiro-toolbar select:focus{
   border-color:var(--accent-blue);
