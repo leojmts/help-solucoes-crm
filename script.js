@@ -551,6 +551,7 @@ async function carregarChamadosDaNuvem() {
       const nomeExibicao = perfilNuvem.nome || (user.email || 'Usuário').split('@')[0];
       usuarioLogado = {
         id: user.id,
+        nome: nomeExibicao,
         usuario: nomeExibicao,
         email: user.email || perfilNuvem.email || '',
         perfil: perfilNuvem.perfil || 'personalizado',
