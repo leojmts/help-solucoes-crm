@@ -19,7 +19,8 @@
   <link rel="stylesheet" href="gerenciamento-contas.css">
   <link rel="stylesheet" href="tema.css?v=20260826-3">
   <link rel="stylesheet" href="tema-fixes.css?v=20260828-4">
-  <link rel="stylesheet" href="crm-gestao-integrada.css?v=20260831-1">
+  <link rel="stylesheet" href="crm-gestao-integrada.css?v=20260831-2">
+  <link rel="stylesheet" href="cadastro-operacional.css?v=20260831-1">
 </head>
 <body>
   <div class="container hidden" id="appContainer">
@@ -284,11 +285,14 @@
         <header class="header">
           <div>
             <h1>Cadastro</h1>
-            <p>Centralize clientes, técnicos e usuários do sistema</p>
+            <p>Centralize clientes, produtos, serviços, estoque, equipamentos e usuários</p>
           </div>
         </header>
         <div class="section-tabs">
           <button class="section-tab active" id="tabCadastroClientes" onclick="trocarSubCadastro('clientes')"><i data-lucide="users"></i>Clientes</button>
+          <button class="section-tab" id="tabCadastroCatalogo" onclick="trocarSubCadastro('catalogo')"><i data-lucide="tags"></i>Produtos e serviços</button>
+          <button class="section-tab" id="tabCadastroEstoque" onclick="trocarSubCadastro('estoque')"><i data-lucide="boxes"></i>Estoque</button>
+          <button class="section-tab" id="tabCadastroEquipamentos" onclick="trocarSubCadastro('equipamentos')"><i data-lucide="monitor-cog"></i>Equipamentos e garantias</button>
           <button class="section-tab" id="tabCadastroTecnicos" onclick="trocarSubCadastro('tecnicos')"><i data-lucide="wrench"></i>Técnicos</button>
           <button class="section-tab" id="tabCadastroUsuarios" onclick="trocarSubCadastro('usuarios')"><i data-lucide="key-round"></i>Usuários</button>
         </div>
@@ -365,6 +369,18 @@
           </div>
         </section>
         </div>
+
+      <div id="cadastroCatalogo" class="cadastro-panel hidden">
+        <section id="cadCatalogoConteudo" class="cad-operacional-panel"></section>
+      </div>
+
+      <div id="cadastroEstoque" class="cadastro-panel hidden">
+        <section id="cadEstoqueConteudo" class="cad-operacional-panel"></section>
+      </div>
+
+      <div id="cadastroEquipamentos" class="cadastro-panel hidden">
+        <section id="cadEquipamentosConteudo" class="cad-operacional-panel"></section>
+      </div>
 
       <div id="cadastroTecnicos" class="cadastro-panel hidden">
         <section class="table-container">
@@ -988,7 +1004,7 @@
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <script src="script.js?v=20260831-1"></script>
   <script src="os-financeiro.js"></script>
-  <script src="financeiro-avancado.js?v=20260831-2"></script>
+  <script src="financeiro-avancado.js?v=20260831-3"></script>
   <script src="crm-correcoes.js"></script>
   <script src="gerenciamento-contas.js"></script>
   <script src="os-documento-v4.js?v=20260826-3"></script>
@@ -1000,6 +1016,7 @@
   <script src="financeiro-resumo-mensal.js?v=20260827-3"></script>
   <script src="contratos-pdf.js?v=20260827-1"></script>
   <script src="contratos.js?v=20260827-1"></script>
-  <script src="crm-gestao-integrada.js?v=20260828-2"></script>
+  <script src="crm-gestao-integrada.js?v=20260831-3"></script>
+  <script src="cadastro-operacional.js?v=20260831-1"></script>
 </body>
 </html>
