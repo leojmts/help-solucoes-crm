@@ -510,6 +510,22 @@ async function carregarChamadosDaNuvem() {
       return data;
     }
 
+    async function carregarNomePessoaUsuario(userId) {
+      const { data, error } = await supabaseClient
+        .from('tecnicos')
+        .select('nome')
+        .eq('user_id', userId)
+        .eq('ativo', true)
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.warn('Não foi possível carregar o nome pessoal vinculado ao usuário:', error);
+        return '';
+      }
+      return (data?.nome || '').trim();
+    }
+
     function registrarLog(acao) {
       const log = JSON.parse(localStorage.getItem('help_crm_log') || '[]');
       log.unshift({ usuario: usuarioLogado ? usuarioLogado.usuario : '-', acao, data: formatarDataHoraAtual() });
@@ -548,7 +564,8 @@ async function carregarChamadosDaNuvem() {
         throw new Error('Sua conta existe, mas ainda não foi autorizada por um administrador.');
       }
 
-      const nomeExibicao = perfilNuvem.nome || (user.email || 'Usuário').split('@')[0];
+      const nomePessoa = await carregarNomePessoaUsuario(user.id);
+      const nomeExibicao = nomePessoa || perfilNuvem.nome || (user.email || 'Usuário').split('@')[0];
       usuarioLogado = {
         id: user.id,
         nome: nomeExibicao,
@@ -1099,10 +1116,158 @@ async function carregarChamadosDaNuvem() {
       document.getElementById('modalChamado').classList.add('active');
     }
 
+    function somenteDigitos(valor) {
+      return String(valor || '').replace(/\D/g, '');
+    }
+
+    function formatarCpfCnpj(valor, tipo) {
+      const limite = tipo === 'fisica' ? 11 : 14;
+      const numeros = somenteDigitos(valor).slice(0, limite);
+      if (tipo === 'fisica') {
+        return numeros
+          .replace(/^(\d{3})(\d)/, '$1.$2')
+          .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+          .replace(/\.(\d{3})(\d)/, '.$1-$2');
+      }
+      return numeros
+        .replace(/^(\d{2})(\d)/, '$1.$2')
+        .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+        .replace(/\.(\d{3})(\d)/, '.$1/$2')
+        .replace(/(\d{4})(\d)/, '$1-$2');
+    }
+
+    function cnpjValido(cnpj) {
+      const numeros = somenteDigitos(cnpj);
+      if (numeros.length !== 14 || /^(\d)\1{13}$/.test(numeros)) return false;
+      const calcular = tamanho => {
+        let soma = 0;
+        let peso = tamanho - 7;
+        for (let i = 0; i < tamanho; i += 1) {
+          soma += Number(numeros[i]) * peso--;
+          if (peso < 2) peso = 9;
+        }
+        const resto = soma % 11;
+        return resto < 2 ? 0 : 11 - resto;
+      };
+      return calcular(12) === Number(numeros[12]) && calcular(13) === Number(numeros[13]);
+    }
+
+    function mostrarStatusConsultaCnpj(mensagem = '', tipo = '') {
+      const status = document.getElementById('cCnpjStatus');
+      if (!status) return;
+      status.textContent = mensagem;
+      status.className = `consulta-cnpj-status${tipo ? ` ${tipo}` : ''}${mensagem ? '' : ' hidden'}`;
+    }
+
+    function atualizarTipoPessoaCliente() {
+      const tipo = document.getElementById('cTipoPessoa')?.value || 'juridica';
+      const documento = document.getElementById('cDocumento');
+      const botao = document.getElementById('btnConsultarCnpj');
+      document.getElementById('cDocumentoLabel').textContent = tipo === 'fisica' ? 'CPF' : 'CNPJ';
+      documento.placeholder = tipo === 'fisica' ? '000.000.000-00' : '00.000.000/0000-00';
+      documento.value = formatarCpfCnpj(documento.value, tipo);
+      botao.classList.toggle('hidden', tipo === 'fisica');
+      mostrarStatusConsultaCnpj();
+      renderizarIcones();
+    }
+
+    function formatarDocumentoCliente() {
+      const tipo = document.getElementById('cTipoPessoa')?.value || 'juridica';
+      const documento = document.getElementById('cDocumento');
+      documento.value = formatarCpfCnpj(documento.value, tipo);
+      mostrarStatusConsultaCnpj();
+    }
+
+    async function localizarClientePorDocumento(documento) {
+      const procurado = somenteDigitos(documento);
+      if (!procurado) return null;
+      const { data, error } = await supabaseClient.from('clientes').select('id,nome,unidade,documento');
+      if (error) throw error;
+      return (data || []).find(cliente => somenteDigitos(cliente.documento) === procurado) || null;
+    }
+
+    function montarEnderecoCnpj(empresa) {
+      const logradouro = [empresa.descricao_tipo_de_logradouro, empresa.logradouro]
+        .map(parte => String(parte || '').trim())
+        .filter(Boolean)
+        .join(' ');
+      return [logradouro, empresa.numero, empresa.complemento, empresa.bairro]
+        .map(parte => String(parte || '').trim())
+        .filter(Boolean)
+        .join(', ');
+    }
+
+    function formatarTelefoneCnpj(telefone) {
+      const numeros = somenteDigitos(telefone).slice(0, 11);
+      if (numeros.length === 11) return numeros.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+      if (numeros.length === 10) return numeros.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3');
+      return telefone || '';
+    }
+
+    async function consultarCnpjCliente() {
+      const documento = document.getElementById('cDocumento');
+      const botao = document.getElementById('btnConsultarCnpj');
+      const cnpj = somenteDigitos(documento.value);
+      if (!cnpjValido(cnpj)) {
+        mostrarStatusConsultaCnpj('Informe um CNPJ válido com 14 números.', 'erro');
+        documento.focus();
+        return;
+      }
+
+      botao.disabled = true;
+      botao.innerHTML = '<span class="consulta-cnpj-spinner"></span><span>Consultando...</span>';
+      mostrarStatusConsultaCnpj('Consultando os dados públicos da empresa...', 'carregando');
+
+      try {
+        const existente = await localizarClientePorDocumento(cnpj);
+        const idEdicao = Number(linhaEdicaoCliente?.dataset.idNuvem || 0);
+        if (existente && existente.id !== idEdicao) {
+          mostrarStatusConsultaCnpj(`Este CNPJ já está cadastrado para ${existente.nome}${existente.unidade ? ` — ${existente.unidade}` : ''}.`, 'aviso');
+          return;
+        }
+
+        const controle = new AbortController();
+        const limite = setTimeout(() => controle.abort(), 12000);
+        let resposta;
+        try {
+          resposta = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`, { signal: controle.signal });
+        } finally {
+          clearTimeout(limite);
+        }
+        const empresa = await resposta.json().catch(() => ({}));
+        if (!resposta.ok) throw new Error(empresa.message || 'CNPJ não encontrado na base consultada.');
+
+        document.getElementById('cNome').value = empresa.razao_social || empresa.nome_fantasia || '';
+        document.getElementById('cEndereco').value = montarEnderecoCnpj(empresa);
+        document.getElementById('cCidade').value = empresa.municipio || '';
+        document.getElementById('cUf').value = String(empresa.uf || '').toUpperCase();
+        document.getElementById('cCep').value = String(empresa.cep || '').replace(/^(\d{5})(\d{3})$/, '$1-$2');
+        if (empresa.ddd_telefone_1) document.getElementById('cTelefone').value = formatarTelefoneCnpj(empresa.ddd_telefone_1);
+        if (empresa.email) document.getElementById('cEmail').value = String(empresa.email).toLowerCase();
+        if (empresa.opcao_pelo_mei) document.getElementById('cRegime').value = 'MEI';
+        else if (empresa.opcao_pelo_simples) document.getElementById('cRegime').value = 'Simples Nacional';
+
+        const situacao = empresa.descricao_situacao_cadastral || 'Situação não informada';
+        const fantasia = empresa.nome_fantasia ? ` · Fantasia: ${empresa.nome_fantasia}` : '';
+        mostrarStatusConsultaCnpj(`Dados encontrados · ${situacao}${fantasia}`, situacao.toUpperCase() === 'ATIVA' ? 'sucesso' : 'aviso');
+        registrarLog(`consultou o CNPJ ${formatarCpfCnpj(cnpj, 'juridica')}`);
+      } catch (erro) {
+        const mensagem = erro.name === 'AbortError'
+          ? 'A consulta demorou demais. Tente novamente ou preencha manualmente.'
+          : `Não foi possível consultar o CNPJ: ${erro.message}`;
+        mostrarStatusConsultaCnpj(mensagem, 'erro');
+      } finally {
+        botao.disabled = false;
+        botao.innerHTML = '<i data-lucide="search"></i><span>Buscar CNPJ</span>';
+        renderizarIcones();
+      }
+    }
+
     function abrirModalCliente() {
       linhaEdicaoCliente = null;
       document.getElementById('modalClienteTitulo').innerText = "Cadastrar Novo Cliente";
       document.getElementById('cNome').value = '';
+      document.getElementById('cTipoPessoa').value = 'juridica';
       document.getElementById('cUnidade').value = '';
       document.getElementById('cDocumento').value = '';
       document.getElementById('cIe').value = '';
@@ -1121,6 +1286,7 @@ async function carregarChamadosDaNuvem() {
       document.getElementById('cFornecedorCategoria').value = '';
       document.getElementById('cFornecedorObs').value = '';
       document.getElementById('cFornecedorCampos').classList.add('hidden');
+      atualizarTipoPessoaCliente();
       document.getElementById('modalCliente').classList.add('active');
     }
 
@@ -1384,6 +1550,13 @@ async function carregarChamadosDaNuvem() {
       const payload = { nome, unidade, documento: doc, ie, regime, telefone: tel, email, endereco, cidade, uf, cep, representante, representante_cpf: representanteCpf, observacoes_tecnicas: obsTecnicas, eh_cliente: true };
 
       try {
+        const clienteDuplicado = await localizarClientePorDocumento(doc);
+        const idEdicao = Number(linhaEdicaoCliente?.dataset.idNuvem || 0);
+        if (clienteDuplicado && clienteDuplicado.id !== idEdicao) {
+          alert(`Este documento já está cadastrado para ${clienteDuplicado.nome}${clienteDuplicado.unidade ? ` — ${clienteDuplicado.unidade}` : ''}.`);
+          document.getElementById('cDocumento').focus();
+          return;
+        }
         let clienteId;
         if (linhaEdicaoCliente && linhaEdicaoCliente.dataset.idNuvem) {
           clienteId = Number(linhaEdicaoCliente.dataset.idNuvem);
@@ -1415,6 +1588,7 @@ async function carregarChamadosDaNuvem() {
       document.getElementById('modalClienteTitulo').innerText = "Editar Cliente";
       document.getElementById('cNome').value = td[0].innerText;
       document.getElementById('cUnidade').value = td[1].innerText;
+      document.getElementById('cTipoPessoa').value = somenteDigitos(td[2].innerText).length === 11 ? 'fisica' : 'juridica';
       document.getElementById('cDocumento').value = td[2].innerText;
       document.getElementById('cIe').value = linhaEdicaoCliente.getAttribute('data-ie') || '';
       document.getElementById('cRegime').value = td[5].innerText;
@@ -1427,6 +1601,7 @@ async function carregarChamadosDaNuvem() {
       document.getElementById('cCep').value = linhaEdicaoCliente.dataset.cep || '';
       document.getElementById('cRepresentante').value = linhaEdicaoCliente.dataset.representante || '';
       document.getElementById('cRepresentanteCpf').value = linhaEdicaoCliente.dataset.representanteCpf || '';
+      atualizarTipoPessoaCliente();
 
       Promise.resolve(typeof cadCarregarFornecedorCliente === 'function' ? cadCarregarFornecedorCliente(Number(linhaEdicaoCliente.dataset.idNuvem)) : null).catch(console.warn);
 
@@ -1441,6 +1616,7 @@ async function carregarChamadosDaNuvem() {
       document.getElementById('modalClienteTitulo').innerText = "Cadastrar Novo Cliente (Clonado)";
       document.getElementById('cNome').value = td[0].innerText;
       document.getElementById('cUnidade').value = '';
+      document.getElementById('cTipoPessoa').value = somenteDigitos(td[2].innerText).length === 11 ? 'fisica' : 'juridica';
       document.getElementById('cDocumento').value = td[2].innerText;
       document.getElementById('cIe').value = tr.getAttribute('data-ie') || '';
       document.getElementById('cRegime').value = td[5].innerText;
@@ -1458,6 +1634,7 @@ async function carregarChamadosDaNuvem() {
       document.getElementById('cFornecedorCategoria').value = '';
       document.getElementById('cFornecedorObs').value = '';
       document.getElementById('cFornecedorCampos').classList.add('hidden');
+      atualizarTipoPessoaCliente();
 
       document.getElementById('modalCliente').classList.add('active');
     }
