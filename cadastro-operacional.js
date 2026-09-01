@@ -1,5 +1,5 @@
 /* Cadastros operacionais: catálogo, estoque, equipamentos e garantias. */
-let cadCatalogo=[],cadEstoque=[],cadMovimentos=[],cadFornecedores=[],cadClientesFornecedores=[];
+let cadCatalogo=[],cadEstoque=[],cadMovimentos=[];
 const cadHtml=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const cadMoeda=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const cadData=v=>v?new Date(`${String(v).slice(0,10)}T12:00:00`).toLocaleDateString('pt-BR'):'—';
@@ -9,44 +9,7 @@ const cadPodeExcluir=()=>usuarioLogado?.perfil==='admin'||usuarioLogado?.permiss
 function instalarCadastroOperacional(){
   if(document.getElementById('cadModalCatalogo'))return;
   document.body.insertAdjacentHTML('beforeend',`<div id="cadModalCatalogo" class="crm-modal-overlay" onclick="if(event.target===this)cadFecharCatalogo()"><div class="crm-modal-content cad-modal"><div class="modal-header"><div><h2 id="cadCatalogoTitulo">Novo produto ou serviço</h2><p>Cadastro comercial e controle de estoque em um só lugar.</p></div><button class="modal-close" onclick="cadFecharCatalogo()">×</button></div><input id="cadCatalogoId" type="hidden"><div class="gc-form"><label>Tipo *<select id="cadCatalogoTipo" onchange="cadAlternarCamposEstoque()"><option>Produto</option><option>Serviço</option></select></label><label>Código *<input id="cadCatalogoCodigo" maxlength="40"></label><label class="full">Descrição *<input id="cadCatalogoDescricao" maxlength="180"></label><label>Categoria<input id="cadCatalogoCategoria" maxlength="80"></label><label>Unidade<input id="cadCatalogoUnidade" value="UN" maxlength="12"></label><label>Custo<input id="cadCatalogoCusto" type="number" min="0" step="0.01" value="0"></label><label>Preço de venda<input id="cadCatalogoPreco" type="number" min="0" step="0.01" value="0"></label><section id="cadCatalogoEstoqueBox" class="full cad-estoque-box"><label class="cad-check"><input id="cadCatalogoControlaEstoque" type="checkbox" checked onchange="cadAlternarCamposEstoque()"><span>Controlar estoque deste produto</span></label><div id="cadCatalogoEstoqueCampos" class="cad-estoque-campos"><label>Estoque inicial<input id="cadCatalogoEstoqueInicial" type="number" min="0" step="0.001" value="0"></label><label>Estoque mínimo<input id="cadCatalogoEstoqueMinimo" type="number" min="0" step="0.001" value="0"></label><p id="cadCatalogoSaldoAtual" class="full cad-saldo-atual hidden"></p></div></section><label class="full">Observações<textarea id="cadCatalogoObs" rows="3"></textarea></label><label class="full cad-check"><input id="cadCatalogoAtivo" type="checkbox" checked><span>Disponível para uso</span></label></div><div class="modal-footer"><button class="btn btn-secondary" onclick="cadFecharCatalogo()">Cancelar</button><button class="btn btn-primary" onclick="cadSalvarCatalogo()"><i data-lucide="save"></i>Salvar cadastro</button></div></div></div>`);
-  document.body.insertAdjacentHTML('beforeend',`<div id="cadModalFornecedor" class="crm-modal-overlay" onclick="if(event.target===this)cadFecharFornecedor()"><div class="crm-modal-content cad-modal"><div class="modal-header"><div><h2 id="cadFornecedorTitulo">Vincular fornecedor</h2><p>Use os mesmos dados de pessoa ou empresa do cadastro de clientes.</p></div><button class="modal-close" onclick="cadFecharFornecedor()">×</button></div><input id="cadFornecedorId" type="hidden"><div class="gc-form"><label class="full">Pessoa ou empresa *<select id="cadFornecedorCliente"></select></label><label>Categoria<input id="cadFornecedorCategoria" maxlength="80" placeholder="Ex.: aluguel, insumos"></label><label class="full">Observações<textarea id="cadFornecedorObs" rows="3"></textarea></label><label class="full cad-check"><input id="cadFornecedorAtivo" type="checkbox" checked><span>Fornecedor ativo e disponível no Financeiro</span></label></div><div class="modal-footer"><button class="btn btn-secondary" onclick="cadFecharFornecedor()">Cancelar</button><button class="btn btn-primary" onclick="cadSalvarFornecedor()"><i data-lucide="save"></i>Salvar fornecedor</button></div></div></div>`);
   if(window.lucide)lucide.createIcons();
-}
-
-async function cadRenderFornecedores(){
-  const el=document.getElementById('cadFornecedoresConteudo');if(!el)return;
-  el.innerHTML='<div class="cad-loading">Carregando fornecedores...</div>';
-  const[fornecedores,clientes]=await Promise.all([
-    supabaseClient.from('financeiro_fornecedores').select('*,clientes(*)').order('nome'),
-    supabaseClient.from('clientes').select('*').order('nome')
-  ]);
-  if(fornecedores.error||clientes.error){el.innerHTML=`<div class="cad-empty">Não foi possível carregar os fornecedores: ${cadHtml((fornecedores.error||clientes.error).message)}</div>`;return}
-  cadFornecedores=fornecedores.data||[];cadClientesFornecedores=clientes.data||[];
-  el.innerHTML=`<div class="cad-head"><div><span>CADASTRO ÚNICO</span><h2>Fornecedores</h2><p>Cliente e fornecedor compartilham nome, documento e contatos. Aqui ficam apenas a classificação e as condições comerciais.</p></div>${cadPodeEditar()?'<button class="btn btn-primary" onclick="cadAbrirFornecedor()"><i data-lucide="link-2"></i>Vincular fornecedor</button>':''}</div><div class="cad-busca cad-busca-unica"><i data-lucide="search"></i><input id="cadFornecedorBusca" placeholder="Buscar nome, documento ou categoria" oninput="cadFiltrarFornecedores()"></div><div id="cadFornecedoresTabela"></div>`;
-  cadFiltrarFornecedores();
-}
-
-function cadFiltrarFornecedores(){
-  const busca=(document.getElementById('cadFornecedorBusca')?.value||'').trim().toLowerCase(),lista=cadFornecedores.filter(x=>!busca||`${x.clientes?.nome||x.nome} ${x.clientes?.documento||x.documento} ${x.categoria}`.toLowerCase().includes(busca)),el=document.getElementById('cadFornecedoresTabela');if(!el)return;
-  el.innerHTML=`<div class="cad-table-wrap"><table class="cad-table"><thead><tr><th>Pessoa ou empresa</th><th>Contato</th><th>Categoria</th><th>Status</th><th>Ações</th></tr></thead><tbody>${lista.map(x=>`<tr><td><b>${cadHtml(x.clientes?.nome||x.nome)}</b><small>${cadHtml(x.clientes?.documento||x.documento||'Sem documento')}</small></td><td>${cadHtml(x.clientes?.telefone||x.clientes?.email||'—')}</td><td>${cadHtml(x.categoria||'Outros')}</td><td><span class="cad-status ${x.ativo?'ativo':'inativo'}">${x.ativo?'Ativo':'Inativo'}</span></td><td><div class="cad-acoes">${cadPodeEditar()?`<button title="Editar vínculo" onclick="cadAbrirFornecedor(${x.id})"><i data-lucide="pencil"></i></button>`:''}</div></td></tr>`).join('')||'<tr><td colspan="5" class="cad-empty">Nenhum fornecedor vinculado.</td></tr>'}</tbody></table></div>`;
-  if(window.lucide)lucide.createIcons();
-}
-
-function cadAbrirFornecedor(id=null){
-  const x=cadFornecedores.find(a=>Number(a.id)===Number(id))||{},select=document.getElementById('cadFornecedorCliente');
-  select.innerHTML=cadClientesFornecedores.map(c=>`<option value="${c.id}">${cadHtml(c.nome)} · ${cadHtml(c.documento||'sem documento')}</option>`).join('');
-  document.getElementById('cadFornecedorId').value=x.id||'';select.value=x.cliente_id||'';select.disabled=!!x.id;
-  document.getElementById('cadFornecedorTitulo').textContent=x.id?'Editar fornecedor':'Vincular fornecedor';
-  document.getElementById('cadFornecedorCategoria').value=x.categoria||'Outros';document.getElementById('cadFornecedorObs').value=x.observacoes||'';document.getElementById('cadFornecedorAtivo').checked=x.ativo!==false;
-  document.getElementById('cadModalFornecedor').classList.add('active');if(window.lucide)lucide.createIcons();
-}
-function cadFecharFornecedor(){document.getElementById('cadModalFornecedor')?.classList.remove('active')}
-
-async function cadSalvarFornecedor(){
-  if(!cadPodeEditar())return avisarModulo('Você não possui permissão para alterar fornecedores.');
-  const clienteId=Number(document.getElementById('cadFornecedorCliente').value);if(!clienteId)return avisarModulo('Escolha uma pessoa ou empresa.');
-  const{error}=await supabaseClient.rpc('definir_cliente_fornecedor',{p_cliente_id:clienteId,p_ativo:document.getElementById('cadFornecedorAtivo').checked,p_categoria:document.getElementById('cadFornecedorCategoria').value.trim()||'Outros',p_observacoes:document.getElementById('cadFornecedorObs').value.trim()});
-  if(error)return avisarModulo(error.message);cadFecharFornecedor();await cadRenderFornecedores();avisarModulo('Fornecedor atualizado no cadastro único.');
 }
 
 async function cadCarregarFornecedorCliente(clienteId){
