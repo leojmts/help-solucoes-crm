@@ -110,7 +110,41 @@ function fecharModalFinanceiro(){document.getElementById('modalFinanceiro').clas
 function editarFinanceiro(id){const x=financeiroRegistros.find(a=>Number(a.id)===Number(id));if(!x)return;abrirModalFinanceiro({finId:x.id,finOsId:x.os_id,finTipo:x.tipo,finStatus:x.status,finDescricao:x.descricao,finCategoria:x.categoria,finValor:x.valor,finVencimento:x.vencimento,finForma:x.forma_pagamento,finObservacoes:x.observacoes});document.getElementById('financeiroModalTitulo').textContent='Editar lançamento'}
 async function salvarFinanceiro(){const g=id=>document.getElementById(id).value.trim(),id=g('finId'),payload={tipo:g('finTipo'),os_id:Number(g('finOsId'))||null,status:g('finStatus'),descricao:g('finDescricao'),categoria:g('finCategoria')||'Outros',valor:Number(g('finValor')),vencimento:g('finVencimento'),forma_pagamento:g('finForma'),observacoes:g('finObservacoes'),pago_em:g('finStatus')==='Pago'?new Date().toISOString().slice(0,10):null,atualizado_em:new Date().toISOString()};if(!payload.descricao||!payload.vencimento||payload.valor<=0)return avisarModulo('Preencha descrição, valor e vencimento.');const{error}=id?await supabaseClient.from('financeiro_lancamentos').update(payload).eq('id',id):await supabaseClient.from('financeiro_lancamentos').insert(payload);if(error)return avisarModulo(error.message);fecharModalFinanceiro();await renderizarFinanceiro();avisarModulo('Lançamento salvo com sucesso.')}
 async function baixarLancamento(id){const{error}=await supabaseClient.from('financeiro_lancamentos').update({status:'Pago',pago_em:new Date().toISOString().slice(0,10),atualizado_em:new Date().toISOString()}).eq('id',id);if(error)return avisarModulo(error.message);await renderizarFinanceiro()}
-async function excluirFinanceiro(id){if(!confirm('Excluir este lançamento financeiro?'))return;const{error}=await supabaseClient.from('financeiro_lancamentos').delete().eq('id',id);if(error)return avisarModulo(error.message);await renderizarFinanceiro()}
+async function excluirFinanceiro(id){
+ const lancamento=financeiroRegistros.find(x=>Number(x.id)===Number(id));
+ if(!lancamento)return avisarModulo('Lançamento não encontrado. Atualize a página e tente novamente.');
+ if(typeof finPermissao==='function'&&!finPermissao('financeiroExcluir'))return avisarModulo('Você não possui permissão para excluir lançamentos.');
+
+ if(lancamento.recorrencia_id){
+  const recorrenciaId=Number(lancamento.recorrencia_id);
+  const [{data:recorrencia,error:erroRecorrencia},{data:lancamentos,error:erroLancamentos}]=await Promise.all([
+   supabaseClient.from('financeiro_recorrencias').select('id,descricao').eq('id',recorrenciaId).maybeSingle(),
+   supabaseClient.from('financeiro_lancamentos').select('id').eq('recorrencia_id',recorrenciaId)
+  ]);
+  if(erroRecorrencia||erroLancamentos)return avisarModulo('Não foi possível conferir a recorrência: '+(erroRecorrencia||erroLancamentos).message);
+  if(!recorrencia)return avisarModulo('A recorrência vinculada não foi encontrada. Atualize a página e tente novamente.');
+  const ids=(lancamentos||[]).map(x=>x.id);
+  const{data:anexos,error:erroAnexos}=ids.length?await supabaseClient.from('financeiro_anexos').select('caminho').in('lancamento_id',ids):{data:[],error:null};
+  if(erroAnexos)return avisarModulo('Não foi possível conferir os anexos da recorrência: '+erroAnexos.message);
+  if(!confirm(`Excluir a recorrência "${recorrencia.descricao}" e todos os ${ids.length} lançamento(s) vinculados?\n\nPagamentos, baixas e anexos desses lançamentos também serão excluídos. Esta ação não pode ser desfeita.`))return;
+  const{data,error}=await supabaseClient.rpc('excluir_financeiro_recorrencia_completa',{p_recorrencia_id:recorrenciaId});
+  if(error)return avisarModulo('Não foi possível excluir a recorrência: '+error.message);
+  const resultado=Array.isArray(data)?data[0]:data;
+  if(!resultado?.recorrencia_excluida)return avisarModulo('A recorrência não foi excluída. Verifique sua permissão e tente novamente.');
+  const caminhos=(anexos||[]).map(x=>x.caminho).filter(Boolean);
+  let avisoAnexos='';
+  if(caminhos.length){const{error:erroStorage}=await supabaseClient.storage.from('financeiro-anexos').remove(caminhos);if(erroStorage)avisoAnexos=' Os registros foram excluídos, mas alguns arquivos antigos podem exigir limpeza manual.'}
+  await renderizarFinanceiro();
+  return avisarModulo(`Recorrência excluída com ${Number(resultado.lancamentos_excluidos||0)} lançamento(s).${avisoAnexos}`);
+ }
+
+ if(!confirm('Excluir este lançamento financeiro?\n\nEsta ação não pode ser desfeita.'))return;
+ const{data,error}=await supabaseClient.from('financeiro_lancamentos').delete().eq('id',id).select('id').maybeSingle();
+ if(error)return avisarModulo(error.message);
+ if(!data)return avisarModulo('O lançamento não foi excluído. Verifique sua permissão e tente novamente.');
+ await renderizarFinanceiro();
+ avisarModulo('Lançamento excluído.');
+}
 
 function numeroDocumentoFinanceiro(x){const ano=String(x.pago_em||x.criado_em||new Date().toISOString()).slice(0,4);return `REC-${ano}-${String(x.id).padStart(6,'0')}`}
 function abrirDocumentoImpressao(titulo,corpo){const w=window.open('','_blank','noopener,noreferrer');if(!w)return avisarModulo('Permita pop-ups para gerar o documento.');w.document.open();w.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${osHtml(titulo)}</title><style>body{margin:0;background:#eef2f7;color:#162033;font:14px Arial,sans-serif}.folha{width:760px;max-width:calc(100% - 40px);margin:30px auto;background:#fff;padding:42px;box-sizing:border-box;border-top:7px solid #1769e0}.marca{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:22px;border-bottom:1px solid #dbe3ec}.marca h1{margin:0;color:#1769e0;font-size:25px}.marca small,.muted{color:#68778b}.doc{font-size:12px;text-align:right}.valor{margin:28px 0;padding:20px;border-radius:10px;background:#edf5ff;color:#0f58b8;text-align:center;font-size:28px;font-weight:800}.linha{display:grid;grid-template-columns:170px 1fr;gap:12px;padding:11px 0;border-bottom:1px solid #e5eaf0}.linha span{color:#68778b}.declaracao{margin:28px 0;line-height:1.7}.assinatura{width:320px;max-width:80%;margin:70px auto 18px;border-top:1px solid #455468;padding-top:9px;text-align:center}.rodape{text-align:center;color:#7a8797;font-size:11px;margin-top:35px}@media print{body{background:#fff}.folha{margin:0;width:100%;max-width:none;box-shadow:none}}</style></head><body>${corpo}<script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close()}
