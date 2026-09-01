@@ -32,7 +32,7 @@ function interfaceModaisContrato() { return `
   <div id="modalContrato" class="crm-modal-overlay" onclick="if(event.target===this)fecharModalContrato()"><div class="crm-modal-content contrato-modal" role="dialog" aria-modal="true">
     <div class="modal-header"><div><h2 id="contratoModalTitulo">Novo contrato</h2><p>Preencha os dados comerciais, jurídicos e financeiros.</p></div><button class="modal-close" onclick="fecharModalContrato()">×</button></div>
     <section class="contrato-form-section"><h3><i data-lucide="link"></i>Vínculo e identificação</h3><div class="contrato-form-grid">
-      <label class="crm-field"><span>Modelo *</span><select id="ctModelo"></select></label><label class="crm-field"><span>Tipo da parte *</span><select id="ctParteTipo" onchange="atualizarOpcoesParteContrato()"><option>Cliente</option><option>Fornecedor</option></select></label><label class="crm-field ct-span-2"><span>Cliente / fornecedor *</span><select id="ctParteId" onchange="preencherParteContrato()"></select></label>
+      <label class="crm-field"><span>Modelo *</span><select id="ctModelo" onchange="aplicarModeloContrato()"></select></label><label class="crm-field"><span>Tipo da parte *</span><select id="ctParteTipo" onchange="atualizarOpcoesParteContrato()"><option>Cliente</option><option>Fornecedor</option></select></label><label class="crm-field ct-span-2"><span>Cliente / fornecedor *</span><select id="ctParteId" onchange="preencherParteContrato()"></select></label>
       <label class="crm-field"><span>Tipo de contrato *</span><input id="ctTipo" value="Locação de software"></label><label class="crm-field"><span>Status inicial</span><select id="ctStatus"><option>Ativo</option><option>Rascunho</option></select></label><label class="crm-field"><span>Responsável *</span><select id="ctResponsavel"></select></label><label class="crm-field"><span>Representante comercial</span><input id="ctRepresentanteComercial"></label>
     </div></section>
     <section class="contrato-form-section"><h3><i data-lucide="building"></i>Dados atuais da contratante</h3><div class="contrato-form-grid">
@@ -130,6 +130,11 @@ function preencherSelectsContrato() {
   ctEl('ctModelo').innerHTML = contratosModelos.map(x=>`<option value="${x.id}">${ctHtml(x.nome)}</option>`).join('');
   ctEl('ctResponsavel').innerHTML = contratosUsuarios.map(x=>`<option value="${x.user_id}">${ctHtml(x.nome)}</option>`).join('');
   atualizarOpcoesParteContrato();
+}
+function aplicarModeloContrato() {
+  const modelo=contratosModelos.find(x=>String(x.id)===String(ctValor('ctModelo'))), padrao=modelo?.clausulas||{};
+  const campos={ctTipo:padrao.tipo_contrato,ctObjeto:padrao.objeto_padrao,ctSistemas:padrao.sistemas_padrao,ctServicos:padrao.servicos_padrao};
+  Object.entries(campos).forEach(([id,valor])=>{if(valor&&ctEl(id))ctEl(id).value=valor});
 }
 function atualizarOpcoesParteContrato() {
   const tipo=ctValor('ctParteTipo'), lista=tipo==='Fornecedor'?contratosFornecedores:contratosClientes;

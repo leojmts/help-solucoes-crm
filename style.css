@@ -804,3 +804,6 @@ html[data-theme="light"] .processo-responsaveis-campo{background:#f8fbff;border-
 .dashboard-agenda-item>svg{width:16px;color:#6eb5ff}
 .dashboard-agenda-item.tipo-crm>svg,.dashboard-crm-item>b{color:#f6a84b}
 .dashboard-crm-item{border-left:2px solid rgba(246,168,75,.55);padding-left:9px}
+
+/* Ações do funil comercial */
+.crm-next-action{display:flex;align-items:center;justify-content:space-between;gap:12px}.crm-next-action>div{min-width:0}.crm-next-action button{flex:none;display:inline-flex;align-items:center;gap:5px;padding:7px 10px;border:1px solid rgba(52,211,153,.35);border-radius:8px;background:rgba(52,211,153,.11);color:#6ee7b7;font-weight:700;cursor:pointer}.crm-next-action button:hover{background:rgba(52,211,153,.2)}.crm-delete-lead{border-color:rgba(248,113,113,.42)!important;background:rgba(127,29,29,.2)!important;color:#fca5a5!important}.crm-delete-lead:hover{background:rgba(185,28,28,.3)!important}@media(max-width:700px){.crm-next-action{align-items:flex-start}.crm-next-action button{margin-top:2px}}

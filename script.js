@@ -2142,13 +2142,26 @@ async function renderizarCRM(){
       const valor=ls.reduce((s,x)=>s+(Number(x.valor)||0),0);
       return `<section class="crm-stage" data-etapa="${e}" ondragover="permitirSoltarLead(event)" ondragleave="sairDestinoLead(event)" ondrop="soltarLeadComercial(event,'${e}')"><div class="crm-stage-head"><div><span>${e}</span><small>${valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</small></div><b>${ls.length}</b></div><div class="crm-stage-list">${ls.map(x=>`<article class="crm-lead-card" draggable="true" data-lead-id="${x.id}" ondragstart="iniciarArrastoLead(event,'${x.id}')" ondragend="finalizarArrastoLead(event)" onclick="editarLead('${x.id}')"><div class="crm-lead-top"><strong>${escaparHtml(x.nome)}</strong><i data-lucide="grip-vertical"></i></div><small>${escaparHtml(x.responsavel||x.cidade||'Sem contato')}</small><span class="crm-tag">${escaparHtml(x.interesse||'-')}</span><span class="crm-tag">${Number(x.probabilidade||0)}% · ${Number(x.valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>${x.fechamento_previsto?`<span class="crm-lead-date"><i data-lucide="target"></i>Fechamento ${new Date(x.fechamento_previsto+'T12:00:00').toLocaleDateString('pt-BR')}</span>`:''}${x.proxima?`<span class="crm-lead-date"><i data-lucide="calendar"></i>${escaparHtml(x.proxima_tipo||'Follow-up')} · ${new Date(x.proxima+'T12:00:00').toLocaleDateString('pt-BR')}${x.proxima_hora?' às '+String(x.proxima_hora).slice(0,5):''}</span>`:''}<select class="crm-mobile-stage" aria-label="Mover ${escaparHtml(x.nome)} para outra etapa" onclick="event.stopPropagation()" onchange="moverLeadParaEtapa('${x.id}',this.value);event.stopPropagation()">${crmEtapas.map(et=>`<option value="${et}" ${et===e?'selected':''}>${et}</option>`).join('')}</select></article>`).join('')||'<div class="crm-stage-empty">Solte uma oportunidade aqui</div>'}</div></section>`;
     }).join('');
-    const p=a.filter(x=>x.proxima&&!x.convertido).sort((x,y)=>String(x.proxima).localeCompare(String(y.proxima)));
-    document.getElementById('crmProximas').innerHTML=p.length?p.map(x=>`<div class="crm-next"><strong>${escaparHtml(x.proxima_tipo||'Follow-up')} · ${escaparHtml(x.nome)}</strong><span>${new Date(x.proxima+'T12:00:00').toLocaleDateString('pt-BR')}${x.proxima_hora?' às '+String(x.proxima_hora).slice(0,5):''} · ${escaparHtml(x.cidade||x.interesse||'-')}</span></div>`).join(''):'<div class="crm-next">Nenhuma ação pendente</div>';
+    const p=a.filter(x=>x.proxima&&!x.convertido&&!x.motivo_perda).sort((x,y)=>String(x.proxima).localeCompare(String(y.proxima)));
+    document.getElementById('crmProximas').innerHTML=p.length?p.map(x=>`<div class="crm-next crm-next-action"><div><strong>${escaparHtml(x.proxima_tipo||'Follow-up')} · ${escaparHtml(x.nome)}</strong><span>${new Date(x.proxima+'T12:00:00').toLocaleDateString('pt-BR')}${x.proxima_hora?' às '+String(x.proxima_hora).slice(0,5):''} · ${escaparHtml(x.cidade||x.interesse||'-')}</span></div><button type="button" onclick="crmConcluirProximaAcao('${x.id}')">✓ Concluir</button></div>`).join(''):'<div class="crm-next">Nenhuma ação pendente</div>';
     renderizarIcones();
   }catch(e){
     console.error('Erro ao carregar CRM:',e);
     alert('Não foi possível carregar o CRM da nuvem.\n\n'+e.message);
   }
+}
+
+async function crmConcluirProximaAcao(id){
+  const lead=crmCache.find(x=>String(x.id)===String(id));
+  if(!lead||!confirm(`Marcar a próxima ação de ${lead.nome} como concluída?`))return;
+  const quando=lead.proxima?new Date(lead.proxima+'T12:00:00').toLocaleDateString('pt-BR'):'';
+  const texto=`Ação concluída: ${lead.proxima_tipo||'Follow-up'}${quando?' agendada para '+quando:''}${lead.proxima_hora?' às '+String(lead.proxima_hora).slice(0,5):''}.`;
+  const {error}=await supabaseClient.from('leads').update({proxima:null,proxima_hora:null,atualizado_em:new Date().toISOString()}).eq('id',id);
+  if(error)return alert('Não foi possível concluir a ação.\n\n'+error.message);
+  const uid=await crmUsuarioId();
+  const {error:historicoErro}=await supabaseClient.from('lead_interacoes').insert({lead_id:id,texto,criado_por:uid});
+  if(historicoErro)console.warn('A ação foi concluída, mas o histórico não foi registrado:',historicoErro);
+  await renderizarCRM();
 }
 
 function iniciarArrastoLead(event,id){event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',id);event.currentTarget.classList.add('arrastando')}
@@ -2180,6 +2193,8 @@ function abrirModalLead(){
   document.getElementById('crmInteresse').selectedIndex=0;
   document.getElementById('crmEtapa').value='Novo';
   document.getElementById('crmHistoricoArea').style.display='none';
+  document.getElementById('btnLeadPerdido')?.classList.remove('hidden');
+  document.getElementById('btnExcluirLeadPerdido')?.classList.add('hidden');
   document.getElementById('modalLead').classList.add('active');
   setTimeout(()=>document.getElementById('crmNome').focus(),50);
 }
@@ -2194,6 +2209,8 @@ async function editarLead(id){
   document.getElementById('crmModalTitulo').textContent='Editar lead';
   for(const [k,v] of Object.entries({crmNome:x.nome,crmResponsavel:x.responsavel_id||'',crmTelefone:x.telefone,crmCidade:x.cidade,crmInteresse:x.interesse,crmEtapa:x.etapa,crmProbabilidade:x.probabilidade||10,crmFechamentoPrevisto:x.fechamento_previsto,crmProximaTipo:x.proxima_tipo||'Follow-up',crmProximaAcao:x.proxima,crmProximaHora:x.proxima_hora?String(x.proxima_hora).slice(0,5):'',crmValor:x.valor,crmObs:x.obs,crmMotivoPerda:x.motivo_perda}))if(document.getElementById(k))document.getElementById(k).value=v||'';
   const perdaBox=document.getElementById('crmMotivoPerdaBox');if(perdaBox)perdaBox.style.display=x.motivo_perda?'block':'none';
+  const excluirPerdido=document.getElementById('btnExcluirLeadPerdido');if(excluirPerdido)excluirPerdido.classList.toggle('hidden',!x.motivo_perda);
+  const marcarPerdido=document.getElementById('btnLeadPerdido');if(marcarPerdido)marcarPerdido.classList.toggle('hidden',!!x.motivo_perda);
   const {data:hist,error}=await supabaseClient.from('lead_interacoes').select('*').eq('lead_id',id).order('criado_em',{ascending:false});
   if(error){alert('Não foi possível carregar o histórico do lead.\n\n'+error.message);return}
   document.getElementById('crmHistoricoArea').style.display='block';
