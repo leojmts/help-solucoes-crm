@@ -9,6 +9,7 @@ const almPodeEditar=()=>typeof cadPodeEditar==='function'&&cadPodeEditar();
 
 function almInstalar(){
   if(!document.getElementById('almModalEquipamento'))document.body.insertAdjacentHTML('beforeend',almTemplates());
+  const emprestado=[...document.querySelectorAll('#almEqStatus option')].find(x=>x.textContent==='Emprestado');if(emprestado)emprestado.disabled=true;
   window.cadRenderEquipamentos=almRender;
   window.gcAbrirModalEquipamento=almAbrirEquipamento;
   window.gcSalvarEquipamento=almSalvarEquipamento;
