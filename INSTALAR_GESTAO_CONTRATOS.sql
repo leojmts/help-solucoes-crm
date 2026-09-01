@@ -315,7 +315,7 @@ begin
 
     if p_id is null then select id into p_id from public.contrato_parcelas where contrato_id=c.id and tipo='Mensalidade' and numero=i; end if;
     insert into public.financeiro_lancamentos(tipo,descricao,categoria,valor,vencimento,status,forma_pagamento,observacoes,criado_por,contrato_id,contrato_parcela_id,parcela_numero,parcelas_total)
-    values(v_tipo,'Contrato '||c.numero||' - '||v_parte_nome||' - mensalidade '||i||'/'||c.quantidade_parcelas,'Contratos',c.valor_mensal,v_data,'Pendente',c.forma_pagamento,c.observacoes_comerciais,(select auth.uid()),c.id,p_id,i,c.quantidade_parcelas)
+    values(v_tipo,'Contrato '||c.numero||' - '||v_parte_nome||case when c.quantidade_parcelas=1 then ' - cobrança única' else ' - mensalidade '||i||'/'||c.quantidade_parcelas end,'Contratos',c.valor_mensal,v_data,'Pendente',c.forma_pagamento,c.observacoes_comerciais,(select auth.uid()),c.id,p_id,case when c.quantidade_parcelas=1 then null else i end,case when c.quantidade_parcelas=1 then null else c.quantidade_parcelas end)
     on conflict(contrato_parcela_id) where contrato_parcela_id is not null do update set
       descricao=excluded.descricao, valor=excluded.valor, vencimento=excluded.vencimento,
       forma_pagamento=excluded.forma_pagamento, parcela_numero=excluded.parcela_numero,
@@ -330,7 +330,7 @@ begin
     and p.numero>c.quantidade_parcelas and l.status='Pendente' and l.valor_pago=0;
 
   insert into public.contrato_historico(contrato_id,acao,descricao,usuario_id,usuario_nome)
-  select c.id,'Parcelas sincronizadas',v_total||' cobrança(s) vinculada(s) ao Financeiro',p.user_id,coalesce(p.nome,p.email)
+  select c.id,'Parcelas sincronizadas',v_total||' cobrança(s) vinculada(s) ao Financeiro',p.user_id,coalesce(nullif(p.nome,''),split_part(p.email,'@',1),'Usuário')
   from public.perfis_usuarios p where p.user_id=(select auth.uid());
   return v_total;
 end $$;
