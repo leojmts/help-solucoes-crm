@@ -408,7 +408,7 @@ async function carregarClientesDaNuvem() {
   const { data, error } = await supabaseClient.from('clientes').select('*').order('nome', { ascending: true });
   if (error) throw error;
   tbody.innerHTML = '';
-  (data || []).forEach(c => {
+  (data || []).filter(c=>c.eh_cliente!==false).forEach(c => {
     const tr = tbody.insertRow(-1);
     tr.dataset.idNuvem = c.id;
     tr.setAttribute('data-ie', c.ie || '');
@@ -944,13 +944,14 @@ async function carregarChamadosDaNuvem() {
     }
 
     function trocarSubCadastro(aba) {
-      ['clientes','catalogo','estoque','equipamentos','tecnicos','usuarios'].forEach(nome => {
+      ['clientes','fornecedores','catalogo','estoque','equipamentos','tecnicos','usuarios'].forEach(nome => {
         document.getElementById('cadastro' + nome.charAt(0).toUpperCase() + nome.slice(1)).classList.toggle('hidden', nome !== aba);
         document.getElementById('tabCadastro' + nome.charAt(0).toUpperCase() + nome.slice(1)).classList.toggle('active', nome === aba);
       });
       if (aba === 'usuarios') { renderizarUsuarios(); renderizarLog(); }
       if (aba === 'tecnicos') renderizarTecnicos();
       if (aba === 'catalogo' && typeof cadRenderCatalogo === 'function') cadRenderCatalogo();
+      if (aba === 'fornecedores' && typeof cadRenderFornecedores === 'function') cadRenderFornecedores();
       if (aba === 'estoque' && typeof cadRenderEstoque === 'function') cadRenderEstoque();
       if (aba === 'equipamentos' && typeof cadRenderEquipamentos === 'function') cadRenderEquipamentos();
     }
@@ -1116,6 +1117,11 @@ async function carregarChamadosDaNuvem() {
       document.getElementById('cRepresentante').value = '';
       document.getElementById('cRepresentanteCpf').value = '';
       document.getElementById('cObsTecnicas').value = '';
+      document.getElementById('cEhFornecedor').checked = false;
+      document.getElementById('cEhFornecedor').dataset.existente = 'false';
+      document.getElementById('cFornecedorCategoria').value = '';
+      document.getElementById('cFornecedorObs').value = '';
+      document.getElementById('cFornecedorCampos').classList.add('hidden');
       document.getElementById('modalCliente').classList.add('active');
     }
 
@@ -1376,17 +1382,25 @@ async function carregarChamadosDaNuvem() {
       const representanteCpf = document.getElementById('cRepresentanteCpf').value.trim();
 
       if (!nome) { alert('Informe o nome do cliente'); return; }
-      const payload = { nome, unidade, documento: doc, ie, regime, telefone: tel, email, endereco, cidade, uf, cep, representante, representante_cpf: representanteCpf, observacoes_tecnicas: obsTecnicas };
+      const payload = { nome, unidade, documento: doc, ie, regime, telefone: tel, email, endereco, cidade, uf, cep, representante, representante_cpf: representanteCpf, observacoes_tecnicas: obsTecnicas, eh_cliente: true };
 
       try {
+        let clienteId;
         if (linhaEdicaoCliente && linhaEdicaoCliente.dataset.idNuvem) {
-          const { error } = await supabaseClient.from('clientes').update(payload).eq('id', linhaEdicaoCliente.dataset.idNuvem);
+          clienteId = Number(linhaEdicaoCliente.dataset.idNuvem);
+          const { error } = await supabaseClient.from('clientes').update(payload).eq('id', clienteId);
           if (error) throw error;
           registrarLog(`editou o cliente ${nome}`);
         } else {
-          const { error } = await supabaseClient.from('clientes').insert(payload);
+          const { data: novo, error } = await supabaseClient.from('clientes').insert(payload).select('id').single();
           if (error) throw error;
+          clienteId = novo.id;
           registrarLog(`cadastrou o cliente ${nome}`);
+        }
+        const fornecedorCheck = document.getElementById('cEhFornecedor');
+        if (fornecedorCheck.checked || fornecedorCheck.dataset.existente === 'true') {
+          const { error } = await supabaseClient.rpc('definir_cliente_fornecedor', { p_cliente_id: clienteId, p_ativo: fornecedorCheck.checked, p_categoria: document.getElementById('cFornecedorCategoria').value.trim() || 'Outros', p_observacoes: document.getElementById('cFornecedorObs').value.trim() });
+          if (error) throw error;
         }
         fecharModais();
         await carregarClientesDaNuvem();
@@ -1415,6 +1429,8 @@ async function carregarChamadosDaNuvem() {
       document.getElementById('cRepresentante').value = linhaEdicaoCliente.dataset.representante || '';
       document.getElementById('cRepresentanteCpf').value = linhaEdicaoCliente.dataset.representanteCpf || '';
 
+      Promise.resolve(typeof cadCarregarFornecedorCliente === 'function' ? cadCarregarFornecedorCliente(Number(linhaEdicaoCliente.dataset.idNuvem)) : null).catch(console.warn);
+
       document.getElementById('modalCliente').classList.add('active');
     }
 
@@ -1438,6 +1454,11 @@ async function carregarChamadosDaNuvem() {
       document.getElementById('cCep').value = tr.dataset.cep || '';
       document.getElementById('cRepresentante').value = tr.dataset.representante || '';
       document.getElementById('cRepresentanteCpf').value = tr.dataset.representanteCpf || '';
+      document.getElementById('cEhFornecedor').checked = false;
+      document.getElementById('cEhFornecedor').dataset.existente = 'false';
+      document.getElementById('cFornecedorCategoria').value = '';
+      document.getElementById('cFornecedorObs').value = '';
+      document.getElementById('cFornecedorCampos').classList.add('hidden');
 
       document.getElementById('modalCliente').classList.add('active');
     }

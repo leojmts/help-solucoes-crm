@@ -8,10 +8,10 @@ const finSaldo=x=>Math.max(0,Number(x.valor)-Number(x.valor_pago||0));
 function instalarFinanceiroAvancado(){
   const view=document.getElementById('visaoFinanceiro');if(!view||document.getElementById('finNavegacao'))return;
   const header=view.querySelector('.header');
-  header.insertAdjacentHTML('afterend',`<nav id="finNavegacao" class="fin-nav" aria-label="Áreas do financeiro"><button type="button" class="active" data-fin-aba="lancamentos"><i data-lucide="list"></i>Lançamentos</button><button type="button" data-fin-aba="fluxo"><i data-lucide="chart-no-axes-combined"></i>Fluxo de caixa</button><button type="button" data-fin-aba="recorrencias"><i data-lucide="repeat-2"></i>Recorrências</button><button type="button" data-fin-aba="fornecedores"><i data-lucide="building-2"></i>Fornecedores</button><button type="button" data-fin-aba="caixa"><i data-lucide="circle-dollar-sign"></i>Controle de caixa</button><button type="button" data-fin-aba="conciliacao"><i data-lucide="scan-search"></i>Conciliação OFX</button></nav><section id="finAlertas" class="fin-alertas"></section>`);
+  header.insertAdjacentHTML('afterend',`<nav id="finNavegacao" class="fin-nav" aria-label="Áreas do financeiro"><button type="button" class="active" data-fin-aba="lancamentos"><i data-lucide="list"></i>Lançamentos</button><button type="button" data-fin-aba="fluxo"><i data-lucide="chart-no-axes-combined"></i>Fluxo de caixa</button><button type="button" data-fin-aba="recorrencias"><i data-lucide="repeat-2"></i>Recorrências</button><button type="button" data-fin-aba="caixa"><i data-lucide="circle-dollar-sign"></i>Controle de caixa</button><button type="button" data-fin-aba="conciliacao"><i data-lucide="scan-search"></i>Conciliação OFX</button></nav><section id="finAlertas" class="fin-alertas"></section>`);
   document.getElementById('financeiroResumo').dataset.finPainel='lancamentos';
   view.querySelector('.financeiro-painel').dataset.finPainel='lancamentos';
-  view.insertAdjacentHTML('beforeend',`<section id="finPainelFluxo" data-fin-painel="fluxo" class="fin-extra hidden"></section><section id="finPainelRecorrencias" data-fin-painel="recorrencias" class="fin-extra hidden"></section><section id="finPainelFornecedores" data-fin-painel="fornecedores" class="fin-extra hidden"></section><section id="finPainelCaixa" data-fin-painel="caixa" class="fin-extra hidden"></section><section id="finPainelConciliacao" data-fin-painel="conciliacao" class="fin-extra hidden"></section>`);
+  view.insertAdjacentHTML('beforeend',`<section id="finPainelFluxo" data-fin-painel="fluxo" class="fin-extra hidden"></section><section id="finPainelRecorrencias" data-fin-painel="recorrencias" class="fin-extra hidden"></section><section id="finPainelCaixa" data-fin-painel="caixa" class="fin-extra hidden"></section><section id="finPainelConciliacao" data-fin-painel="conciliacao" class="fin-extra hidden"></section>`);
   document.getElementById('finNavegacao').addEventListener('click',event=>{
     const botao=event.target.closest('button[data-fin-aba]');
     if(botao)finAba(botao.dataset.finAba,botao);
@@ -41,7 +41,7 @@ function aplicarPermissoesFinanceirasUI(){
 async function carregarFinanceiroAvancado(){
  if(!finPermissao('financeiroVisualizar'))return;
  const [f,r,p,a,c]=await Promise.all([
-  supabaseClient.from('financeiro_fornecedores').select('*').eq('ativo',true).order('nome'),
+  supabaseClient.from('financeiro_fornecedores').select('*,clientes(id,nome,documento,telefone,email)').eq('ativo',true).order('nome'),
   supabaseClient.from('financeiro_recorrencias').select('*,financeiro_fornecedores(nome)').order('criado_em',{ascending:false}),
   supabaseClient.from('financeiro_pagamentos').select('*').order('pago_em',{ascending:false}),
   supabaseClient.from('financeiro_anexos').select('*').order('criado_em',{ascending:false}),
@@ -49,17 +49,34 @@ async function carregarFinanceiroAvancado(){
  ]);
  const erro=[f,r,p,a,c].find(x=>x.error)?.error;if(erro)return avisarModulo(erro.message);
  finFornecedores=f.data||[];finRecorrencias=r.data||[];finPagamentos=p.data||[];finAnexos=a.data||[];finCaixaAtual=c.data||null;
- await finGerarRecorrenciasPendentes(); finAtualizarSelectFornecedores(); finRenderAlertas(); finRenderFluxo(); finRenderRecorrencias(); finRenderFornecedores(); finRenderCaixa(); aplicarPermissoesFinanceirasUI();
+ await finGerarRecorrenciasPendentes(); finAtualizarSelectFornecedores(); finRenderAlertas(); finRenderFluxo(); finRenderRecorrencias(); finRenderCaixa(); aplicarPermissoesFinanceirasUI();
 }
 
 function finAba(aba,btn){document.querySelectorAll('[data-fin-painel]').forEach(x=>x.classList.toggle('hidden',x.dataset.finPainel!==aba));document.querySelectorAll('#finNavegacao button').forEach(x=>x.classList.remove('active'));btn?.classList.add('active');if(aba==='fluxo')finRenderFluxo();if(aba==='caixa')finRenderCaixa()}
-function finAtualizarSelectFornecedores(){const s=document.getElementById('finFornecedor');if(s)s.innerHTML='<option value="">Nenhum</option>'+finFornecedores.map(x=>`<option value="${x.id}">${osHtml(x.nome)}</option>`).join('')}
+function finAtualizarSelectFornecedores(){const s=document.getElementById('finFornecedor');if(s)s.innerHTML='<option value="">Nenhum</option>'+finFornecedores.map(x=>`<option value="${x.id}">${osHtml(x.clientes?.nome||x.nome)}</option>`).join('')}
 
 async function finGerarRecorrenciasPendentes(){
  if(!finPermissao('financeiroCriar'))return;const hoje=finHoje(),limite=new Date(`${hoje}T12:00:00`);limite.setMonth(limite.getMonth()+2);const limiteData=limite.toISOString().slice(0,10);let gerou=false;
  for(const r of finRecorrencias.filter(x=>x.ativa&&x.inicio<=limiteData&&(!x.fim||x.fim>=hoje))){
   let d=new Date(`${r.inicio}T12:00:00`);d.setDate(Math.min(r.dia_vencimento,28));
-  while(d<=limite){const venc=d.toISOString().slice(0,10);if((!r.fim||venc<=r.fim)&&venc>=r.inicio){const{data,error:erroConsulta}=await supabaseClient.from('financeiro_lancamentos').select('id').eq('recorrencia_id',r.id).eq('vencimento',venc).maybeSingle();if(erroConsulta)return avisarModulo('Não foi possível conferir a recorrência: '+erroConsulta.message);if(!data){const{error}=await supabaseClient.from('financeiro_lancamentos').insert({tipo:r.tipo,descricao:r.descricao,categoria:r.categoria,fornecedor_id:r.fornecedor_id,valor:r.valor,vencimento:venc,status:'Pendente',forma_pagamento:r.forma_pagamento,observacoes:r.observacoes,recorrencia_id:r.id});if(error)return avisarModulo('Não foi possível gerar a conta recorrente: '+error.message);gerou=true}}
+  while(d<=limite){
+   const venc=d.toISOString().slice(0,10);
+   if((!r.fim||venc<=r.fim)&&venc>=r.inicio){
+    const existente=await supabaseClient.from('financeiro_lancamentos').select('id').eq('recorrencia_id',r.id).eq('vencimento',venc).maybeSingle();
+    if(existente.error)return avisarModulo('Não foi possível conferir a recorrência: '+existente.error.message);
+    if(!existente.data){
+     const equivalente=await supabaseClient.from('financeiro_lancamentos').select('id').is('recorrencia_id',null).eq('tipo',r.tipo).eq('descricao',r.descricao).eq('vencimento',venc).eq('valor',r.valor).eq('status','Pendente').eq('valor_pago',0).limit(1).maybeSingle();
+     if(equivalente.error)return avisarModulo('Não foi possível conferir contas existentes: '+equivalente.error.message);
+     if(equivalente.data){
+      const vinculo=await supabaseClient.from('financeiro_lancamentos').update({recorrencia_id:r.id,atualizado_em:new Date().toISOString()}).eq('id',equivalente.data.id);
+      if(vinculo.error&&vinculo.error.code!=='23505')return avisarModulo(vinculo.error.message);
+     }else{
+      const novo=await supabaseClient.from('financeiro_lancamentos').insert({tipo:r.tipo,descricao:r.descricao,categoria:r.categoria,fornecedor_id:r.fornecedor_id,valor:r.valor,vencimento:venc,status:'Pendente',forma_pagamento:r.forma_pagamento,observacoes:r.observacoes,recorrencia_id:r.id});
+      if(novo.error&&novo.error.code!=='23505')return avisarModulo('Não foi possível gerar a conta recorrente: '+novo.error.message);
+     }
+     gerou=true;
+    }
+   }
    d.setMonth(d.getMonth()+1);d.setDate(Math.min(r.dia_vencimento,28));
   }
   await supabaseClient.from('financeiro_recorrencias').update({ultima_geracao:hoje,atualizado_em:new Date().toISOString()}).eq('id',r.id);

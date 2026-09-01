@@ -19,3 +19,4 @@ html[data-theme="light"] .contratos-toolbar .crm-search-wrap,html[data-theme="li
 html[data-theme="light"] .contratos-toolbar select{background:#fff!important;color:#172033!important;border-color:#cfd9e5!important;color-scheme:light}
 html[data-theme="light"] .ct-valor-total,html[data-theme="light"] .ct-parte-aviso{background:#fff7ed!important;border-color:#fed7aa!important;color:#9a3412!important}
 html[data-theme="light"] .ct-doc-item button,html[data-theme="light"] .ct-anexo-item button{color:#1768d6!important}
+.ct-parcelas-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.ct-parcelas-head h3{margin:0}

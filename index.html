@@ -14,13 +14,13 @@
   <link rel="stylesheet" href="style.css?v=20260828-4">
   <link rel="stylesheet" href="os-financeiro.css?v=20260831-2">
   <link rel="stylesheet" href="financeiro-avancado.css?v=20260901-1">
-  <link rel="stylesheet" href="contratos.css?v=20260831-1">
+  <link rel="stylesheet" href="contratos.css?v=20260901-2">
   <link rel="stylesheet" href="crm-correcoes.css">
   <link rel="stylesheet" href="gerenciamento-contas.css">
   <link rel="stylesheet" href="tema.css?v=20260826-3">
   <link rel="stylesheet" href="tema-fixes.css?v=20260828-4">
   <link rel="stylesheet" href="crm-gestao-integrada.css?v=20260901-1">
-  <link rel="stylesheet" href="cadastro-operacional.css?v=20260901-1">
+  <link rel="stylesheet" href="cadastro-operacional.css?v=20260901-2">
 </head>
 <body>
   <div class="container hidden" id="appContainer">
@@ -290,6 +290,7 @@
         </header>
         <div class="section-tabs">
           <button class="section-tab active" id="tabCadastroClientes" onclick="trocarSubCadastro('clientes')"><i data-lucide="users"></i>Clientes</button>
+          <button class="section-tab" id="tabCadastroFornecedores" onclick="trocarSubCadastro('fornecedores')"><i data-lucide="building-2"></i>Fornecedores</button>
           <button class="section-tab" id="tabCadastroCatalogo" onclick="trocarSubCadastro('catalogo')"><i data-lucide="tags"></i>Produtos e serviços</button>
           <button class="section-tab" id="tabCadastroEstoque" onclick="trocarSubCadastro('estoque')"><i data-lucide="boxes"></i>Estoque</button>
           <button class="section-tab" id="tabCadastroEquipamentos" onclick="trocarSubCadastro('equipamentos')"><i data-lucide="monitor-cog"></i>Equipamentos e garantias</button>
@@ -368,7 +369,11 @@
           </table>
           </div>
         </section>
-        </div>
+      </div>
+
+      <div id="cadastroFornecedores" class="cadastro-panel hidden">
+        <section id="cadFornecedoresConteudo" class="cad-operacional-panel"></section>
+      </div>
 
       <div id="cadastroCatalogo" class="cadastro-panel hidden">
         <section id="cadCatalogoConteudo" class="cad-operacional-panel"></section>
@@ -975,6 +980,13 @@
           </div>
           <p class="aviso-senha">Este conteúdo é salvo na nuvem e pode ser visto por usuários autorizados. Não registre senhas, códigos de autenticação ou outras credenciais.</p>
         </div>
+        <div class="form-group full cad-cliente-fornecedor">
+          <label><input type="checkbox" id="cEhFornecedor" onchange="document.getElementById('cFornecedorCampos').classList.toggle('hidden',!this.checked)"> Este cliente também é fornecedor</label>
+          <div id="cFornecedorCampos" class="form-grid hidden">
+            <div class="form-group"><label>Categoria do fornecedor</label><input id="cFornecedorCategoria" placeholder="Ex.: aluguel, insumos, serviços"></div>
+            <div class="form-group"><label>Observações do fornecedor</label><input id="cFornecedorObs" placeholder="Condições ou informações comerciais"></div>
+          </div>
+        </div>
       </div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="fecharModais()">Cancelar</button>
@@ -1002,9 +1014,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.75.1/dist/umd/supabase.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script src="script.js?v=20260901-1"></script>
+  <script src="script.js?v=20260901-2"></script>
   <script src="os-financeiro.js"></script>
-  <script src="financeiro-avancado.js?v=20260901-1"></script>
+  <script src="financeiro-avancado.js?v=20260901-2"></script>
   <script src="crm-correcoes.js"></script>
   <script src="gerenciamento-contas.js"></script>
   <script src="os-documento-v4.js?v=20260826-3"></script>
@@ -1015,8 +1027,8 @@
   <script src="os-exclusao.js?v=20260831-2"></script>
   <script src="financeiro-resumo-mensal.js?v=20260827-3"></script>
   <script src="contratos-pdf.js?v=20260827-1"></script>
-  <script src="contratos.js?v=20260827-1"></script>
+  <script src="contratos.js?v=20260901-2"></script>
   <script src="crm-gestao-integrada.js?v=20260901-1"></script>
-  <script src="cadastro-operacional.js?v=20260901-1"></script>
+  <script src="cadastro-operacional.js?v=20260901-2"></script>
 </body>
 </html>
