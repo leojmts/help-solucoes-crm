@@ -34,6 +34,8 @@
   async function gerarContratoPdf(dados, opcoes = {}) {
     if (!global.PDFLib) throw new Error('Biblioteca PDF não carregada.');
     const PDFLib = global.PDFLib;
+    const rotuloCobranca = dados.contrato.periodicidade === 'Anual' ? 'Valor anual' : dados.contrato.periodicidade === 'Semestral' ? 'Valor semestral' : dados.contrato.periodicidade === 'Trimestral' ? 'Valor trimestral' : dados.contrato.periodicidade === 'Bimestral' ? 'Valor bimestral' : 'Mensalidade';
+    const unidadesCobertas = (dados.contrato.contrato_unidades || []).map(x => x.cliente_unidades?.nome).filter(Boolean).join(', ');
     const doc = await PDFLib.PDFDocument.create();
     doc.setTitle(`${dados.modelo?.titulo || 'Contrato'} - ${dados.contrato.numero}`);
     doc.setAuthor(dados.empresa.nome_fantasia || dados.empresa.razao_social);
@@ -128,6 +130,7 @@
     linhaTexto(`Objeto específico: ${texto(dados.contrato.objeto)}`, { font: bold });
     linhaTexto(`Sistemas contratados: ${texto(dados.contrato.sistemas_contratados)}`);
     linhaTexto(`Serviços, licenças, manutenção e suporte: ${texto(dados.contrato.servicos_contratados)}`);
+    linhaTexto(`Unidades atendidas: ${texto(unidadesCobertas)}`, { font: bold });
 
     // Mantém o título e o quadro comercial juntos na mudança de página.
     garantir(185);
@@ -137,14 +140,14 @@
       { rotulo: 'Equipamentos / kit de automação', valor: `${moeda(dados.contrato.equipamentos_valor)} - ${texto(dados.contrato.equipamentos_descricao)}`, bold: true },
       { rotulo: texto(dados.contrato.outros_valores_descricao || 'Outros valores iniciais'), valor: moeda(dados.contrato.outros_valores), bold: true },
       { rotulo: 'Valor inicial total', valor: moeda(dados.contrato.valor_inicial), bold: true, cor: COR.vermelho },
-      { rotulo: 'Mensalidade', valor: moeda(dados.contrato.valor_mensal), bold: true, cor: COR.vermelho },
+      { rotulo: rotuloCobranca, valor: moeda(dados.contrato.valor_mensal), bold: true, cor: COR.vermelho },
       { rotulo: 'Forma de pagamento', valor: texto(dados.contrato.forma_pagamento), bold: true },
       { rotulo: 'Instalação prevista', valor: dataBR(dados.contrato.data_instalacao), bold: true }
     ]);
     if (dados.contrato.observacoes_comerciais) linhaTexto(`Observações comerciais: ${dados.contrato.observacoes_comerciais}`, { font: italic });
 
-    secao(5, 'VALOR MENSAL DA LOCAÇÃO E SERVIÇOS');
-    linhaTexto(`A mensalidade será de ${moeda(dados.contrato.valor_mensal)}, pelo período inicial de ${dados.contrato.duracao_meses} mês(es), em ${dados.contrato.quantidade_parcelas} parcela(s) com periodicidade ${texto(dados.contrato.periodicidade).toLowerCase()}. A primeira parcela vencerá em ${dataBR(dados.contrato.primeira_mensalidade)} e as demais observarão, quando aplicável, o dia ${dados.contrato.dia_vencimento}.`, { font: bold });
+    secao(5, 'VALOR, COBRANÇA E VIGÊNCIA FINANCEIRA');
+    linhaTexto(`O ${rotuloCobranca.toLowerCase()} será de ${moeda(dados.contrato.valor_mensal)}, pelo período inicial de ${dados.contrato.duracao_meses} mês(es), em ${dados.contrato.quantidade_parcelas} parcela(s) com periodicidade ${texto(dados.contrato.periodicidade).toLowerCase()}. A primeira parcela vencerá em ${dataBR(dados.contrato.primeira_mensalidade)} e as demais observarão, quando aplicável, o dia ${dados.contrato.dia_vencimento}. O valor é único para todas as unidades atendidas descritas neste contrato.`, { font: bold });
     linhaTexto(`Formas válidas de pagamento: ${texto(dados.contrato.formas_validas_pagamento)}.`);
     paragrafosModelo('pagamentos').forEach((p, i) => linhaTexto(`5.${i + 1} ${p}`));
     linhaTexto(`Os valores poderão ser reajustados a cada 12 meses pelo índice ${texto(dados.contrato.indice_reajuste)} ou por outro índice oficial que o substitua. Variação negativa não implicará redução automática do valor vigente.`);
@@ -155,7 +158,7 @@
     secao(7, 'DURAÇÃO, RENOVAÇÃO E RESCISÃO');
     const fim = (() => { const d = new Date(`${dados.contrato.inicio}T12:00:00`); d.setMonth(d.getMonth() + Number(dados.contrato.duracao_meses || 0)); return d.toLocaleDateString('pt-BR'); })();
     linhaTexto(`7.1 O contrato inicia em ${dataBR(dados.contrato.inicio)} e terá duração inicial de ${dados.contrato.duracao_meses} mês(es), com término previsto em ${fim}. ${dados.contrato.auto_renovacao ? 'Ao final, será renovado por prazo indeterminado, salvo manifestação em contrário.' : 'A renovação dependerá de nova manifestação das partes.'}`);
-    linhaTexto(`7.2 A rescisão sem justa causa deverá ser comunicada com antecedência mínima de ${dados.contrato.aviso_previo_dias} dia(s). Durante o prazo determinado, poderá incidir multa rescisória de ${Number(dados.contrato.multa_rescisoria_percentual || 0).toLocaleString('pt-BR')}% sobre o saldo das mensalidades vincendas.`);
+    linhaTexto(`7.2 A rescisão sem justa causa deverá ser comunicada com antecedência mínima de ${dados.contrato.aviso_previo_dias} dia(s). Durante o prazo determinado, poderá incidir multa rescisória de ${Number(dados.contrato.multa_rescisoria_percentual || 0).toLocaleString('pt-BR')}% sobre o saldo das parcelas vincendas.`);
 
     secao(8, 'INADIMPLÊNCIA');
     linhaTexto(`8.1 O atraso acarretará multa de ${Number(dados.contrato.multa_atraso_percentual || 0).toLocaleString('pt-BR')}% e juros moratórios de ${Number(dados.contrato.juros_dia_percentual || 0).toLocaleString('pt-BR')}% ao dia, calculados sobre o débito.`);

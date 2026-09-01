@@ -82,7 +82,7 @@ async function carregarContratos() {
   instalarInterfaceContratos();
   ctEl('contratosGrade').innerHTML = '<div class="contratos-vazio">Carregando contratos...</div>';
   const [cr,cl,fo,us,mo,em] = await Promise.all([
-    supabaseClient.from('contratos').select('*,clientes(*),financeiro_fornecedores(*),contrato_modelos(id,nome,titulo,clausulas)').order('criado_em',{ascending:false}),
+    supabaseClient.from('contratos').select('*,clientes(*),financeiro_fornecedores(*),contrato_modelos(id,nome,titulo,clausulas),contrato_unidades(unidade_id,cliente_unidades(id,nome,cidade,uf,principal))').order('criado_em',{ascending:false}),
     supabaseClient.from('clientes').select('*').order('nome'),
     supabaseClient.from('financeiro_fornecedores').select('*').eq('ativo',true).order('nome'),
     supabaseClient.rpc('listar_usuarios_ativos_processo'),
@@ -119,7 +119,7 @@ async function renderizarContratos() {
   const ativos = contratosRegistros.filter(c => ['Ativo','Vencendo'].includes(statusExibidoContrato(c)));
   const vencendo = contratosRegistros.filter(c => statusExibidoContrato(c) === 'Vencendo').length;
   const atraso = contratosRegistros.reduce((s,c) => s + resumoLocalContrato(c).atrasadas,0);
-  const receita = ativos.filter(c => c.parte_tipo === 'Cliente').reduce((s,c) => s + Number(c.valor_mensal || 0),0);
+  const receita = ativos.filter(c => c.parte_tipo === 'Cliente').reduce((s,c) => s + ctValorMensalEquivalente(c),0);
   const proximos = contratosRegistros.flatMap(c => c._lancamentos || []).filter(x => x.status==='Pendente' && x.vencimento>=ctHoje()).sort((a,b)=>a.vencimento.localeCompare(b.vencimento));
   ctEl('contratosKpis').innerHTML = [[ativos.length,'Contratos ativos',''],[vencendo,'Vencendo em 45 dias','alerta'],[atraso,'Parcelas atrasadas','atraso'],[ctMoeda(receita),'Receita mensal contratada',''],[proximos[0]?ctData(proximos[0].vencimento):'—','Próximo vencimento','']].map(([v,t,c])=>`<article class="contratos-kpi ${c}"><span>${t}</span><strong>${v}</strong></article>`).join('');
   ctEl('contratosGrade').innerHTML = lista.map(c => { const p=parteDoContrato(c)||{}, s=statusExibidoContrato(c), r=resumoLocalContrato(c); return `<article class="contrato-card"><div class="contrato-card-head"><span class="contrato-card-numero">${ctHtml(c.numero)}</span><span class="contrato-status ${s.toLowerCase()}">${ctHtml(s)}</span></div><div><h3>${ctHtml(p.nome||'Parte não encontrada')}</h3><p>${ctHtml(c.tipo_contrato)} · ${ctHtml(c.sistemas_contratados||c.objeto)}</p></div><div class="contrato-card-valores"><div><span>Mensalidade</span><b>${ctMoeda(c.valor_mensal)}</b></div><div><span>Vigência</span><b>${ctData(c.inicio)} - ${fimContrato(c).toLocaleDateString('pt-BR')}</b></div></div>${ctPermissao('contratosFinanceiro')?`<div class="contrato-card-resumo"><div><span>Recebido</span><b>${ctMoeda(r.recebido)}</b></div><div><span>Em aberto</span><b>${ctMoeda(r.aberto)}</b></div><div><span>Atrasadas</span><b>${r.atrasadas}</b></div></div>`:''}<footer class="contrato-card-foot"><small>${c.quantidade_parcelas} parcela(s) · dia ${c.dia_vencimento}</small><button onclick="abrirDetalheContrato('${c.id}')">Abrir contrato</button></footer></article>`; }).join('') || '<div class="contratos-vazio"><i data-lucide="file-check-2"></i><p>Nenhum contrato encontrado.</p></div>';
@@ -171,12 +171,14 @@ async function salvarContrato() {
   const p=payloadContrato();
   if(!p.modelo_id||!(p.cliente_id||p.fornecedor_id)||!p.objeto||!p.sistemas_contratados||!p.valor_mensal||!p.inicio||!p.primeira_mensalidade||!p.forma_pagamento||!p.responsavel_id)return avisarModulo('Preencha os campos obrigatórios do contrato.');
   if(!ctValor('ctParteNome')||!ctValor('ctParteDocumento')||!ctValor('ctParteEndereco')||!ctValor('ctParteCidade')||!ctValor('ctParteUf')||!ctValor('ctParteRepresentante'))return avisarModulo('Complete os dados cadastrais obrigatórios da contratante.');
+  if(p.parte_tipo==='Cliente'&&!ctUnidadesSelecionadas().length)return avisarModulo('Selecione ao menos uma unidade atendida pelo contrato.');
   const botao=ctEl('btnSalvarContrato');botao.disabled=true;
   try{
     const parteId=p.cliente_id||p.fornecedor_id,parte=await salvarDadosParteContrato(p.parte_tipo,parteId);if(parte.error)throw parte.error;
     let salvo;
     if(contratoEditandoId){const r=await supabaseClient.from('contratos').update({...p,atualizado_em:new Date().toISOString()}).eq('id',contratoEditandoId).select('id,numero,status').single();if(r.error)throw r.error;salvo=r.data;}
     else{const status=ctValor('ctStatus')||'Ativo';const r=await supabaseClient.from('contratos').insert({...p,status,renovado_de_id:contratoRenovandoDe||null,criado_por:usuarioLogado.id}).select('id,numero,status').single();if(r.error)throw r.error;salvo=r.data;}
+    if(p.parte_tipo==='Cliente'){const cobertura=await supabaseClient.rpc('salvar_contrato_unidades',{p_contrato_id:salvo.id,p_unidades:ctUnidadesSelecionadas()});if(cobertura.error)throw cobertura.error;}
     if(salvo.status!=='Rascunho'){const sync=await supabaseClient.rpc('sincronizar_parcelas_contrato',{p_contrato_id:salvo.id});if(sync.error)throw sync.error;await criarOnboardingContrato(salvo.id,p);}
     if(contratoRenovandoDe){const rr=await supabaseClient.rpc('marcar_contrato_renovado',{p_anterior_id:contratoRenovandoDe,p_novo_id:salvo.id});if(rr.error)throw rr.error;}
     document.dispatchEvent(new CustomEvent('contrato:salvo',{detail:salvo}));fecharModalContrato();await carregarContratos();avisarModulo(`Contrato ${salvo.numero} salvo e integrado ao Financeiro.`);setTimeout(()=>abrirDetalheContrato(salvo.id),120);
@@ -214,7 +216,7 @@ function renderizarDetalheContrato(c) {
 }
 
 async function dadosAtuaisContrato(id) {
-  const r=await supabaseClient.from('contratos').select('*,clientes(*),financeiro_fornecedores(*),contrato_modelos(*)').eq('id',id).single();if(r.error)throw r.error;
+  const r=await supabaseClient.from('contratos').select('*,clientes(*),financeiro_fornecedores(*),contrato_modelos(*),contrato_unidades(unidade_id,cliente_unidades(id,nome,cidade,uf,principal))').eq('id',id).single();if(r.error)throw r.error;
   const e=await supabaseClient.from('configuracoes_empresa').select('*').eq('id',true).single();if(e.error)throw e.error;
   return{contrato:r.data,parte:r.data.parte_tipo==='Fornecedor'?r.data.financeiro_fornecedores:r.data.clientes,empresa:e.data,modelo:r.data.contrato_modelos};
 }
