@@ -944,12 +944,15 @@ async function carregarChamadosDaNuvem() {
     }
 
     function trocarSubCadastro(aba) {
-      ['clientes','tecnicos','usuarios'].forEach(nome => {
+      ['clientes','catalogo','estoque','equipamentos','tecnicos','usuarios'].forEach(nome => {
         document.getElementById('cadastro' + nome.charAt(0).toUpperCase() + nome.slice(1)).classList.toggle('hidden', nome !== aba);
         document.getElementById('tabCadastro' + nome.charAt(0).toUpperCase() + nome.slice(1)).classList.toggle('active', nome === aba);
       });
       if (aba === 'usuarios') { renderizarUsuarios(); renderizarLog(); }
       if (aba === 'tecnicos') renderizarTecnicos();
+      if (aba === 'catalogo' && typeof cadRenderCatalogo === 'function') cadRenderCatalogo();
+      if (aba === 'estoque' && typeof cadRenderEstoque === 'function') cadRenderEstoque();
+      if (aba === 'equipamentos' && typeof cadRenderEquipamentos === 'function') cadRenderEquipamentos();
     }
 
     function alternarSidebar() {
