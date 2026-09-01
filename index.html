@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=20260828-4">
+  <link rel="stylesheet" href="style.css?v=20260901-1">
   <link rel="stylesheet" href="os-financeiro.css?v=20260831-2">
   <link rel="stylesheet" href="financeiro-avancado.css?v=20260901-1">
   <link rel="stylesheet" href="contratos.css?v=20260901-3">
@@ -911,12 +911,25 @@
           <input type="text" id="cNome" placeholder="Ex: Mercado Central">
         </div>
         <div class="form-group">
+          <label>Tipo de pessoa</label>
+          <select id="cTipoPessoa" onchange="atualizarTipoPessoaCliente()">
+            <option value="juridica">Pessoa jurídica</option>
+            <option value="fisica">Pessoa física</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label>Unidade / Filial</label>
           <input type="text" id="cUnidade" placeholder="Ex: Matriz">
         </div>
-        <div class="form-group">
-          <label>CNPJ / CPF</label>
-          <input type="text" id="cDocumento" placeholder="00.000.000/0000-00">
+        <div class="form-group full">
+          <label id="cDocumentoLabel">CNPJ</label>
+          <div class="consulta-cnpj-campo">
+            <input type="text" id="cDocumento" inputmode="numeric" placeholder="00.000.000/0000-00" oninput="formatarDocumentoCliente()">
+            <button class="btn btn-secondary" id="btnConsultarCnpj" type="button" onclick="consultarCnpjCliente()">
+              <i data-lucide="search"></i><span>Buscar CNPJ</span>
+            </button>
+          </div>
+          <small id="cCnpjStatus" class="consulta-cnpj-status hidden" aria-live="polite"></small>
         </div>
         <div class="form-group">
           <label>Serial Do Cliente</label>
@@ -1005,7 +1018,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.75.1/dist/umd/supabase.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script src="script.js?v=20260901-6"></script>
+  <script src="script.js?v=20260901-8"></script>
   <script src="os-financeiro.js?v=20260901-4"></script>
   <script src="financeiro-avancado.js?v=20260901-2"></script>
   <script src="crm-correcoes.js"></script>
