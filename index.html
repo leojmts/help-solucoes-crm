@@ -868,4 +868,167 @@
         </section>
         <section id="checklistEncerramento" class="checklist-encerramento hidden">
           <div><i data-lucide="shield-check"></i><span><strong>Checklist de encerramento</strong><small>Obrigatório para marcar como resolvido.</small></span></div>
-          <label><
+          <label><input id="mContatoConfirmado" type="checkbox"> Confirmei a solução com o cliente</label>
+          <p><span id="checkResolucao"><i data-lucide="circle"></i>Resolução preenchida</span><span id="checkTempo"><i data-lucide="circle"></i>Tempo registrado</span></p>
+        </section>
+        <section id="areaInteracoesChamado" class="chamado-interacoes hidden">
+          <div class="interacoes-cabecalho">
+            <div><h4>Histórico de interações</h4><small>Registre cada contato e acompanhe o próximo passo.</small></div>
+            <span id="contadorInteracoesChamado" class="interacoes-contador">0 registros</span>
+          </div>
+          <div class="interacao-form">
+            <div class="form-group">
+              <label>Tipo</label>
+              <select id="interacaoTipo"><option>WhatsApp</option><option>Ligação</option><option>E-mail</option><option>Visita</option><option>Orçamento</option><option>Observação interna</option><option>Outro</option></select>
+            </div>
+            <div class="form-group interacao-descricao">
+              <label>Descrição</label>
+              <input id="interacaoDescricao" maxlength="2000" list="listaMencoesEquipe" placeholder="Comente ou marque alguém com @nome">
+              <datalist id="listaMencoesEquipe"></datalist>
+              <select id="interacaoModelo" class="modelo-select" onchange="aplicarRespostaModelo()"><option value="">Usar resposta pronta...</option></select>
+            </div>
+            <div class="form-group interacao-proximo-campo">
+              <label>Próximo contato — data e hora (opcional)</label>
+              <div class="interacao-data-hora">
+                <label><span>Data</span><input id="interacaoProximoData" type="date"></label>
+                <label><span>Hora (HH:MM)</span><input id="interacaoProximoHora" type="text" inputmode="numeric" maxlength="5" placeholder="08:00" oninput="formatarCampoHora(this)"></label>
+              </div>
+            </div>
+            <label class="interacao-interna"><input id="interacaoInterna" type="checkbox"> Somente equipe</label>
+            <label class="interacao-anexo"><i data-lucide="paperclip"></i><span>Anexar arquivos</span><input id="interacaoAnexos" type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf,text/plain" onchange="mostrarAnexosSelecionados()"></label>
+            <div id="interacaoAnexosSelecionados" class="anexos-selecionados"></div>
+            <button id="btnRegistrarInteracao" class="btn btn-primary" type="button" onclick="adicionarInteracaoChamado()"><i data-lucide="plus"></i>Registrar</button>
+            <button id="btnCancelarEdicaoInteracao" class="btn btn-secondary hidden" type="button" onclick="limparFormularioInteracao()">Cancelar edição</button>
+          </div>
+          <div id="listaInteracoesChamado" class="interacoes-lista"></div>
+        </section>
+      </div>
+      <div class="modal-actions">
+        <button id="btnGerarOSChamado" class="btn btn-secondary hidden" type="button" onclick="gerarOSDoChamado()"><i data-lucide="clipboard-plus"></i>Gerar ordem de serviço</button>
+        <button class="btn btn-secondary" onclick="fecharModais()">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarChamado()">Salvar Chamado</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalCliente" class="modal-overlay">
+    <div class="modal">
+      <h3 id="modalClienteTitulo">Cadastrar Novo Cliente</h3>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Nome / Razão Social</label>
+          <input type="text" id="cNome" placeholder="Ex: Mercado Central">
+        </div>
+        <div class="form-group">
+          <label>Unidade / Filial</label>
+          <input type="text" id="cUnidade" placeholder="Ex: Matriz">
+        </div>
+        <div class="form-group">
+          <label>CNPJ / CPF</label>
+          <input type="text" id="cDocumento" placeholder="00.000.000/0000-00">
+        </div>
+        <div class="form-group">
+          <label>Serial Do Cliente</label>
+          <input type="text" id="cIe" placeholder="Ex: 123456789 ou NÃO TEM">
+        </div>
+        <div class="form-group">
+          <label>Regime Tributário</label>
+          <select id="cRegime">
+            <option value="Simples Nacional">Simples Nacional</option>
+            <option value="Lucro Presumido">Lucro Presumido</option>
+            <option value="Lucro Real">Lucro Real</option>
+            <option value="MEI">MEI</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Telefone / WhatsApp</label>
+          <input type="text" id="cTelefone" placeholder="(67) 99999-0000">
+        </div>
+        <div class="form-group">
+          <label>E-mail (NF-e / Faturas)</label>
+          <input type="email" id="cEmail" placeholder="cliente@empresa.com">
+        </div>
+        <div class="form-group full">
+          <label>Endereço completo</label>
+          <input type="text" id="cEndereco" placeholder="Rua, número, complemento e bairro">
+        </div>
+        <div class="form-group">
+          <label>Cidade</label>
+          <input type="text" id="cCidade" placeholder="Ex.: Jardim">
+        </div>
+        <div class="form-group">
+          <label>UF</label>
+          <input type="text" id="cUf" maxlength="2" placeholder="MS">
+        </div>
+        <div class="form-group">
+          <label>CEP</label>
+          <input type="text" id="cCep" placeholder="00000-000">
+        </div>
+        <div class="form-group">
+          <label>Representante legal</label>
+          <input type="text" id="cRepresentante" placeholder="Nome completo">
+        </div>
+        <div class="form-group">
+          <label>CPF do representante</label>
+          <input type="text" id="cRepresentanteCpf" placeholder="000.000.000-00">
+        </div>
+        <div class="form-group full">
+          <label>Observações Técnicas (equipamentos, rede e orientações)</label>
+          <div class="campo-senha-wrap" id="wrapObsTecnicas">
+            <button type="button" class="btn-revelar" onclick="alternarRevelarObs()"><i data-lucide="eye"></i>Revelar</button>
+            <textarea id="cObsTecnicas" placeholder="Ex: Impressora do caixa usa IP fixo. Acesso remoto liberado somente com autorização."></textarea>
+          </div>
+          <p class="aviso-senha">Este conteúdo é salvo na nuvem e pode ser visto por usuários autorizados. Não registre senhas, códigos de autenticação ou outras credenciais.</p>
+        </div>
+        <div class="form-group full cad-cliente-fornecedor">
+          <label><input type="checkbox" id="cEhFornecedor" onchange="document.getElementById('cFornecedorCampos').classList.toggle('hidden',!this.checked)"> Este cliente também é fornecedor</label>
+          <div id="cFornecedorCampos" class="form-grid hidden">
+            <div class="form-group"><label>Categoria do fornecedor</label><input id="cFornecedorCategoria" placeholder="Ex.: aluguel, insumos, serviços"></div>
+            <div class="form-group"><label>Observações do fornecedor</label><input id="cFornecedorObs" placeholder="Condições ou informações comerciais"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="fecharModais()">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarCliente()">Salvar Cliente</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalTecnico" class="modal-overlay">
+    <div class="modal">
+      <h3>Cadastrar Novo Técnico</h3>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Nome do Técnico</label>
+          <input type="text" id="tNome" placeholder="Ex: Carlos Silva">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="fecharModais()">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarTecnico()">Cadastrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.75.1/dist/umd/supabase.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="script.js?v=20260901-2"></script>
+  <script src="os-financeiro.js"></script>
+  <script src="financeiro-avancado.js?v=20260901-2"></script>
+  <script src="crm-correcoes.js"></script>
+  <script src="gerenciamento-contas.js"></script>
+  <script src="os-documento-v4.js?v=20260826-3"></script>
+  <script src="os-itens-acoes.js?v=20260826-2"></script>
+  <script src="tema.js?v=20260826-1"></script>
+  <script src="dashboard-financeiro.js?v=20260827-3"></script>
+  <script src="avisos-destinatarios.js?v=20260826-1"></script>
+  <script src="os-exclusao.js?v=20260831-2"></script>
+  <script src="financeiro-resumo-mensal.js?v=20260827-3"></script>
+  <script src="contratos-pdf.js?v=20260827-1"></script>
+  <script src="contratos.js?v=20260901-2"></script>
+  <script src="crm-gestao-integrada.js?v=20260901-1"></script>
+  <script src="cadastro-operacional.js?v=20260901-2"></script>
+</body>
+</html>
