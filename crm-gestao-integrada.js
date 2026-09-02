@@ -91,7 +91,7 @@ async function gcExcluirLeadPerdido(){
   if(!confirm(`Excluir definitivamente o cliente perdido ${lead.nome}? O histórico de interações também será excluído.`))return;
   const r=await supabaseClient.from('leads').delete().eq('id',crmEditandoId).select('id').maybeSingle();
   if(r.error)return avisarModulo(r.error.message);
-  if(!r.data)return avisarModulo('O registro não foi excluído. Verifique sua permissão no CRM.');
+  if(!r.data)return avisarModulo('O registro não foi excluído. Verifique sua permissão no Sistema.');
   fecharModalLead();crmEditandoId=null;await renderizarCRM();avisarModulo('Cliente perdido excluído.')
 }
 
