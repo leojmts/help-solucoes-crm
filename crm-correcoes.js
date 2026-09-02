@@ -245,7 +245,7 @@ async function finRenderConciliacao(recarregar = true) {
   const lista = finOfxMovimentos.filter(x => String(x.conta_id) === contaSelecionada && (!statusAtual || x.status === statusAtual) && (!termo || `${x.descricao} ${x.documento} ${x.fitid}`.toLocaleLowerCase('pt-BR').includes(termo)));
   const daConta = finOfxMovimentos.filter(x => String(x.conta_id) === contaSelecionada);
   const total = daConta.reduce((s, x) => s + Number(x.valor), 0);
-  el.innerHTML = `<div class="fin-section-head"><div><span class="os-kicker">CONCILIAÇÃO BANCÁRIA</span><h2>Extratos OFX</h2><p>Compare o extrato do banco com as baixas registradas no CRM.</p></div>${finPermissao('financeiroBaixar') ? '<button class="btn btn-primary" onclick="finSelecionarArquivoOFX()"><i data-lucide="file-up"></i>Importar OFX</button>' : ''}</div>
+  el.innerHTML = `<div class="fin-section-head"><div><span class="os-kicker">CONCILIAÇÃO BANCÁRIA</span><h2>Extratos OFX</h2><p>Compare o extrato do banco com as baixas registradas no Sistema.</p></div>${finPermissao('financeiroBaixar') ? '<button class="btn btn-primary" onclick="finSelecionarArquivoOFX()"><i data-lucide="file-up"></i>Importar OFX</button>' : ''}</div>
     <div class="fin-ofx-toolbar"><label><span>Conta bancária</span><select id="finOfxContaFiltro" onchange="finRenderConciliacao(false)">${contas.map(c => `<option value="${c.id}" ${String(c.id) === contaSelecionada ? 'selected' : ''}>${osHtml(c.nome)}</option>`).join('')}</select></label><label><span>Status</span><select id="finOfxStatusFiltro" onchange="finRenderConciliacao(false)"><option value="">Todos</option>${['Pendente','Conciliado','Ignorado'].map(s => `<option ${s === statusAtual ? 'selected' : ''}>${s}</option>`).join('')}</select></label><label class="fin-ofx-busca"><span>Pesquisar</span><input id="finOfxBusca" value="${osHtml(buscaAtual)}" placeholder="Descrição, documento ou FITID" oninput="clearTimeout(window.finOfxBuscaTimer);window.finOfxBuscaTimer=setTimeout(()=>finRenderConciliacao(false),250)"></label></div>
     <div class="fin-kpis fin-ofx-kpis"><article><span>Movimentos</span><b>${daConta.length}</b></article><article><span>Pendentes</span><b>${daConta.filter(x => x.status === 'Pendente').length}</b></article><article><span>Conciliados</span><b>${daConta.filter(x => x.status === 'Conciliado').length}</b></article><article><span>Resultado do extrato</span><b>${osMoeda(total)}</b></article></div>
     <div class="fin-ofx-lista">${lista.map(m => {
@@ -488,7 +488,7 @@ imprimirOS = function () {
     <section class="os-doc-resumo"><div><span>Peças / Produtos</span><b>${pecas.reduce((s,x)=>s+Number(x.quantidade||0),0)} un. · ${osMoeda(totalPecas)}</b></div><div><span>Serviços</span><b>${servicos.reduce((s,x)=>s+Number(x.quantidade||0),0)} item(ns) · ${osMoeda(totalServicos)}</b></div><div><span>Subtotal</span><b>${osMoeda(subtotal)}</b></div><div><span>Desconto</span><b>${osMoeda(desconto)}</b></div></section>
     <div class="os-doc-total"><span>Total geral R$:</span><strong>${osMoeda(osAtual.total).replace('R$ ','').replace('R$','').trim()}</strong></div>
     <section class="os-doc-assinaturas"><div>Data</div><div>${osHtml(osAtual.assinatura_nome || 'Assinatura do responsável / solicitante')}</div></section>
-    <div class="os-doc-rodape">Help Soluções Tecnológicas · ${osHtml(osAtual.numero)} · Documento gerado pelo CRM</div>
+    <div class="os-doc-rodape">Help Soluções Tecnológicas · ${osHtml(osAtual.numero)} · Documento gerado pelo Sistema</div>
   </main>`;
   abrirDocumentoImpressao(osAtual.numero, corpo);
 };
