@@ -77,10 +77,7 @@
     const atraso=pend.filter(x=>x.vencimento&&x.vencimento<hoje).reduce((s,x)=>s+saldo(x),0);
     const pagsPeriodo=pags.filter(x=>dentro(x.pago_em,f));
     const mov=pagsPeriodo.reduce((s,x)=>s+Number(x.valor||0),0);
-    const tiposPorLancamento=new Map(regs.map(x=>[String(x.id),x.tipo]));
-    const entradas=pagsPeriodo.filter(x=>tiposPorLancamento.get(String(x.lancamento_id))==='Receber').reduce((s,x)=>s+Number(x.valor||0),0);
-    const saidas=pagsPeriodo.filter(x=>tiposPorLancamento.get(String(x.lancamento_id))==='Pagar').reduce((s,x)=>s+Number(x.valor||0),0);
-    const diferenca=entradas-saidas;
+    const diferenca=receber-pagar;
     const classeDiferenca=diferenca<0?'saldo negativo':'saldo positivo';
     const el=document.getElementById('financeiroResumo'); if(!el) return;
     const r=rotulo(f.periodo);
@@ -89,7 +86,7 @@
       ['alert-triangle','Em atraso',atraso,'atraso','Todas as pendências vencidas'],
       ['arrow-up-circle','A pagar',pagar,'pagar',r],
       ['circle-check-big','Movimentado',mov,'pago',r],
-      ['scale','Entradas − saídas',diferenca,classeDiferenca,r]
+      ['scale','Entradas − saídas',diferenca,classeDiferenca,`Previsão · ${r}`]
     ].map(([i,t,v,c,sub])=>`<article class="${c}"><i data-lucide="${i}"></i><span>${t}<small>${sub}</small></span><strong>${typeof osMoeda==='function'?osMoeda(v):moeda(v)}</strong></article>`).join('');
     if(window.lucide) lucide.createIcons();
   };
