@@ -39,8 +39,8 @@
     const doc = await PDFLib.PDFDocument.create();
     doc.setTitle(`${dados.modelo?.titulo || 'Contrato'} - ${dados.contrato.numero}`);
     doc.setAuthor(dados.empresa.nome_fantasia || dados.empresa.razao_social);
-    doc.setSubject('Contrato formal gerado pelo CRM Help Soluções Tecnológicas');
-    doc.setCreator('CRM Help Soluções Tecnológicas');
+    doc.setSubject('Contrato formal gerado pelo Sistema Help Soluções Tecnológicas');
+    doc.setCreator('Sistema Help Soluções Tecnológicas');
     const normal = await doc.embedFont(PDFLib.StandardFonts.Helvetica);
     const bold = await doc.embedFont(PDFLib.StandardFonts.HelveticaBold);
     const italic = await doc.embedFont(PDFLib.StandardFonts.HelveticaOblique);
