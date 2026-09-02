@@ -7,12 +7,12 @@
   }
 
   function atualizarBotao(){
-    const botao=document.getElementById('themeToggleBtn');
-    if(!botao)return;
     const claro=temaAtual()==='light';
-    botao.title=claro?'Usar modo escuro':'Usar modo claro';
-    botao.setAttribute('aria-label',botao.title);
-    botao.innerHTML=`<i data-lucide="${claro?'moon':'sun'}"></i>`;
+    document.querySelectorAll('.theme-toggle').forEach(botao=>{
+      botao.title=claro?'Usar modo escuro':'Usar modo claro';
+      botao.setAttribute('aria-label',botao.title);
+      botao.innerHTML=`<i data-lucide="${claro?'moon':'sun'}"></i>`;
+    });
     if(window.renderizarIcones)renderizarIcones();
     else if(window.lucide)lucide.createIcons();
   }
@@ -32,14 +32,24 @@
 
   function instalarBotao(){
     const box=document.getElementById('userBox');
-    if(!box||document.getElementById('themeToggleBtn'))return;
-    const sair=box.querySelector('button[title="Sair"]');
-    const botao=document.createElement('button');
-    botao.id='themeToggleBtn';
-    botao.className='theme-toggle';
-    botao.type='button';
-    botao.onclick=window.alternarTema;
-    if(sair)box.insertBefore(botao,sair);else box.appendChild(botao);
+    if(box&&!document.getElementById('themeToggleBtn')){
+      const sair=box.querySelector('button[title="Sair"]');
+      const botao=document.createElement('button');
+      botao.id='themeToggleBtn';
+      botao.className='theme-toggle';
+      botao.type='button';
+      botao.onclick=window.alternarTema;
+      if(sair)box.insertBefore(botao,sair);else box.appendChild(botao);
+    }
+    const login=document.querySelector('#telaLogin .login-v2-panel');
+    if(login&&!document.getElementById('loginThemeToggle')){
+      const botao=document.createElement('button');
+      botao.id='loginThemeToggle';
+      botao.className='theme-toggle login-theme-toggle';
+      botao.type='button';
+      botao.onclick=window.alternarTema;
+      login.appendChild(botao);
+    }
     atualizarBotao();
   }
 
