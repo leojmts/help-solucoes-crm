@@ -8,24 +8,34 @@ html[data-theme="light"]{
   --help-line:#dbe4ee;
 }
 
-/* O login e uma tela institucional escura e nao herda controles claros. */
+/* Login acompanha o tema e permite alternar antes de entrar. */
+.login-v2-panel{position:relative}
+.login-theme-toggle{position:absolute!important;z-index:8;top:22px;right:22px;background:rgba(255,255,255,.035)!important}
 html[data-theme="light"] #telaLogin,
-html[data-theme="light"] #telaLogin .login-v2-shell{color-scheme:dark!important;background:#061426!important;color:#e9f0fb!important}
-html[data-theme="light"] #telaLogin .login-v2-brand{background:radial-gradient(circle at 20% 18%,rgba(40,116,220,.20),transparent 36%),linear-gradient(145deg,#07192d,#061426)!important;border-color:rgba(123,164,218,.15)!important}
-html[data-theme="light"] #telaLogin .login-v2-panel{background:radial-gradient(circle at 78% 18%,rgba(38,111,211,.15),transparent 32%),linear-gradient(155deg,#0b1d33,#061426)!important}
+html[data-theme="light"] #telaLogin .login-v2-shell{color-scheme:light!important;background:#eef3f8!important;color:#172033!important}
+html[data-theme="light"] #telaLogin .login-v2-brand{background:radial-gradient(circle at 18% 15%,rgba(47,125,225,.15),transparent 35%),linear-gradient(145deg,#f8fbff,#e9f1f8)!important;border-color:#d6e2ee!important}
+html[data-theme="light"] #telaLogin .login-v2-panel{background:radial-gradient(circle at 84% 10%,rgba(47,125,225,.10),transparent 32%),linear-gradient(155deg,#f8fbff,#edf3f8)!important}
 html[data-theme="light"] #telaLogin h1,
-html[data-theme="light"] #telaLogin h2{color:#f8fbff!important}
-html[data-theme="light"] #telaLogin .login-v2-copy p{color:#b8c6d9!important}
+html[data-theme="light"] #telaLogin h2{color:#172033!important}
+html[data-theme="light"] #telaLogin .login-v2-copy p{color:#52657a!important}
 html[data-theme="light"] #telaLogin .login-v2-card>p,
-html[data-theme="light"] #telaLogin .login-options{color:#aab9cc!important}
-html[data-theme="light"] #telaLogin .login-v2-fields label{color:#dbe6f5!important}
+html[data-theme="light"] #telaLogin .login-options{color:#64748b!important}
+html[data-theme="light"] #telaLogin .login-v2-card{background:#fff!important;color:#172033!important;border:1px solid #d8e2ec!important;border-radius:24px!important;padding:clamp(28px,4vw,52px)!important;box-shadow:0 24px 65px rgba(15,23,42,.12)!important}
+html[data-theme="light"] #telaLogin .login-avatar{background:#eaf2ff!important;color:#1768d6!important;border-color:#c6dcf8!important}
+html[data-theme="light"] #telaLogin .login-v2-fields label{color:#334155!important}
 html[data-theme="light"] #telaLogin input[type="email"],
-html[data-theme="light"] #telaLogin input[type="password"]{background:rgba(255,255,255,.035)!important;color:#fff!important;border-color:#314861!important;color-scheme:dark!important;box-shadow:none!important}
+html[data-theme="light"] #telaLogin input[type="password"]{background:#fff!important;color:#172033!important;border-color:#cbd7e4!important;color-scheme:light!important;box-shadow:0 1px 2px rgba(15,23,42,.025)!important}
 html[data-theme="light"] #telaLogin input[type="email"]::placeholder,
-html[data-theme="light"] #telaLogin input[type="password"]::placeholder{color:#718096!important}
+html[data-theme="light"] #telaLogin input[type="password"]::placeholder{color:#8a98aa!important}
 html[data-theme="light"] #telaLogin input[type="email"]:focus,
 html[data-theme="light"] #telaLogin input[type="password"]:focus{border-color:#2d79e4!important;box-shadow:0 0 0 4px rgba(45,121,228,.12)!important}
-html[data-theme="light"] #telaLogin input[type="checkbox"]{color-scheme:dark!important;accent-color:#1768d6!important}
+html[data-theme="light"] #telaLogin input[type="checkbox"]{color-scheme:light!important;accent-color:#1768d6!important}
+html[data-theme="light"] #telaLogin .login-options a{color:#1768d6!important}
+html[data-theme="light"] #telaLogin .login-v2-footer{color:#718096!important}
+html[data-theme="light"] #telaLogin .login-benefits div{color:#475569!important}
+html[data-theme="light"] #telaLogin .login-benefits b{background:#fff!important;box-shadow:0 6px 18px rgba(15,23,42,.06)!important}
+html[data-theme="light"] #telaLogin .login-theme-toggle{background:#fff!important;color:#475569!important;border-color:#cbd7e4!important;box-shadow:0 4px 14px rgba(15,23,42,.08)!important}
+html[data-theme="light"] #telaLogin .circuit{border-color:rgba(47,125,225,.13)!important}
 
 /* Botao de avisos/notificacoes com contraste completo no tema claro. */
 html[data-theme="light"] .notify-btn{background:#fff!important;color:#334155!important;border-color:#cbd8e6!important;box-shadow:0 3px 10px rgba(15,23,42,.09)!important;cursor:pointer}
@@ -181,3 +191,76 @@ html[data-theme="light"] .aviso-destinatarios-nota{color:#64748b!important}
 .dashboard-fin-linha>span{display:flex;flex-direction:column;gap:3px;min-width:0}.dashboard-fin-linha strong{font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dashboard-fin-linha small{font-size:.64rem;color:var(--text-muted)}.dashboard-fin-linha>b{font-size:.7rem;white-space:nowrap}
 html[data-theme="light"] .dashboard-fin-linha{border-color:#e5ebf2!important}
 html[data-theme="light"] .dashboard-fin-linha strong{color:#334155!important}
+
+/* Camada final do tema claro: carregada depois de todos os módulos. */
+html[data-theme="light"]{
+  --card:#fff;
+  --card-bg:#fff;
+  --surface:#fff;
+  --surface-soft:#f5f8fc;
+  --border:#d8e2ec;
+  --muted:#64748b;
+  --text:#172033;
+  --primary:#2f7de1;
+  --input-bg:#fff;
+}
+
+html[data-theme="light"] :where(.modal,.crm-modal-content,.os-modal,.financeiro-modal,.contrato-modal,.contrato-detalhe,.ct-modal-pequeno,.gc-modal,.cad-modal,.alm-modal){
+  background:#fff!important;color:#172033!important;border-color:#d8e2ec!important;
+  box-shadow:0 24px 70px rgba(15,23,42,.16)!important;
+}
+html[data-theme="light"] :where(.modal-header,.modal-footer,.os-modal-head,.os-actions){background:#fbfdff!important;border-color:#dfe7ef!important;color:#172033!important}
+html[data-theme="light"] :where(.modal-close,.os-close,.notification-close){background:#fff!important;color:#526174!important;border-color:#d4dee9!important}
+html[data-theme="light"] :where(.modal-close,.os-close,.notification-close):hover{background:#eef4fa!important;color:#1768d6!important;border-color:#9ebce0!important}
+html[data-theme="light"] :where(.modal-overlay,.crm-modal-overlay,.os-overlay){background:rgba(30,41,59,.42)!important}
+
+html[data-theme="light"] :where(.crm-field,.form-group,.form-grid label,.os-form-grid label,.contrato-form-grid label,.gc-form label){color:#526174!important}
+html[data-theme="light"] :where(
+  .crm-field input,.crm-field select,.crm-field textarea,
+  .form-group input,.form-group select,.form-group textarea,
+  .os-toolbar input,.os-toolbar select,.financeiro-toolbar input,.financeiro-toolbar select,
+  .os-form-grid input,.os-form-grid select,.os-form-grid textarea,.os-observacoes textarea,
+  .os-assinatura input,.os-item input,.os-item select,.os-totais input,
+  .fin-rel-filtros input,.fin-rel-filtros select,
+  .fin-ofx-toolbar input,.fin-ofx-toolbar select,.fin-ofx-match select,
+  .gc-toolbar input,.gc-toolbar select,.gc-form input,.gc-form select,.gc-form textarea,
+  .contratos-toolbar select,.cad-filtros select
+){background:#fff!important;color:#172033!important;border-color:#cfd9e5!important;color-scheme:light!important;box-shadow:none!important}
+html[data-theme="light"] :where(input,select,textarea):disabled{background:#eef2f6!important;color:#7a8797!important;border-color:#dbe3ec!important;opacity:1!important;cursor:not-allowed}
+html[data-theme="light"] :where(input,select,textarea)[readonly]{background:#f5f7fa!important;color:#526174!important}
+html[data-theme="light"] :where(input,textarea)::placeholder{color:#8795a8!important;opacity:1!important}
+html[data-theme="light"] :where(input,select,textarea):focus{border-color:#5f98df!important;box-shadow:0 0 0 3px rgba(47,125,225,.12)!important;outline:0!important}
+html[data-theme="light"] :where(select option){background:#fff!important;color:#172033!important}
+
+html[data-theme="light"] :where(
+  .os-toolbar,.financeiro-toolbar,.os-form-section,.financeiro-painel,.financeiro-relatorios,
+  .fin-extra,.fin-nav,.fin-caixa-operacional,.fin-grafico,.fin-cards article,.fin-lista>div,
+  .fin-ofx-item,.fin-ofx-importacoes-lista>div,.fin-contas article,
+  .contratos-kpi,.contrato-card,.contratos-vazio,.contrato-form-section,.ct-painel,
+  .gc-tabs,.gc-kpi,.gc-card,.gc-table-wrap,.gc-pendencia,
+  .cad-head,.cad-kpis article,.cad-table-wrap,.cad-busca,.cad-cliente-fornecedor,
+  .alm-tabs,.alm-card,.alm-timeline
+){background:#fff!important;color:#172033!important;border-color:#dbe3ec!important}
+html[data-theme="light"] :where(.fin-rel-filtros,.fin-rel-resumo article,.fin-kpis article,.contrato-card-resumo,.ct-resumo-fin article,.gc-client-contact div,.gc-funnel article,.cad-estoque-box){background:#f7f9fc!important;color:#172033!important;border-color:#dfe7ef!important}
+html[data-theme="light"] :where(.os-coluna,.fin-conta-inativa){background:#eef3f8!important;color:#172033!important;border-color:#d9e3ed!important}
+
+html[data-theme="light"] :where(.table-container,.financeiro-table-wrap,.gc-table-wrap,.cad-table-wrap){box-shadow:0 5px 18px rgba(15,23,42,.05)!important}
+html[data-theme="light"] :where(.financeiro-table-wrap,.gc-table,.cad-table) th{background:#edf3f8!important;color:#53657a!important;border-color:#dce5ee!important}
+html[data-theme="light"] :where(.financeiro-table-wrap,.gc-table,.cad-table) td{background:#fff!important;color:#243145!important;border-color:#e5ebf1!important}
+html[data-theme="light"] :where(.financeiro-table-wrap,.gc-table,.cad-table) tbody tr:hover td{background:#f7faff!important}
+
+html[data-theme="light"] :where(.fin-nav button.active,.alm-tabs button.active,.gc-tabs button.active){background:#e7f1ff!important;color:#1768d6!important}
+html[data-theme="light"] :where(.fin-nav button,.alm-tabs button,.gc-tabs button){color:#5f6f83!important}
+html[data-theme="light"] :where(.fin-cards article button,.fin-lista button,.cad-acoes button,.alm-unidades-lista button,.gc-actions button){background:#fff!important;color:#526174!important;border-color:#d4dee9!important}
+html[data-theme="light"] :where(.fin-cards article button,.fin-lista button,.cad-acoes button,.alm-unidades-lista button,.gc-actions button):hover{background:#eef5ff!important;color:#1768d6!important;border-color:#9fc1eb!important}
+
+html[data-theme="light"] :where(.interacao-form,.chamado-interacoes,.checklist-encerramento,.dossie-preview,.dossie-chamado-card,.crm-tools-card,.settings-card,.permissao-item){background:#fff!important;color:#172033!important;border-color:#dbe3ec!important}
+html[data-theme="light"] :where(.interacao-interna,.dossie-internas,.aviso-senha,.consulta-cnpj-campo){background:#f7f9fc!important;color:#334155!important;border-color:#dfe7ef!important}
+
+@media(max-width:1100px){
+  html[data-theme="light"] #telaLogin .login-v2-card{max-width:680px}
+}
+@media(max-width:720px){
+  .login-theme-toggle{top:14px;right:14px}
+  html[data-theme="light"] #telaLogin .login-v2-card{border-radius:18px!important;padding:26px 22px!important}
+}
