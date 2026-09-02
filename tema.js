@@ -8,10 +8,12 @@
 
   function atualizarBotao(){
     const claro=temaAtual()==='light';
+    const iconeEsperado=claro?'moon':'sun';
     document.querySelectorAll('.theme-toggle').forEach(botao=>{
       botao.title=claro?'Usar modo escuro':'Usar modo claro';
       botao.setAttribute('aria-label',botao.title);
-      botao.innerHTML=`<i data-lucide="${claro?'moon':'sun'}"></i>`;
+      const iconeAtual=botao.querySelector('[data-lucide]')?.getAttribute('data-lucide');
+      if(iconeAtual!==iconeEsperado)botao.innerHTML=`<i data-lucide="${iconeEsperado}"></i>`;
     });
     if(window.renderizarIcones)renderizarIcones();
     else if(window.lucide)lucide.createIcons();
@@ -57,5 +59,4 @@
   aplicarTema(salvo==='light'?'light':'dark',false);
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',instalarBotao);
   else instalarBotao();
-  new MutationObserver(instalarBotao).observe(document.documentElement,{childList:true,subtree:true});
 })();
