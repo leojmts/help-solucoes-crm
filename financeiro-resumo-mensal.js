@@ -5,6 +5,14 @@
   const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
   const moeda=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
+  // Carrega os filtros específicos de Recorrências sem mexer na lógica principal do Financeiro.
+  if(!document.getElementById('finRecFiltrosScript')){
+    const s=document.createElement('script');
+    s.id='finRecFiltrosScript';
+    s.src='financeiro-recorrencias-filtros.js?v=20260902-1';
+    document.head.appendChild(s);
+  }
+
   // O relatório de contas pertence somente à aba Lançamentos.
   // Este listener fica no document para funcionar mesmo que a navegação financeira
   // seja criada depois pelo financeiro-avancado.js.
