@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Help Soluções Tecnológicas - CRM</title>
+  <title>Help Soluções Tecnológicas - Sistema</title>
   <meta name="theme-color" content="#07182b">
   <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20260827-2">
   <link rel="apple-touch-icon" href="favicon.svg?v=20260827-2">
@@ -37,7 +37,7 @@
           <li id="menuDashboard" class="active nav-item" data-permissao="dashboard" onclick="trocarAba('dashboard')" title="Dashboard"><i data-lucide="layout-dashboard"></i><span class="nav-label">Dashboard</span></li>
           <li id="menuMeuTrabalho" class="nav-item" data-permissao="dashboard" onclick="trocarAba('meuTrabalho')" title="Meu trabalho"><i data-lucide="user-check"></i><span class="nav-label">Meu trabalho</span></li>
           <li id="menuKanban" class="nav-item" data-permissao="dashboard" onclick="trocarAba('kanban')" title="Kanban de chamados"><i data-lucide="columns-3"></i><span class="nav-label">Kanban</span></li>
-          <li id="menuCRM" class="nav-item" data-permissao="crm" onclick="trocarAba('crm')" title="CRM Comercial"><i data-lucide="briefcase"></i><span class="nav-label">CRM Comercial</span></li>
+          <li id="menuCRM" class="nav-item" data-permissao="crm" onclick="trocarAba('crm')" title="Sistema Comercial"><i data-lucide="briefcase"></i><span class="nav-label">Sistema Comercial</span></li>
           <li id="menuCadastro" class="nav-item" data-permissao="clientes" onclick="trocarAba('cadastro')" title="Cadastros"><i data-lucide="database"></i><span class="nav-label">Cadastro</span></li>
           <li id="menuProcessos" class="nav-item" onclick="trocarAba('processos')" title="Processos internos"><i data-lucide="list-checks"></i><span class="nav-label">Processos</span></li>
           <li id="menuContratos" class="nav-item" data-permissao="contratos" onclick="trocarAba('contratos')" title="Gestão de contratos"><i data-lucide="file-signature"></i><span class="nav-label">Contratos</span></li>
@@ -273,7 +273,7 @@
 
 <div id="visaoKanban" class="view-section hidden operacional-view"><header class="header"><div><h1>Kanban de chamados</h1><p>Arraste os cartões para atualizar o andamento.</p></div><div class="kanban-filtros"><select id="kanbanTecnico" onchange="renderizarKanban()"><option value="">Todos os técnicos</option></select><input id="kanbanBusca" placeholder="Buscar chamado ou cliente" oninput="renderizarKanban()"></div></header><section id="kanbanChamados" class="kanban-board"></section></div>
 
-<div id="visaoCRM" class="view-section hidden"><header class="header"><div><h1>CRM Comercial</h1><p>Organize oportunidades e acompanhe cada próximo passo.</p></div><div class="actions"><button class="btn btn-primary" onclick="abrirModalLead()"><i data-lucide="plus"></i>Novo lead</button></div></header><section class="crm-summary"><div class="crm-mini"><span>Leads ativos</span><strong id="crmTotalAtivos">0</strong></div><div class="crm-mini"><span>Em negociação</span><strong id="crmNegociacao">0</strong></div><div class="crm-mini"><span>Follow-ups pendentes</span><strong id="crmFollowups">0</strong></div><div class="crm-mini"><span>Convertidos</span><strong id="crmConvertidos">0</strong></div></section><section class="crm-layout"><div class="crm-board" id="crmBoard"></div><aside class="crm-actions"><h3>Próximas ações</h3><div id="crmProximas"></div></aside></section></div><div id="modalLead" class="crm-modal-overlay" onclick="if(event.target===this) fecharModalLead()"><div class="crm-modal-content" role="dialog" aria-modal="true" aria-labelledby="crmModalTitulo"><div class="modal-header"><h2 id="crmModalTitulo">Novo lead</h2><button class="modal-close" onclick="fecharModalLead()">×</button></div><div class="crm-modal-grid"><div><label>Empresa / Nome</label><input id="crmNome"></div><div><label>Responsável</label><input id="crmResponsavel"></div><div><label>WhatsApp</label><input id="crmTelefone"></div><div><label>Cidade</label><input id="crmCidade"></div><div><label>Interesse</label><select id="crmInteresse"><option>ERP / Gestão</option><option>PDV</option><option>Emissão Fiscal</option><option>Suporte / Informática</option></select></div><div><label>Etapa</label><select id="crmEtapa"><option>Novo</option><option>Contato</option><option>Demonstração</option><option>Proposta</option><option>Negociação</option><option>Fechado</option></select></div><div><label>Próxima ação</label><input id="crmProximaAcao" type="date"></div><div><label>Valor estimado</label><input id="crmValor" type="number"></div><div class="full"><label>Observações</label><textarea id="crmObs" rows="3"></textarea></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="fecharModalLead()">Cancelar</button><button class="btn btn-primary" onclick="salvarLead()">Salvar</button></div><div id="crmHistoricoArea" style="display:none;margin-top:16px"><h3>Histórico</h3><div id="crmHistorico"></div><div style="display:flex;gap:8px;margin-top:10px"><input id="crmNovaInteracao" placeholder="Registrar ligação, visita ou WhatsApp"><button class="btn btn-secondary" onclick="adicionarInteracao()">Registrar</button></div><div style="margin-top:10px;display:flex;gap:8px"><button class="btn btn-secondary" onclick="moverLeadEtapa()">Avançar etapa</button><button class="btn btn-primary" onclick="converterLeadCliente()">Converter em cliente</button></div></div></div></div></div>
+<div id="visaoCRM" class="view-section hidden"><header class="header"><div><h1>Sistema Comercial</h1><p>Organize oportunidades e acompanhe cada próximo passo.</p></div><div class="actions"><button class="btn btn-primary" onclick="abrirModalLead()"><i data-lucide="plus"></i>Novo lead</button></div></header><section class="crm-summary"><div class="crm-mini"><span>Leads ativos</span><strong id="crmTotalAtivos">0</strong></div><div class="crm-mini"><span>Em negociação</span><strong id="crmNegociacao">0</strong></div><div class="crm-mini"><span>Follow-ups pendentes</span><strong id="crmFollowups">0</strong></div><div class="crm-mini"><span>Convertidos</span><strong id="crmConvertidos">0</strong></div></section><section class="crm-layout"><div class="crm-board" id="crmBoard"></div><aside class="crm-actions"><h3>Próximas ações</h3><div id="crmProximas"></div></aside></section></div><div id="modalLead" class="crm-modal-overlay" onclick="if(event.target===this) fecharModalLead()"><div class="crm-modal-content" role="dialog" aria-modal="true" aria-labelledby="crmModalTitulo"><div class="modal-header"><h2 id="crmModalTitulo">Novo lead</h2><button class="modal-close" onclick="fecharModalLead()">×</button></div><div class="crm-modal-grid"><div><label>Empresa / Nome</label><input id="crmNome"></div><div><label>Responsável</label><input id="crmResponsavel"></div><div><label>WhatsApp</label><input id="crmTelefone"></div><div><label>Cidade</label><input id="crmCidade"></div><div><label>Interesse</label><select id="crmInteresse"><option>ERP / Gestão</option><option>PDV</option><option>Emissão Fiscal</option><option>Suporte / Informática</option></select></div><div><label>Etapa</label><select id="crmEtapa"><option>Novo</option><option>Contato</option><option>Demonstração</option><option>Proposta</option><option>Negociação</option><option>Fechado</option></select></div><div><label>Próxima ação</label><input id="crmProximaAcao" type="date"></div><div><label>Valor estimado</label><input id="crmValor" type="number"></div><div class="full"><label>Observações</label><textarea id="crmObs" rows="3"></textarea></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="fecharModalLead()">Cancelar</button><button class="btn btn-primary" onclick="salvarLead()">Salvar</button></div><div id="crmHistoricoArea" style="display:none;margin-top:16px"><h3>Histórico</h3><div id="crmHistorico"></div><div style="display:flex;gap:8px;margin-top:10px"><input id="crmNovaInteracao" placeholder="Registrar ligação, visita ou WhatsApp"><button class="btn btn-secondary" onclick="adicionarInteracao()">Registrar</button></div><div style="margin-top:10px;display:flex;gap:8px"><button class="btn btn-secondary" onclick="moverLeadEtapa()">Avançar etapa</button><button class="btn btn-primary" onclick="converterLeadCliente()">Converter em cliente</button></div></div></div></div></div>
       
 
       
@@ -300,7 +300,7 @@
         <div id="cadastroClientes" class="cadastro-panel">
         <section class="table-container">
           <div class="table-header">
-            <h3>Base do CRM</h3>
+            <h3>Base do Sistema</h3>
             <div class="filters cadastro-actions">
               <button class="btn btn-primary" type="button" onclick="abrirModalCliente()"><i data-lucide="plus"></i>Novo cliente</button>
               <input 
@@ -395,7 +395,7 @@
         <header class="header">
           <div>
             <h2 style="font-size:1.3rem;">Usuários e Permissões</h2>
-            <p>Defina quem pode acessar cada recurso do CRM</p>
+            <p>Defina quem pode acessar cada recurso do Sistema</p>
           </div>
           <div class="actions">
             <button class="btn btn-primary" onclick="abrirModalUsuario()">+ Novo Usuário</button>
@@ -589,7 +589,7 @@
           </div>
           <div class="settings-card">
             <h3><i data-lucide="bell-ring"></i>Antecedência dos lembretes</h3>
-            <p>Quantas horas antes do próximo contato o CRM deve avisar a equipe.</p>
+            <p>Quantas horas antes do próximo contato o Sistema deve avisar a equipe.</p>
             <input type="number" id="cfgLembreteHoras" min="1" step="1" value="4">
           </div>
           <div class="settings-card">
@@ -750,7 +750,7 @@
           <label class="permissao-item"><input type="checkbox" id="permNovoCliente" value="novoCliente"> Cadastrar Cliente</label>
           <label class="permissao-item"><input type="checkbox" id="permNovoTecnico" value="novoTecnico"> Cadastrar Técnico</label>
           <label class="permissao-item"><input type="checkbox" id="permUsuarios" value="usuarios"> Gerenciar Usuários</label>
-          <label class="permissao-item"><input type="checkbox" id="permCrm" value="crm"> CRM Comercial</label>
+          <label class="permissao-item"><input type="checkbox" id="permCrm" value="crm"> Sistema Comercial</label>
           <label class="permissao-item"><input type="checkbox" id="permOs" value="os"> Ordens de serviço</label>
           <label class="permissao-item"><input type="checkbox" id="permOsVisualizar" value="osVisualizar"> OS: visualizar</label>
           <label class="permissao-item"><input type="checkbox" id="permOsCriar" value="osCriar"> OS: criar</label>
@@ -1019,24 +1019,24 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.75.1/dist/umd/supabase.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script src="script.js?v=20260901-8"></script>
-  <script src="os-financeiro.js?v=20260901-4"></script>
+  <script src="script.js?v=20260902-2"></script>
+  <script src="os-financeiro.js?v=20260902-1"></script>
   <script src="financeiro-avancado.js?v=20260901-3"></script>
-  <script src="crm-correcoes.js"></script>
-  <script src="gerenciamento-contas.js"></script>
-  <script src="os-documento-v4.js?v=20260826-3"></script>
+  <script src="crm-correcoes.js?v=20260902-1"></script>
+  <script src="gerenciamento-contas.js?v=20260902-1"></script>
+  <script src="os-documento-v4.js?v=20260902-1"></script>
   <script src="os-itens-acoes.js?v=20260826-2"></script>
   <script src="tema.js?v=20260902-1"></script>
   <script src="dashboard-financeiro.js?v=20260827-3"></script>
   <script src="avisos-destinatarios.js?v=20260826-1"></script>
   <script src="os-exclusao.js?v=20260831-2"></script>
   <script src="financeiro-resumo-mensal.js?v=20260827-3"></script>
-  <script src="contratos-pdf.js?v=20260901-1"></script>
+  <script src="contratos-pdf.js?v=20260902-1"></script>
   <script src="contratos.js?v=20260901-5"></script>
   <script src="contratos-cobertura.js?v=20260901-1"></script>
-  <script src="crm-gestao-integrada.js?v=20260901-5"></script>
+  <script src="crm-gestao-integrada.js?v=20260902-1"></script>
   <script src="cadastro-operacional.js?v=20260901-4"></script>
 <script src="almoxarifado.js?v=20260901-2"></script>
-<script src="assistente.js?v=20260902-1"></script>
+<script src="assistente.js?v=20260902-2"></script>
 </body>
 </html>
