@@ -114,6 +114,27 @@
     if(window.lucide) lucide.createIcons();
   };
 
+  const finAbaOriginal=window.finAba;
+  if(typeof finAbaOriginal==='function'){
+    window.finAba=function(aba,btn){
+      document.getElementById('financeiroRelatorios')?.classList.add('hidden');
+      return finAbaOriginal.apply(this,arguments);
+    };
+  }
+
+  const alternarRelatorioOriginal=window.alternarRelatorioFinanceiro;
+  if(typeof alternarRelatorioOriginal==='function'){
+    window.alternarRelatorioFinanceiro=function(){
+      const box=document.getElementById('financeiroRelatorios');
+      const abrindo=!!box?.classList.contains('hidden');
+      if(abrindo&&typeof window.finAba==='function'){
+        const btnLancamentos=document.querySelector('#finNavegacao [data-fin-aba="lancamentos"]');
+        window.finAba('lancamentos',btnLancamentos);
+      }
+      return alternarRelatorioOriginal.apply(this,arguments);
+    };
+  }
+
   const trocarOriginal=window.trocarAba;
   if(typeof trocarOriginal==='function'){
     window.trocarAba=function(aba){
