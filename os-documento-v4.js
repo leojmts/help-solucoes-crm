@@ -76,7 +76,7 @@ window.imprimirOS = async function () {
     <div class="osv4-payment">Forma de pagamento: não informada</div>
     <div class="osv4-total"><span>Total geral:</span><strong>${osMoeda(totalGeral)}</strong></div>
     <section class="osv4-sign"><div>Data</div><div>${osHtml(atual.assinatura_nome || 'Assinatura do responsável / solicitante')}</div></section>
-    <div class="osv4-foot">Help Soluções Tecnológicas · ${osHtml(atual.numero)} · Documento gerado pelo CRM</div>
+    <div class="osv4-foot">Help Soluções Tecnológicas · ${osHtml(atual.numero)} · Documento gerado pelo Sistema</div>
   </main>`;
   abrirDocumentoImpressao(atual.numero, corpo);
 };
