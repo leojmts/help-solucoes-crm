@@ -5,6 +5,26 @@
   const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
   const moeda=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
+  // O relatório de contas pertence somente à aba Lançamentos.
+  // Este listener fica no document para funcionar mesmo que a navegação financeira
+  // seja criada depois pelo financeiro-avancado.js.
+  document.addEventListener('click',event=>{
+    const alvo=event.target;
+    if(!alvo?.closest)return;
+
+    const abaFinanceiro=alvo.closest('#finNavegacao button[data-fin-aba]');
+    if(abaFinanceiro){
+      document.getElementById('financeiroRelatorios')?.classList.add('hidden');
+      return;
+    }
+
+    const botaoRelatorio=alvo.closest('#visaoFinanceiro .header [onclick*="alternarRelatorioFinanceiro"]');
+    if(botaoRelatorio){
+      const lancamentos=document.querySelector('#finNavegacao button[data-fin-aba="lancamentos"]');
+      if(lancamentos&&!lancamentos.classList.contains('active'))lancamentos.click();
+    }
+  },true);
+
   function mes(offset=0){
     const a=new Date();
     return {inicio:iso(new Date(a.getFullYear(),a.getMonth()+offset,1)),fim:iso(new Date(a.getFullYear(),a.getMonth()+offset+1,0))};
