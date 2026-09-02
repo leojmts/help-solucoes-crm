@@ -256,6 +256,18 @@ html[data-theme="light"] :where(.fin-cards article button,.fin-lista button,.cad
 
 html[data-theme="light"] :where(.interacao-form,.chamado-interacoes,.checklist-encerramento,.dossie-preview,.dossie-chamado-card,.crm-tools-card,.settings-card,.permissao-item){background:#fff!important;color:#172033!important;border-color:#dbe3ec!important}
 html[data-theme="light"] :where(.interacao-interna,.dossie-internas,.aviso-senha,.consulta-cnpj-campo){background:#f7f9fc!important;color:#334155!important;border-color:#dfe7ef!important}
+html[data-theme="light"] :where(.interacao-item,.interacao-anexo-link,.interacao-data-hora input){background:#f7f9fc!important;color:#334155!important;border-color:#d8e2ec!important}
+html[data-theme="light"] :where(.crm-modal-grid input,.crm-modal-grid select,.crm-modal-grid textarea){background:#fff!important;color:#172033!important;border-color:#cfd9e5!important;color-scheme:light!important}
+html[data-theme="light"] .modal-actions{background:#fbfdff!important;border-color:#dfe7ef!important}
+
+html[data-theme="light"] :where(#visaoRelatorios .report-actions select,#visaoRelatorios .report-rate-field input,.dossie-select-wrap select){background:#fff!important;color:#172033!important;border-color:#cfd9e5!important;color-scheme:light!important}
+html[data-theme="light"] :where(#visaoRelatorios .report-rate-field,.dossie-toolbar,.dossie-campos>div,.dossie-bloco,.dossie-interacao){background:#f7f9fc!important;color:#334155!important;border-color:#dfe7ef!important}
+
+html[data-theme="light"] .crm-tool-item{background:#fff!important;color:#243145!important;border-color:#dbe3ec!important;box-shadow:0 3px 10px rgba(15,23,42,.04)!important}
+html[data-theme="light"] .crm-search-wrap>button:hover{background:#eaf2ff!important;color:#1768d6!important}
+html[data-theme="light"] .processo-responsaveis-campo{background:#f7f9fc!important;color:#334155!important;border-color:#d7e4f1!important}
+html[data-theme="light"] :where(.processo-responsaveis-atalhos button,.processo-responsavel-opcao){background:#fff!important;color:#52657a!important;border-color:#cfdbea!important}
+html[data-theme="light"] :where(.processo-responsaveis-atalhos button.ativo,.processo-responsavel-opcao:has(input:checked)){background:#eaf3ff!important;color:#2366ba!important;border-color:#73a5df!important}
 
 @media(max-width:1100px){
   html[data-theme="light"] #telaLogin .login-v2-card{max-width:680px}
