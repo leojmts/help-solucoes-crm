@@ -75,14 +75,21 @@
     const receber=noPeriodo.filter(x=>x.tipo==='Receber').reduce((s,x)=>s+saldo(x),0);
     const pagar=noPeriodo.filter(x=>x.tipo==='Pagar').reduce((s,x)=>s+saldo(x),0);
     const atraso=pend.filter(x=>x.vencimento&&x.vencimento<hoje).reduce((s,x)=>s+saldo(x),0);
-    const mov=pags.filter(x=>dentro(x.pago_em,f)).reduce((s,x)=>s+Number(x.valor||0),0);
+    const pagsPeriodo=pags.filter(x=>dentro(x.pago_em,f));
+    const mov=pagsPeriodo.reduce((s,x)=>s+Number(x.valor||0),0);
+    const tiposPorLancamento=new Map(regs.map(x=>[String(x.id),x.tipo]));
+    const entradas=pagsPeriodo.filter(x=>tiposPorLancamento.get(String(x.lancamento_id))==='Receber').reduce((s,x)=>s+Number(x.valor||0),0);
+    const saidas=pagsPeriodo.filter(x=>tiposPorLancamento.get(String(x.lancamento_id))==='Pagar').reduce((s,x)=>s+Number(x.valor||0),0);
+    const diferenca=entradas-saidas;
+    const classeDiferenca=diferenca<0?'saldo negativo':'saldo positivo';
     const el=document.getElementById('financeiroResumo'); if(!el) return;
     const r=rotulo(f.periodo);
     el.innerHTML=[
       ['arrow-down-circle','A receber',receber,'receber',r],
       ['alert-triangle','Em atraso',atraso,'atraso','Todas as pendências vencidas'],
       ['arrow-up-circle','A pagar',pagar,'pagar',r],
-      ['circle-check-big','Movimentado',mov,'pago',r]
+      ['circle-check-big','Movimentado',mov,'pago',r],
+      ['scale','Entradas − saídas',diferenca,classeDiferenca,r]
     ].map(([i,t,v,c,sub])=>`<article class="${c}"><i data-lucide="${i}"></i><span>${t}<small>${sub}</small></span><strong>${typeof osMoeda==='function'?osMoeda(v):moeda(v)}</strong></article>`).join('');
     if(window.lucide) lucide.createIcons();
   };
@@ -120,7 +127,7 @@
   }
 
   const style=document.createElement('style');
-  style.textContent=`.fin-periodo-filtro{display:flex;align-items:center;gap:8px;min-width:0}.fin-periodo-filtro>select{min-width:185px}.fin-periodo-personalizado{display:flex;gap:7px;align-items:center}.fin-periodo-personalizado.hidden{display:none!important}.fin-periodo-personalizado label{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase}.fin-periodo-personalizado input{min-width:132px}#financeiroResumo article span small{display:block;margin-top:4px;font-size:9px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--text-muted)}@media(max-width:980px){.financeiro-toolbar{flex-wrap:wrap}.fin-periodo-filtro{width:100%;flex-wrap:wrap}.fin-periodo-filtro>select{flex:1}.fin-periodo-personalizado{flex:1;flex-wrap:wrap}}`;
+  style.textContent=`.fin-periodo-filtro{display:flex;align-items:center;gap:8px;min-width:0}.fin-periodo-filtro>select{min-width:185px}.fin-periodo-personalizado{display:flex;gap:7px;align-items:center}.fin-periodo-personalizado.hidden{display:none!important}.fin-periodo-personalizado label{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase}.fin-periodo-personalizado input{min-width:132px}#financeiroResumo article span small{display:block;margin-top:4px;font-size:9px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--text-muted)}#financeiroResumo .saldo.positivo svg,#financeiroResumo .saldo.positivo strong{color:#31d6a0}#financeiroResumo .saldo.negativo svg,#financeiroResumo .saldo.negativo strong{color:#fb7185}@media(min-width:1180px){#financeiroResumo.financeiro-resumo{grid-template-columns:repeat(5,minmax(0,1fr))}}@media(max-width:980px){.financeiro-toolbar{flex-wrap:wrap}.fin-periodo-filtro{width:100%;flex-wrap:wrap}.fin-periodo-filtro>select{flex:1}.fin-periodo-personalizado{flex:1;flex-wrap:wrap}}`;
   document.head.appendChild(style);
 
   function iniciar(){
