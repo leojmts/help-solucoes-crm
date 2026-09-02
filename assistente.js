@@ -28,7 +28,7 @@
         ['Abra o cartão e altere o status desejado. Você pode concluir qualquer chamado sem depender de outro.', '#kanbanChamados']
       ], 'finalizar fechar mover status técnico')
     ]},
-    visaoCRM: { nome: 'CRM Comercial', intro: 'Gerencie oportunidades, próximas ações, clientes ganhos e negócios perdidos.', guias: [
+    visaoCRM: { nome: 'Sistema Comercial', intro: 'Gerencie oportunidades, próximas ações, clientes ganhos e negócios perdidos.', guias: [
       guia('Cadastrar uma oportunidade', 'Inclua um novo lead no funil comercial.', [
         ['Clique em Novo lead.', '[onclick="abrirModalLead()"]'],
         ['Preencha empresa, contato, interesse e próxima ação.'],
@@ -228,7 +228,7 @@
     if ($('#helpAssistantFab')) return;
     document.body.insertAdjacentHTML('beforeend', `
       <button id="helpAssistantFab" class="help-assistant-fab" type="button" aria-label="Abrir assistente" aria-controls="helpAssistantPanel"><i data-lucide="circle-help"></i><span>Precisa de ajuda?</span></button>
-      <aside id="helpAssistantPanel" class="help-assistant-panel" role="dialog" aria-label="Assistente do CRM" aria-hidden="true">
+      <aside id="helpAssistantPanel" class="help-assistant-panel" role="dialog" aria-label="Assistente do Sistema" aria-hidden="true">
         <header class="help-assistant-head"><div class="help-assistant-mark"><i data-lucide="sparkles"></i></div><div class="help-assistant-title"><strong>Assistente Help</strong><small id="helpAssistantContext">Ajuda do módulo atual</small></div><button class="help-assistant-close" type="button" aria-label="Fechar"><i data-lucide="x"></i></button></header>
         <div id="helpAssistantBody" class="help-assistant-body"></div>
       </aside>
@@ -294,7 +294,7 @@
       }));
       conteudo = `<div class="help-section-title">${resultados.length} resultado(s)</div><div class="help-guide-list">${resultados.map(r => cartaoGuia({...r.g, resumo:`${r.modulo} · ${r.g.resumo}`}, r.chave, r.i)).join('') || '<p class="help-empty">Não encontrei esse assunto. Tente palavras como “baixa”, “contrato”, “OS”, “estoque” ou “cliente”.</p>'}</div>`;
     } else {
-      conteudo = `<section class="help-context"><small>Módulo atual</small><h3>${modulo.nome}</h3><p>${modulo.intro}</p></section><div class="help-section-title">O que você quer fazer?</div><div class="help-guide-list">${modulo.guias.map((g, i) => cartaoGuia(g, moduloAtual, i)).join('')}</div><div class="help-section-title">Dica</div><p class="help-empty">Você também pode pesquisar uma dúvida de qualquer módulo do CRM.</p>`;
+      conteudo = `<section class="help-context"><small>Módulo atual</small><h3>${modulo.nome}</h3><p>${modulo.intro}</p></section><div class="help-section-title">O que você quer fazer?</div><div class="help-guide-list">${modulo.guias.map((g, i) => cartaoGuia(g, moduloAtual, i)).join('')}</div><div class="help-section-title">Dica</div><p class="help-empty">Você também pode pesquisar uma dúvida de qualquer módulo do Sistema.</p>`;
     }
     body.innerHTML = `<div class="help-search"><i data-lucide="search"></i><input id="helpAssistantSearch" autocomplete="off" placeholder="Ex.: como dar baixa em uma conta?" value="${String(termo).replace(/"/g, '&quot;')}"></div>${conteudo}`;
     $('#helpAssistantSearch')?.addEventListener('input', e => renderInicio(e.target.value));
