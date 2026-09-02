@@ -81,13 +81,27 @@
   const base=window.finRenderRecorrencias;
   if(typeof base==='function')window.finRenderRecorrencias=function(){const r=base.apply(this,arguments);instalar();return r};
 
+  // Isolamento definitivo do Relatório de contas: trocar qualquer guia fecha o relatório.
+  // A regra CSS abaixo também impede que ele fique visível em uma guia diferente de Lançamentos,
+  // mesmo se algum outro script remover a classe hidden por engano.
   document.addEventListener('click',e=>{
-    const b=e.target?.closest?.('#finNavegacao button[data-fin-aba="recorrencias"]');
-    if(b)setTimeout(instalar,0);
+    const alvo=e.target;
+    if(!alvo?.closest)return;
+    const aba=alvo.closest('#finNavegacao button[data-fin-aba]');
+    if(aba){
+      document.getElementById('financeiroRelatorios')?.classList.add('hidden');
+      if(aba.dataset.finAba==='recorrencias')setTimeout(instalar,0);
+      return;
+    }
+    const relatorio=alvo.closest('#visaoFinanceiro .header [onclick*="alternarRelatorioFinanceiro"]');
+    if(relatorio){
+      const lancamentos=document.querySelector('#finNavegacao button[data-fin-aba="lancamentos"]');
+      if(lancamentos&&!lancamentos.classList.contains('active'))lancamentos.click();
+    }
   },true);
 
   const style=document.createElement('style');
-  style.textContent=`.fin-rec-filtros{display:grid;grid-template-columns:minmax(210px,1.35fr) repeat(4,minmax(135px,.8fr)) auto;gap:10px;align-items:end;margin:0 0 14px;padding:14px;border:1px solid var(--border-color);border-radius:12px;background:rgba(3,13,24,.24)}.fin-rec-filtros label{display:flex;flex-direction:column;gap:6px}.fin-rec-filtros label>span{font-size:10px;font-weight:750;letter-spacing:.04em;text-transform:uppercase;color:var(--text-muted)}.fin-rec-filtros input,.fin-rec-filtros select{width:100%;min-height:40px;padding:0 11px;border:1px solid var(--border-color);border-radius:9px;background:var(--input-bg,#071322);color:var(--text-main);outline:none}.fin-rec-filtros input:focus,.fin-rec-filtros select:focus{border-color:var(--accent-blue);box-shadow:0 0 0 3px rgba(59,130,246,.12)}.fin-rec-filtros .btn{min-height:40px;justify-content:center}.fin-rec-oculto{display:none!important}@media(max-width:1050px){.fin-rec-filtros{grid-template-columns:repeat(3,minmax(0,1fr))}.fin-rec-busca{grid-column:span 2}}@media(max-width:680px){.fin-rec-filtros{grid-template-columns:1fr 1fr}.fin-rec-busca{grid-column:1/-1}.fin-rec-filtros .btn{grid-column:1/-1}}`;
+  style.textContent=`.fin-rec-filtros{display:grid;grid-template-columns:minmax(210px,1.35fr) repeat(4,minmax(135px,.8fr)) auto;gap:10px;align-items:end;margin:0 0 14px;padding:14px;border:1px solid var(--border-color);border-radius:12px;background:rgba(3,13,24,.24)}.fin-rec-filtros label{display:flex;flex-direction:column;gap:6px}.fin-rec-filtros label>span{font-size:10px;font-weight:750;letter-spacing:.04em;text-transform:uppercase;color:var(--text-muted)}.fin-rec-filtros input,.fin-rec-filtros select{width:100%;min-height:40px;padding:0 11px;border:1px solid var(--border-color);border-radius:9px;background:var(--input-bg,#071322);color:var(--text-main);outline:none}.fin-rec-filtros input:focus,.fin-rec-filtros select:focus{border-color:var(--accent-blue);box-shadow:0 0 0 3px rgba(59,130,246,.12)}.fin-rec-filtros .btn{min-height:40px;justify-content:center}.fin-rec-oculto{display:none!important}#visaoFinanceiro:has(#finNavegacao button[data-fin-aba]:not([data-fin-aba="lancamentos"]).active) #financeiroRelatorios{display:none!important}@media(max-width:1050px){.fin-rec-filtros{grid-template-columns:repeat(3,minmax(0,1fr))}.fin-rec-busca{grid-column:span 2}}@media(max-width:680px){.fin-rec-filtros{grid-template-columns:1fr 1fr}.fin-rec-busca{grid-column:1/-1}.fin-rec-filtros .btn{grid-column:1/-1}}`;
   document.head.appendChild(style);
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(instalar,0),{once:true});else setTimeout(instalar,0);
 })();
