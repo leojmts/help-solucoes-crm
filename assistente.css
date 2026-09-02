@@ -9,7 +9,7 @@
   --help-shadow: 0 22px 65px rgba(0, 0, 0, .42);
 }
 
-body.light-theme {
+html[data-theme="light"] {
   --help-bg: #ffffff;
   --help-surface: #f5f8fc;
   --help-surface-2: #eef4fb;
