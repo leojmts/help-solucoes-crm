@@ -203,8 +203,33 @@
     return data?.id || null;
   }
 
+  function corrigirSelecaoCliente360(tentativa = 0) {
+    const abrir360Base = window.gcAbrir360;
+    if (typeof abrir360Base !== 'function') {
+      if (tentativa < 50) setTimeout(() => corrigirSelecaoCliente360(tentativa + 1), 100);
+      return;
+    }
+    if (abrir360Base.__clienteSelecaoCorrigida) return;
+
+    const fn = function(clienteId) {
+      const solicitado = Number(clienteId) || 0;
+      if (solicitado) {
+        // A tela 360 pode permanecer montada em segundo plano com o cliente anterior.
+        // Sincronizamos o seletor antes da troca de aba para impedir que ele sobrescreva
+        // o ID recebido pelo botão Visão 360° durante o carregamento assíncrono.
+        if (typeof gcClienteAtualId !== 'undefined') gcClienteAtualId = solicitado;
+        const seletor = document.getElementById('gcCliente360');
+        if (seletor) seletor.value = String(solicitado);
+      }
+      return abrir360Base.call(this, solicitado || clienteId);
+    };
+    fn.__clienteSelecaoCorrigida = true;
+    window.gcAbrir360 = fn;
+  }
+
   function instalarIntegracao() {
     instalarInterface();
+    corrigirSelecaoCliente360();
 
     const abrirBase = window.abrirModalCliente;
     if (typeof abrirBase === 'function' && !abrirBase.__clienteAnexos) {
