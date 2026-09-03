@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Central de Treinamento v3 | Help Soluções</title>
 <style>html,body{margin:0;min-height:100%;background:#07111f}#status{position:fixed;inset:0;display:grid;place-items:center;color:#dbe7f6;font:600 13px system-ui;background:#07111f;z-index:999}</style>
 </head>
@@ -14,7 +14,9 @@
     const r=await fetch('treinamento-prototipo.html',{cache:'no-store'});
     if(!r.ok)throw new Error('Falha ao carregar a base');
     let html=await r.text();
-    const ext='<script src="treinamento-v3.js?v=20260903-4"><\/script><script src="treinamento-v3-fixes.js?v=20260903-1"><\/script><script src="treinamento-v3-search.js?v=20260903-1"><\/script>';
+    const mobileCss='<link rel="stylesheet" href="treinamento-v3-mobile.css?v=20260903-1">';
+    html=html.includes('</head>')?html.replace('</head>',mobileCss+'</head>'):mobileCss+html;
+    const ext='<script src="treinamento-v3.js?v=20260903-4"><\/script><script src="treinamento-v3-fixes.js?v=20260903-1"><\/script><script src="treinamento-v3-search.js?v=20260903-1"><\/script><script src="treinamento-v3-mobile.js?v=20260903-1"><\/script>';
     html=html.includes('</body>')?html.replace('</body>',ext+'</body>'):html+ext;
     document.open();document.write(html);document.close();
   }catch(e){document.getElementById('status').textContent='Não foi possível iniciar a Central v3.'}
