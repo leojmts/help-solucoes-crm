@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Funil — Testes de lógica</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:980px;margin:30px auto;padding:0 16px;background:#0b1220;color:#eef4ff}
+button{padding:10px 14px;margin:4px;border:1px solid #334155;border-radius:8px;background:#111c2e;color:#fff;cursor:pointer}
+pre{white-space:pre-wrap;background:#07101d;border:1px solid #233149;border-radius:10px;padding:14px;overflow:auto}
+.ok{color:#6ee7a7}.bad{color:#ff9b9b}.muted{color:#94a3b8}
+.card{background:#0f1a2b;border:1px solid #26364e;border-radius:12px;padding:16px;margin:12px 0}
+</style>
+</head>
+<body>
+<h1>Funil de Vendas — laboratório de lógica</h1>
+<p class="muted">Preview isolado. Não usa Supabase, não altera o CRM e não representa o layout final.</p>
+<div class="card">
+  <button onclick="runTests()">Executar testes automáticos</button>
+  <button onclick="seedDemo()">Gerar cenário demonstrativo</button>
+  <button onclick="resetDemo()">Limpar cenário</button>
+</div>
+<div class="card"><h2>Resultado dos testes</h2><div id="results"></div></div>
+<div class="card"><h2>Resumo que o CRM receberia</h2><pre id="crmSummary">Execute o cenário demonstrativo.</pre></div>
+<div class="card"><h2>Estado demonstrativo</h2><pre id="state">—</pre></div>
+
+<script src="core.js"></script>
+<script>
+const {FunilEngine,MemoryStore,LocalStorageStore} = HelpFunil;
+
+function assert(cond,msg){if(!cond)throw new Error(msg)}
+function mustThrow(fn, code){
+  let thrown=null;try{fn()}catch(e){thrown=e}
+  assert(thrown,'Era esperado um erro.');
+  if(code)assert(thrown.code===code,'Código inesperado: '+thrown.code);
+  return thrown;
+}
+function dateTomorrow(){
+  const d=new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10);
+}
+function dateToday(){return new Date().toISOString().slice(0,10)}
+function next(type='Ligação'){return {type,date:dateTomorrow(),time:'09:00',notes:'Retornar contato'}}
+
+const testCases = [
+  ['Cria usuários com perfis válidos', () => {
+    const e=new FunilEngine(new MemoryStore());
+    e.addUser({id:'v1',name:'Vendedor 1',role:'vendedor'});
+    e.addUser({id:'g1',name:'Gestor',role:'gestor'});
+    assert(e.snapshot().users.length===2,'Usuários não foram salvos.');
+  }],
+  ['Bloqueia oportunidade ativa sem próxima ação', () => {
+    const e=new FunilEngine(new MemoryStore());
+    e.addUser({id:'v1',name:'Vendedor',role:'vendedor'});
+    mustThrow(()=>e.createOpportunity({company:'Cliente A'},'v1'),'VALIDATION_ERROR');
+  }],
+  ['Vendedor só cria oportunidade para si', () => {
+    const e=new FunilEngine(new MemoryStore());
+    e.addUser({id:'v1',name:'V1',role:'vendedor'});
+    e.addUser({id:'v2',name:'V2',role:'vendedor'});
+    mustThrow(()=>e.createOpportunity({company:'A',ownerId:'v2',nextAction:next()},'v1'),'PERMISSION_DENIED');
+  }],
+  ['Registra interação e histórico de auditoria', () => {
+    const e=new FunilEngine(new MemoryStore());
+    e.addUser({id:'v1',name:'V1',role:'vendedor'});
+    const o=e.createOpportunity({company:'A',nextAction:next()},'v1');
+    e.addInteraction(o.id,{type:'whatsapp',description:'Contato realizado'},'v1');
+    assert(e.listInteractions(o.id,'v1').length===1,'Interação ausente.');
+    assert(e.getHistory(o.id,'v1').some(x=>x.action==='interaction.created'),'Auditoria ausente.');
+  }],
+  ['Mantém próxima ação ao mover etapa ativa', () => {
+    const e=new FunilEngine(new MemoryStore());
+    e.addUser({id:'v1',name:'V1',role:'vendedor'});
+    const o=e.createOpportunity({company:'A',nextAction:next()},'v1');
+    const moved=e.moveStage(o.id,'contato','v1');
+    assert(moved.stage==='contato','Etapa incorreta.');
+    assert(!!moved.nextAction,'Próxima ação foi perdida.');
+  }],
+  ['Exige motivo ao marcar como perdido', () => {
+    const e=new FunilEngine(new MemoryStore());
+    e.addUser({id:'v1',name:'V1',role:'vendedor'});
+    const o=e.createOpportunity({company:'A',nextAction:next()},'v1');
+    mustThrow(()=>e.markLost(o.id,'','v1'),'VALIDATION_ERROR');
+  }],
+  ['Ganho encerra a oportunidade e limpa próxima ação', () => {
+    const e=new FunilEngine(new MemoryStore());
+    e.addUser({id:'v1',name:'V1',role:'vendedor'});
+    const o=e.createOpportunity({company:'A',value:2000,nextAction:next()},'v1');
+    const won=e.moveStage(o.id,'ganho','v1');
+    assert(won.stage==='ganho','Não marcou ganho.');
+    assert(won.nextAction===null,'Próxima ação deveria ser limpa.');
+    assert(!!won.wonAt,'Data de ganho não registrada.');
+  }],
+  ['Somente gestor/ADM pode reabrir oportunidade encerrada', () => {
+    const e=new FunilEngine(new MemoryStore());
+    e.addUser({id:'v1',name:'V1',role:'vendedor'});
+    e.addUser({id:'g1',name:'Gestor',role:'gestor'});
+    const o=e.createOpportunity({company:'A',nextAction:next()},'v1');
+    e.moveStage(o.id,'ganho','v1');
+    mustThrow(()=>e.reopenOpportunity(o.id,'v1','contato',next()),'PERMISSION_DENIED');
+    assert(e.reopenOpportunity(o.id,'g1','contato',next()).stage==='contato','Gestor não conseguiu reabrir.');
+  }],
+  ['Vendedor não enxerga carteira de outro vendedor', () => {
+    const e=new FunilEngine(new MemoryStore());
+    e.addUser({id:'v1',name:'V1',role:'vendedor'});
+    e.addUser({id:'v2',name:'V2',role:'vendedor'});
+    e.createOpportunity({company:'A',nextAction:next()},'v1');
+    assert(e.listOpportunities('v2').length===0,'V2 enxergou carteira alheia.');
+  }],
+  ['Gestor enxerga a equipe', () => {
+    const e=new FunilEngine(new MemoryStore());
+    e.addUser({id:'v1',name:'V1',role:'vendedor'});
+    e.addUser({id:'v2',name:'V2',role:'vendedor'});
+    e.addUser({id:'g1',name:'Gestor',role:'gestor'});
+    e.createOpportunity({company:'A',nextAction:next()},'v1');
+    e.createOpportunity({company:'B',nextAction:next()},'v2');
+    assert(e.listOpportunities('g1').length===2,'Gestor não viu equipe.');
+  }],
+  ['Métricas calculam pipeline e vendas', () => {
+    const e=new FunilEngine(new MemoryStore());
+    e.addUser({id:'v1',name:'V1',role:'vendedor'});
+    const a=e.createOpportunity({company:'A',value:1000,nextAction:next()},'v1');
+    const b=e.createOpportunity({company:'B',value:2000,nextAction:next()},'v1');
+    e.moveStage(a.id,'ganho','v1');
+    const m=e.metrics('v1');
+    assert(m.pipelineValue===2000,'Pipeline incorreto: '+m.pipelineValue);
+    assert(m.revenueWonThisMonth===1000,'Vendido no mês incorreto.');
+  }],
+  ['Resumo para CRM não expõe módulos internos do CRM', () => {
+    const e=new FunilEngine(new MemoryStore());
+    e.addUser({id:'g1',name:'Gestor',role:'gestor'});
+    e.createOpportunity({company:'A',value:1000,nextAction:next(),ownerId:'g1'},'g1');
+    const s=e.crmSummary('g1');
+    assert(s.source==='funil-vendas','Origem incorreta.');
+    assert(!('financeiro' in s) && !('contratos' in s),'Resumo expôs dados indevidos.');
+  }],
+  ['Handoff sugere vincular cliente existente', () => {
+    const e=new FunilEngine(new MemoryStore());
+    e.addUser({id:'v1',name:'V1',role:'vendedor'});
+    const o=e.createOpportunity({company:'Mercado X',phone:'67999990000',nextAction:next()},'v1');
+    e.moveStage(o.id,'ganho','v1');
+    const h=e.clientHandoff(o.id,'v1',[{id:'c1',company:'Mercado X',phone:'67 99999-0000'}]);
+    assert(h.status==='match_found' && h.existingClient.id==='c1','Cliente não foi identificado.');
+  }],
+  ['Integridade final sem inconsistências', () => {
+    const e=new FunilEngine(new MemoryStore());
+    e.addUser({id:'v1',name:'V1',role:'vendedor'});
+    const o=e.createOpportunity({company:'A',nextAction:next()},'v1');
+    e.addInteraction(o.id,{type:'ligacao',description:'Ligação atendida'},'v1');
+    assert(e.validateIntegrity().length===0,'Foram encontradas inconsistências.');
+  }]
+];
+
+function runTests(){
+  const box=document.getElementById('results');box.innerHTML='';
+  let ok=0;
+  testCases.forEach(([name,fn])=>{
+    const line=document.createElement('div');
+    try{fn();ok++;line.className='ok';line.textContent='✓ '+name}
+    catch(e){line.className='bad';line.textContent='✕ '+name+' — '+e.message}
+    box.appendChild(line);
+  });
+  const sum=document.createElement('p');sum.innerHTML='<b>'+ok+'/'+testCases.length+' testes aprovados</b>';box.prepend(sum);
+}
+
+function seedDemo(){
+  const store=new LocalStorageStore('helpFunilPrototypeDemo');
+  const e=new FunilEngine(store);e.reset();
+  e.addUser({id:'adm',name:'Administrador',role:'admin'});
+  e.addUser({id:'joao',name:'João',role:'vendedor'});
+  e.addUser({id:'maria',name:'Maria',role:'vendedor'});
+
+  const o1=e.createOpportunity({company:'Mercado Central',contactName:'Carlos',phone:'67999991111',value:3500,source:'Indicação',ownerId:'joao',nextAction:next('WhatsApp')},'adm');
+  e.addInteraction(o1.id,{type:'whatsapp',description:'Primeiro contato realizado'},'joao');
+  e.moveStage(o1.id,'qualificado','joao',{nextAction:next('Reunião')});
+
+  const o2=e.createOpportunity({company:'Clínica Vida',contactName:'Ana',value:6800,source:'Instagram',ownerId:'maria',nextAction:next('Ligação')},'adm');
+  e.addInteraction(o2.id,{type:'ligacao',description:'Apresentou interesse em suporte recorrente'},'maria');
+  e.moveStage(o2.id,'proposta','maria',{nextAction:next('Follow-up da proposta')});
+
+  const o3=e.createOpportunity({company:'Loja Horizonte',contactName:'Rafael',value:2200,source:'Prospecção ativa',ownerId:'joao',nextAction:next('Visita')},'adm');
+  e.addInteraction(o3.id,{type:'visita',description:'Visita técnica/comercial realizada'},'joao');
+  e.moveStage(o3.id,'ganho','joao');
+
+  const o4=e.createOpportunity({company:'Escritório Alfa',contactName:'Bruna',value:1800,source:'Site',ownerId:'maria',nextAction:next('WhatsApp')},'adm');
+  e.markLost(o4.id,'Preço','maria','Cliente optou por solução mais barata.');
+
+  e.setGoal({userId:'joao',competence:new Date().toISOString().slice(0,7),amount:15000},'adm');
+  e.setGoal({userId:'maria',competence:new Date().toISOString().slice(0,7),amount:15000},'adm');
+
+  window.demoEngine=e;
+  renderDemo();
+}
+
+function resetDemo(){
+  const e=new FunilEngine(new LocalStorageStore('helpFunilPrototypeDemo'));e.reset();window.demoEngine=e;renderDemo();
+}
+
+function renderDemo(){
+  const e=window.demoEngine || new FunilEngine(new LocalStorageStore('helpFunilPrototypeDemo'));
+  window.demoEngine=e;
+  const snap=e.snapshot();
+  document.getElementById('state').textContent=JSON.stringify(snap,null,2);
+  const actor=snap.users.find(u=>u.role==='admin');
+  document.getElementById('crmSummary').textContent=actor?JSON.stringify(e.crmSummary(actor.id),null,2):'Sem dados.';
+}
+renderDemo();
+</script>
+</body>
+</html>
