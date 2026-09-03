@@ -427,3 +427,169 @@ footer{background:#061326;color:#9db0c5;border-top:1px solid rgba(255,255,255,.0
 @media(prefers-reduced-motion:reduce){
   *{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
+
+
+/* ===== microanimações inspiradas em sites modernos de tecnologia ===== */
+:root{
+  --motion-ease:cubic-bezier(.22,.75,.28,1);
+  --motion-spring:cubic-bezier(.2,.9,.25,1.12)
+}
+
+body{opacity:.985}
+body.site-ready{opacity:1;transition:opacity .35s ease}
+
+.site-header{
+  transition:background .3s ease,box-shadow .3s ease,border-color .3s ease,transform .3s ease
+}
+.site-header.is-scrolled{
+  background:rgba(6,20,38,.965);
+  box-shadow:0 12px 34px rgba(2,12,26,.14);
+  border-bottom-color:rgba(255,255,255,.1)
+}
+.nav-links>a:not(.nav-cta){position:relative;transition:color .22s ease}
+.nav-links>a:not(.nav-cta)::after{
+  content:"";position:absolute;left:0;right:0;bottom:-7px;height:2px;
+  border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--orange));
+  transform:scaleX(0);transform-origin:center;transition:transform .25s var(--motion-ease)
+}
+.nav-links>a:not(.nav-cta):hover::after,
+.nav-links>a:not(.nav-cta).is-active::after{transform:scaleX(1)}
+.nav-links>a.is-active{color:#fff}
+
+.nav-cta,.btn{position:relative;overflow:hidden;transform:translateZ(0)}
+.nav-cta::after,.btn-primary::after,.whatsapp::after{
+  content:"";position:absolute;inset:-120% auto -120% -42%;width:32%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);
+  transform:rotate(14deg);transition:left .55s var(--motion-ease);pointer-events:none
+}
+.nav-cta:hover::after,.btn-primary:hover::after,.whatsapp:hover::after{left:118%}
+.btn,.nav-cta,.mobile-wa-cta{transition:transform .18s ease,box-shadow .22s ease,filter .22s ease}
+.btn:hover,.nav-cta:hover{filter:brightness(1.04)}
+.btn.is-pressed,.nav-cta.is-pressed,.mobile-wa-cta.is-pressed{transform:scale(.975)!important}
+
+.hero-enter{
+  opacity:0;
+  transform:translateY(18px);
+  filter:blur(6px)
+}
+.site-ready .hero-enter{
+  opacity:1;transform:translateY(0);filter:blur(0);
+  transition:
+    opacity .72s var(--motion-ease) var(--hero-delay,0ms),
+    transform .72s var(--motion-ease) var(--hero-delay,0ms),
+    filter .72s var(--motion-ease) var(--hero-delay,0ms)
+}
+.hero-panel.hero-enter{
+  transform:translateY(22px) scale(.985)
+}
+.site-ready .hero-panel.hero-enter{
+  transform:perspective(900px) rotateX(var(--tilt-y,0deg)) rotateY(var(--tilt-x,0deg)) translateY(0) scale(1);
+}
+.hero-panel{
+  --glow-x:72%;--glow-y:12%;
+  transform-style:preserve-3d;
+  transition:
+    transform .28s ease,
+    border-color .3s ease,
+    box-shadow .3s ease
+}
+.hero-panel:hover{
+  border-color:rgba(123,170,255,.24);
+  box-shadow:0 42px 100px rgba(0,0,0,.25)
+}
+.hero-panel::before{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:radial-gradient(circle at var(--glow-x) var(--glow-y),rgba(104,161,255,.16),transparent 29%);
+  opacity:.85;transition:background-position .25s ease
+}
+.hero-logo{
+  animation:helpLogoFloat 5.6s ease-in-out infinite;
+  will-change:transform
+}
+.panel-glow{
+  animation:helpGlowDrift 8s ease-in-out infinite alternate
+}
+@keyframes helpLogoFloat{
+  0%,100%{transform:translate3d(0,0,0) rotate(0deg)}
+  50%{transform:translate3d(0,-8px,0) rotate(.8deg)}
+}
+@keyframes helpGlowDrift{
+  from{transform:translate3d(-7px,-3px,0) scale(.96);opacity:.75}
+  to{transform:translate3d(12px,9px,0) scale(1.08);opacity:1}
+}
+
+.reveal{
+  opacity:0;
+  transform:translate3d(0,26px,0);
+  filter:blur(5px);
+  transition:
+    opacity .68s var(--motion-ease) var(--reveal-delay,0ms),
+    transform .68s var(--motion-ease) var(--reveal-delay,0ms),
+    filter .68s var(--motion-ease) var(--reveal-delay,0ms)
+}
+.reveal-left{transform:translate3d(-28px,8px,0)}
+.reveal-right{transform:translate3d(28px,8px,0)}
+.reveal.is-visible{
+  opacity:1;transform:translate3d(0,0,0);filter:blur(0)
+}
+
+.segment-card{position:relative;overflow:hidden}
+.segment-card::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(47,124,255,.09),transparent 38%);
+  opacity:0;transition:opacity .25s ease
+}
+.segment-card:hover::after{opacity:1}
+.segment-card .icon-box{
+  transition:transform .35s var(--motion-spring),box-shadow .3s ease
+}
+.segment-card:hover .icon-box{
+  transform:translateY(-3px) rotate(-3deg) scale(1.06);
+  box-shadow:0 10px 24px rgba(47,124,255,.13)
+}
+
+.presence-card .big-stat span{
+  background:linear-gradient(90deg,#70a4ff,#a7c7ff,#70a4ff);
+  background-size:200% auto;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:helpTextShimmer 6s linear infinite
+}
+@keyframes helpTextShimmer{to{background-position:200% center}}
+
+.contact-box{
+  background-size:140% 140%;
+  animation:helpContactGradient 10s ease-in-out infinite alternate
+}
+@keyframes helpContactGradient{
+  from{background-position:0% 50%}
+  to{background-position:100% 50%}
+}
+
+.mobile-wa-cta{
+  animation:helpMobileCta 4.5s ease-in-out infinite
+}
+@keyframes helpMobileCta{
+  0%,78%,100%{box-shadow:0 18px 42px rgba(4,20,38,.28)}
+  87%{box-shadow:0 20px 48px rgba(31,196,106,.18),0 18px 42px rgba(4,20,38,.28)}
+}
+
+@media(max-width:760px){
+  .reveal{transform:translate3d(0,18px,0);filter:blur(3px)}
+  .reveal-left,.reveal-right{transform:translate3d(0,18px,0)}
+  .site-ready .hero-panel.hero-enter{transform:translateY(0) scale(1)}
+  .hero-panel:hover{box-shadow:0 18px 44px rgba(0,0,0,.19)}
+  .hero-logo{animation-duration:6.5s}
+  .segment-card:hover .icon-box{transform:none}
+  .nav-links>a:not(.nav-cta)::after{display:none}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .hero-enter,.reveal{
+    opacity:1!important;transform:none!important;filter:none!important;transition:none!important
+  }
+  .hero-logo,.panel-glow,.presence-card .big-stat span,.contact-box,.mobile-wa-cta{
+    animation:none!important
+  }
+  .hero-panel{transform:none!important}
+  .nav-cta::after,.btn-primary::after,.whatsapp::after{display:none!important}
+}
