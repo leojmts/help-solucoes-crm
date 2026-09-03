@@ -8,6 +8,14 @@
     document.head.appendChild(clienteAnexosScript);
   }
 
+  // Complemento isolado: inclui chamados em aberto nas Pendências do Cliente.
+  if(!document.getElementById('clientePendenciasChamadosScript')){
+    const clientePendenciasChamadosScript=document.createElement('script');
+    clientePendenciasChamadosScript.id='clientePendenciasChamadosScript';
+    clientePendenciasChamadosScript.src='cliente-pendencias-chamados.js?v=20260903-1';
+    document.head.appendChild(clientePendenciasChamadosScript);
+  }
+
   const estado={busca:'',inicio:'',fim:'',tipo:'',status:''};
 
   function dataIso(card){
