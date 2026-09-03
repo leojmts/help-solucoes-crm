@@ -1,0 +1,197 @@
+/* Central de Treinamento v3 — refinamento visual mobile */
+@media (max-width:760px){
+  :root{--mobile-nav-h:68px}
+  body{
+    background:
+      radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 10%,transparent),transparent 34%),
+      var(--bg)!important;
+  }
+  main{padding:0 0 calc(28px + var(--mobile-nav-h))!important;overflow:visible!important}
+
+  /* Cabeçalho estilo app */
+  .mobile-compact-brand{
+    position:sticky;top:0;z-index:80;
+    margin:0!important;padding:calc(9px + env(safe-area-inset-top,0px)) 16px 9px!important;
+    border:0!important;border-bottom:1px solid color-mix(in srgb,var(--line) 80%,transparent)!important;
+    border-radius:0!important;background:color-mix(in srgb,var(--bg) 90%,transparent)!important;
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:none!important;
+  }
+  .mobile-compact-brand img{width:34px!important;height:34px!important}
+  .mobile-compact-brand b{font-size:14px!important;letter-spacing:-.02em}
+  .mobile-compact-brand small{font-size:10px!important;margin-top:2px!important}
+  .mobile-compact-brand a{width:40px!important;height:40px!important;border-radius:50%!important;border:0!important;background:var(--surface)!important;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+
+  .topbar{padding:22px 16px 6px!important}
+  .eyebrow{font-size:10px!important;letter-spacing:.08em!important}
+  h1{font-size:30px!important;line-height:1.04!important;margin:7px 0 10px!important;max-width:95%}
+  .subtitle{font-size:13px!important;line-height:1.55!important;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+  /* Auditoria vira faixa discreta */
+  .audit-banner{
+    margin:12px 16px 18px!important;padding:10px 12px!important;border-radius:12px!important;
+    border:1px solid color-mix(in srgb,var(--ok) 20%,var(--line))!important;box-shadow:none!important;
+  }
+  .audit-mark{width:30px!important;height:30px!important;border-radius:9px!important}
+  .audit-banner b{font-size:11px!important}
+  .audit-banner span{font-size:10px!important;line-height:1.45!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+  /* Busca e setor */
+  .search-row{margin:0 16px 20px!important;gap:9px!important}
+  .search input{
+    height:52px!important;border-radius:15px!important;font-size:16px!important;padding-left:45px!important;
+    background:var(--surface)!important;border:1px solid color-mix(in srgb,var(--line) 85%,transparent)!important;
+    box-shadow:0 8px 24px rgba(16,24,40,.06)!important;
+  }
+  .search span{left:16px!important}
+  .role-select{
+    min-height:48px!important;border-radius:14px!important;font-size:14px!important;background:var(--surface)!important;
+    box-shadow:none!important;padding:0 14px!important;
+  }
+
+  .view{padding:0 16px}
+
+  /* Resumo em carrossel horizontal */
+  .summary-grid{
+    display:flex!important;gap:10px!important;margin:0 -16px 24px!important;padding:0 16px 4px!important;
+    overflow-x:auto!important;scroll-snap-type:x mandatory;scrollbar-width:none;
+  }
+  .summary-grid::-webkit-scrollbar{display:none}
+  .summary-card{
+    flex:0 0 162px!important;scroll-snap-align:start;padding:15px!important;border-radius:16px!important;
+    box-shadow:none!important;background:color-mix(in srgb,var(--surface) 96%,var(--accentSoft))!important;
+  }
+  .summary-card span{font-size:10px!important;line-height:1.35!important}
+  .summary-card b{font-size:26px!important;margin-top:6px!important}
+  .summary-card small{font-size:9px!important;line-height:1.4!important;margin-top:4px!important}
+
+  .section-head{margin:5px 0 12px!important;align-items:flex-end!important}
+  .section-head h2{font-size:19px!important;letter-spacing:-.02em}
+  .section-head span{font-size:10px!important;max-width:45%;line-height:1.35!important}
+
+  /* Módulos como cartões de app */
+  .modules,.plan-grid,.v3-grid{gap:12px!important}
+  .module,.v3-card,.plan-card,.map-module{
+    padding:16px!important;border-radius:18px!important;border:1px solid color-mix(in srgb,var(--line) 78%,transparent)!important;
+    box-shadow:none!important;background:var(--surface)!important;
+  }
+  .module-top{gap:13px!important;align-items:center!important}
+  .module-icon,.v3-flow-icon{
+    width:48px!important;height:48px!important;border-radius:14px!important;background:var(--accentSoft)!important;
+    color:var(--accent)!important;flex:0 0 auto!important;
+  }
+  .module-icon svg,.v3-flow-icon svg{width:23px!important;height:23px!important;stroke-width:2!important}
+  .module-copy h3,.v3-card h3,.plan-card h3{font-size:15px!important;line-height:1.25!important;margin:0 0 5px!important}
+  .module-copy p,.v3-card p,.plan-card p{font-size:11px!important;line-height:1.5!important}
+  .tags{margin-top:9px!important;gap:5px!important}
+  .tag,.v3-level,.v3-status{font-size:9px!important;padding:5px 8px!important}
+  .module-progress{margin-top:14px!important}
+  .bar{height:6px!important;border:0!important;background:var(--surface3)!important}
+  .bar-meta{font-size:9px!important;margin-top:6px!important}
+
+  /* Biblioteca */
+  .library{gap:10px!important}
+  .procedure{
+    padding:15px 14px!important;border-radius:16px!important;border-color:color-mix(in srgb,var(--line) 80%,transparent)!important;
+    background:var(--surface)!important;
+  }
+  .procedure h3{font-size:14px!important;margin-bottom:5px!important}
+  .procedure p{font-size:11px!important;line-height:1.45!important}
+  .procedure .arrow{font-size:18px!important}
+
+  /* Mapa e funcionalidades */
+  .feature-list{gap:8px!important}
+  .feature{padding:11px!important;border-radius:12px!important;font-size:10px!important;line-height:1.45!important}
+  .feature b{font-size:11px!important;margin-bottom:3px!important}
+  .map-module-head h3{font-size:15px!important}
+
+  /* Fluxos */
+  .v3-flow{grid-template-columns:48px minmax(0,1fr)!important;gap:12px!important;align-items:start!important}
+  .v3-flow-step{font-size:10px!important;padding:8px 10px!important;border-radius:10px!important}
+  .v3-after{font-size:10px!important;padding:10px 11px!important;border-radius:11px!important}
+  .v3-cert{padding:14px!important;border-radius:14px!important}
+  .v3-check{font-size:11px!important;line-height:1.45!important}
+
+  /* Notícias, alertas e quiz */
+  .v3-news{gap:10px!important}
+  .v3-news article{padding:15px!important;border-radius:16px!important}
+  .v3-news h3{font-size:14px!important}
+  .v3-news p{font-size:11px!important;line-height:1.5!important}
+  .v3-news time{font-size:9px!important}
+  .v3-alert{font-size:11px!important;line-height:1.5!important;padding:13px!important;border-radius:13px!important}
+  .v3-quiz{padding:14px!important;border-radius:14px!important}
+  .v3-quiz h4{font-size:12px!important}
+  .v3-quiz-options button{min-height:48px!important;font-size:11px!important;border-radius:11px!important}
+
+  /* Modal vira uma tela do app */
+  .modal-bg{align-items:stretch!important;background:var(--bg)!important;padding:0!important}
+  .modal{
+    width:100%!important;height:100svh!important;max-height:none!important;border:0!important;border-radius:0!important;
+    box-shadow:none!important;background:var(--bg)!important;
+  }
+  .modal-head{
+    padding:calc(13px + env(safe-area-inset-top,0px)) 16px 13px!important;background:color-mix(in srgb,var(--surface) 94%,transparent)!important;
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom-color:color-mix(in srgb,var(--line) 75%,transparent)!important;
+  }
+  .modal-head h2{font-size:20px!important;margin:4px 0 5px!important}
+  .modal-head p{font-size:11px!important;line-height:1.45!important}
+  .close{width:42px!important;height:42px!important;border-radius:50%!important;background:var(--surface2)!important}
+  .close svg{width:20px!important;height:20px!important}
+  .modal-body{padding:18px 16px calc(32px + env(safe-area-inset-bottom,0px))!important}
+  .lesson-list{gap:10px!important}
+  .lesson{padding:14px!important;border-radius:15px!important;background:var(--surface)!important}
+  .lesson h4{font-size:14px!important}
+  .lesson p{font-size:11px!important;line-height:1.45!important}
+  .lesson-state{font-size:9px!important;padding:5px 8px!important}
+  .step{padding:13px!important;border-radius:13px!important;background:var(--surface)!important}
+  .step-num{width:30px!important;height:30px!important;border-radius:9px!important;font-size:10px!important}
+  .step b{font-size:12px!important}
+  .step span{font-size:11px!important;line-height:1.5!important}
+  .actions{position:sticky;bottom:-18px;z-index:3;padding:12px 0 calc(8px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent 0,var(--bg) 22%,var(--bg) 100%)}
+  .actions .btn{min-height:48px!important;font-size:11px!important;border-radius:12px!important}
+
+  /* ADM menos apertado */
+  .v3-admin-toolbar{gap:9px!important}
+  .v3-admin-toolbar .btn{font-size:11px!important;min-height:46px!important;border-radius:12px!important}
+  .v3-admin-list{max-height:330px!important;border-radius:16px!important}
+  .v3-admin-item{padding:13px!important;border-radius:12px!important}
+  .v3-admin-item b{font-size:12px!important}
+  .v3-admin-item span{font-size:10px!important}
+  .v3-form{padding:15px!important;border-radius:16px!important}
+  .v3-form label{font-size:10px!important}
+
+  /* Navegação inferior reta e leve */
+  .mobile-training-nav{
+    left:0!important;right:0!important;bottom:0!important;height:calc(var(--mobile-nav-h) + env(safe-area-inset-bottom,0px))!important;
+    padding:7px 8px calc(7px + env(safe-area-inset-bottom,0px))!important;border:0!important;border-top:1px solid color-mix(in srgb,var(--line) 82%,transparent)!important;
+    border-radius:0!important;background:color-mix(in srgb,var(--surface) 94%,transparent)!important;box-shadow:0 -8px 30px rgba(0,0,0,.07)!important;
+  }
+  .mobile-training-nav button{border-radius:12px!important;gap:4px!important;font-size:9px!important;font-weight:750!important}
+  .mobile-training-nav button .mi{font-size:0!important;line-height:1!important;height:22px;display:grid;place-items:center}
+  .mobile-training-nav button .mi svg{width:21px!important;height:21px!important;stroke-width:2!important}
+  .mobile-training-nav button.active{background:transparent!important;color:var(--accent)!important}
+  .mobile-training-nav button.active .mi{background:var(--accentSoft);border-radius:11px;padding:4px 15px;height:28px}
+
+  /* Menu Mais */
+  .mobile-sheet-backdrop{background:rgba(3,9,18,.5)!important;backdrop-filter:blur(3px)}
+  .mobile-more-sheet{
+    left:12px!important;right:12px!important;bottom:calc(var(--mobile-nav-h) + 12px + env(safe-area-inset-bottom,0px))!important;
+    padding:14px!important;border-radius:22px!important;box-shadow:0 24px 70px rgba(0,0,0,.3)!important;
+  }
+  .mobile-more-sheet h4{font-size:12px!important;margin:1px 3px 10px!important}
+  .mobile-more-grid{gap:8px!important}
+  .mobile-more-grid button{min-height:58px!important;border-radius:14px!important;font-size:11px!important;padding:11px 12px!important}
+  .mobile-more-grid .mi{font-size:0!important;width:24px;height:24px;display:grid;place-items:center}
+  .mobile-more-grid .mi svg{width:21px!important;height:21px!important}
+
+  .prototype{margin:18px 16px 0!important;font-size:10px!important;padding:13px!important}
+  .toast{font-size:11px!important;bottom:calc(var(--mobile-nav-h) + 12px + env(safe-area-inset-bottom,0px))!important}
+}
+
+@media (max-width:390px){
+  .topbar{padding-top:18px!important}
+  h1{font-size:27px!important}
+  .summary-card{flex-basis:150px!important}
+  .mobile-training-nav button{font-size:8px!important}
+  .mobile-more-grid{grid-template-columns:1fr!important}
+  .actions{grid-template-columns:1fr!important}
+}
