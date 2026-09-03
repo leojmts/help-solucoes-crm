@@ -14,7 +14,7 @@
     const r=await fetch('treinamento-prototipo.html',{cache:'no-store'});
     if(!r.ok)throw new Error('Falha ao carregar a base');
     let html=await r.text();
-    const ext='<script src="treinamento-v3.js?v=20260903-2"><\/script>';
+    const ext='<script src="treinamento-v3.js?v=20260903-3"><\/script><script src="treinamento-v3-fixes.js?v=20260903-1"><\/script>';
     html=html.includes('</body>')?html.replace('</body>',ext+'</body>'):html+ext;
     document.open();document.write(html);document.close();
   }catch(e){document.getElementById('status').textContent='Não foi possível iniciar a Central v3.'}
