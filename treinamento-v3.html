@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Central de Treinamento v3 | Help Soluções</title>
+<style>html,body,iframe{margin:0;width:100%;height:100%;border:0;background:#07111f}body{overflow:hidden}#status{position:fixed;inset:0;display:grid;place-items:center;color:#dbe7f6;font:600 13px system-ui;background:#07111f;z-index:2}iframe{display:block}</style>
+</head>
+<body>
+<div id="status">Abrindo Central de Treinamento v3...</div>
+<iframe id="base" src="treinamento-prototipo.html" title="Central de Treinamento Help"></iframe>
+<script>
+const frame=document.getElementById('base');
+frame.addEventListener('load',()=>{
+  try{
+    const d=frame.contentDocument;
+    const s=d.createElement('script');
+    s.src='treinamento-v3.js?v=20260903-1';
+    s.onload=()=>document.getElementById('status').remove();
+    s.onerror=()=>{document.getElementById('status').textContent='Não foi possível carregar as extensões da v3.'};
+    d.body.appendChild(s);
+  }catch(e){document.getElementById('status').textContent='Não foi possível iniciar a Central v3.'}
+});
+</script>
+</body>
+</html>
