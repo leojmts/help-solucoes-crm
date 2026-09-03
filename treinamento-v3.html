@@ -16,7 +16,7 @@
     let html=await r.text();
     const mobileCss='<link rel="stylesheet" href="treinamento-v3-mobile.css?v=20260903-1">';
     html=html.includes('</head>')?html.replace('</head>',mobileCss+'</head>'):mobileCss+html;
-    const ext='<script src="treinamento-v3.js?v=20260903-4"><\/script><script src="treinamento-v3-fixes.js?v=20260903-1"><\/script><script src="treinamento-v3-search.js?v=20260903-1"><\/script><script src="treinamento-v3-mobile.js?v=20260903-1"><\/script>';
+    const ext='<script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"><\/script><script src="treinamento-v3.js?v=20260903-4"><\/script><script src="treinamento-v3-fixes.js?v=20260903-1"><\/script><script src="treinamento-v3-search.js?v=20260903-1"><\/script><script src="treinamento-v3-mobile.js?v=20260903-1"><\/script><script src="treinamento-v3-icons.js?v=20260903-1"><\/script>';
     html=html.includes('</body>')?html.replace('</body>',ext+'</body>'):html+ext;
     document.open();document.write(html);document.close();
   }catch(e){document.getElementById('status').textContent='Não foi possível iniciar a Central v3.'}
