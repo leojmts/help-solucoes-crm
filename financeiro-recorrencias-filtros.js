@@ -1,5 +1,13 @@
 /* Filtros da aba Recorrências — isolados para não alterar a lógica financeira existente. */
 (function(){
+  // Loader isolado do módulo de anexos de clientes. Não altera a lógica financeira abaixo.
+  if(!document.getElementById('clienteAnexosScript')){
+    const clienteAnexosScript=document.createElement('script');
+    clienteAnexosScript.id='clienteAnexosScript';
+    clienteAnexosScript.src='cliente-anexos.js?v=20260903-1';
+    document.head.appendChild(clienteAnexosScript);
+  }
+
   const estado={busca:'',inicio:'',fim:'',tipo:'',status:''};
 
   function dataIso(card){
