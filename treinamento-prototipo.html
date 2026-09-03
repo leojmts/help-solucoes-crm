@@ -1,765 +1,226 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Central de Treinamento - Protótipo | Help Soluções</title>
-  <meta name="color-scheme" content="light dark">
-  <style>
-    :root {
-      --bg: #f4f7fb;
-      --surface: #ffffff;
-      --surface-2: #f8fafc;
-      --surface-3: #eef4fb;
-      --text: #162033;
-      --muted: #667085;
-      --line: #e3e8ef;
-      --accent: #0f6fff;
-      --accent-strong: #0957cc;
-      --accent-soft: #eaf2ff;
-      --success: #087443;
-      --success-soft: #e8f7ef;
-      --warning: #9a6700;
-      --warning-soft: #fff5d6;
-      --danger: #b42318;
-      --danger-soft: #feeceb;
-      --shadow: 0 12px 32px rgba(16, 24, 40, .08);
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #07111f;
-        --surface: #0d1a2b;
-        --surface-2: #101f31;
-        --surface-3: #14263b;
-        --text: #f5f7fb;
-        --muted: #9ba9ba;
-        --line: #203047;
-        --accent: #6ea8ff;
-        --accent-strong: #91bdff;
-        --accent-soft: #132a4d;
-        --success: #65d7a0;
-        --success-soft: #102c22;
-        --warning: #f1c65a;
-        --warning-soft: #33280f;
-        --danger: #ff9a92;
-        --danger-soft: #3a1818;
-        --shadow: 0 12px 32px rgba(0, 0, 0, .22);
-      }
-    }
-
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
-
-    button, input, select { font: inherit; }
-    button { cursor: pointer; }
-    a { color: inherit; text-decoration: none; }
-
-    .shell {
-      min-height: 100vh;
-      display: grid;
-      grid-template-columns: 250px minmax(0, 1fr);
-    }
-
-    .sidebar {
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      padding: 20px 14px;
-      background: #07182b;
-      color: #dbe7f6;
-      border-right: 1px solid rgba(255,255,255,.06);
-      overflow-y: auto;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-      padding: 4px 8px 20px;
-      font-weight: 800;
-      letter-spacing: -.02em;
-    }
-
-    .brand img {
-      width: 36px;
-      height: 36px;
-      object-fit: contain;
-      border-radius: 9px;
-      background: rgba(255,255,255,.04);
-      padding: 3px;
-    }
-
-    .nav-title {
-      color: #71849d;
-      text-transform: uppercase;
-      font-size: 10px;
-      letter-spacing: .11em;
-      font-weight: 900;
-      margin: 17px 10px 8px;
-    }
-
-    .nav-item {
-      width: 100%;
-      border: 0;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      border-radius: 10px;
-      padding: 11px 12px;
-      margin: 3px 0;
-      color: #b9c7d8;
-      background: transparent;
-      font-size: 14px;
-      text-align: left;
-    }
-
-    .nav-item:hover { background: rgba(255,255,255,.04); color: white; }
-    .nav-item.active {
-      color: white;
-      background: rgba(71, 142, 255, .15);
-      box-shadow: inset 3px 0 0 #4d93ff;
-    }
-
-    .nav-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: currentColor;
-      opacity: .7;
-      flex: 0 0 auto;
-    }
-
-    .sidebar-note {
-      margin-top: 22px;
-      padding: 13px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.08);
-      color: #9fb0c4;
-      font-size: 11px;
-      line-height: 1.55;
-      background: rgba(255,255,255,.025);
-    }
-
-    main { min-width: 0; padding: 30px; }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 18px;
-      margin-bottom: 20px;
-    }
-
-    .eyebrow {
-      color: var(--accent);
-      font-size: 11px;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: .09em;
-    }
-
-    h1 { margin: 4px 0 7px; font-size: clamp(26px, 3vw, 38px); letter-spacing: -.035em; }
-    .subtitle { color: var(--muted); margin: 0; max-width: 760px; line-height: 1.55; }
-
-    .back-link {
-      border: 1px solid var(--line);
-      background: var(--surface);
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-weight: 750;
-      font-size: 13px;
-      white-space: nowrap;
-      box-shadow: 0 4px 12px rgba(16,24,40,.04);
-    }
-
-    .search-wrap {
-      position: relative;
-      max-width: 880px;
-      margin: 0 0 18px;
-    }
-
-    .search-wrap input {
-      width: 100%;
-      height: 52px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 0 16px 0 44px;
-      background: var(--surface);
-      color: var(--text);
-      outline: none;
-      box-shadow: var(--shadow);
-    }
-
-    .search-wrap input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-    .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--muted); }
-    .search-hint { margin-top: 7px; color: var(--muted); font-size: 11px; }
-
-    .tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 20px;
-      padding: 5px;
-      width: fit-content;
-      max-width: 100%;
-      overflow-x: auto;
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-    }
-
-    .tab {
-      border: 0;
-      background: transparent;
-      color: var(--muted);
-      padding: 9px 13px;
-      border-radius: 9px;
-      font-size: 13px;
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
-    .tab.active { background: var(--accent-soft); color: var(--accent); }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      box-shadow: var(--shadow);
-    }
-
-    .hero-card { padding: 23px; margin-bottom: 18px; }
-    .hero-row { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
-    .hero-card h2, .panel h2 { margin: 0 0 7px; font-size: 18px; letter-spacing: -.02em; }
-    .muted { color: var(--muted); }
-
-    .progress {
-      height: 10px;
-      background: var(--surface-2);
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      overflow: hidden;
-      margin-top: 17px;
-    }
-
-    .progress > span { display: block; height: 100%; width: 32%; background: var(--accent); border-radius: inherit; }
-    .progress-meta { display: flex; justify-content: space-between; margin-top: 9px; color: var(--muted); font-size: 11px; font-weight: 750; }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      border-radius: 999px;
-      padding: 6px 9px;
-      font-size: 10px;
-      font-weight: 900;
-      background: var(--accent-soft);
-      color: var(--accent);
-      white-space: nowrap;
-    }
-
-    .grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(280px, .7fr); gap: 18px; align-items: start; }
-    .section-title { display: flex; align-items: end; justify-content: space-between; margin: 7px 0 11px; gap: 14px; }
-    .section-title h2 { font-size: 17px; margin: 0; }
-    .section-title span { color: var(--muted); font-size: 11px; }
-
-    .course-list, .procedure-list, .news-list { display: grid; gap: 11px; }
-
-    .course {
-      padding: 17px;
-      display: grid;
-      grid-template-columns: 42px minmax(0, 1fr) auto;
-      gap: 14px;
-      align-items: center;
-      transition: .16s ease;
-    }
-
-    .course.clickable:hover, .procedure:hover, .news-item:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--accent) 32%, var(--line)); }
-    .course.clickable { cursor: pointer; }
-    .course-index { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--line); font-weight: 900; color: var(--muted); }
-    .course h3, .procedure h3, .news-item h3 { margin: 0 0 5px; font-size: 14px; }
-    .course p, .procedure p, .news-item p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
-
-    .status { font-size: 10px; font-weight: 900; border-radius: 999px; padding: 6px 9px; }
-    .status.done { color: var(--success); background: var(--success-soft); }
-    .status.next { color: var(--accent); background: var(--accent-soft); }
-    .status.locked { color: var(--muted); background: var(--surface-2); border: 1px solid var(--line); }
-
-    .panel { padding: 19px; }
-    .panel + .panel { margin-top: 14px; }
-    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 14px; }
-    .stat { border: 1px solid var(--line); border-radius: 12px; padding: 13px; background: var(--surface-2); }
-    .stat strong { display: block; font-size: 20px; margin-bottom: 3px; }
-    .stat span { color: var(--muted); font-size: 10px; font-weight: 800; }
-
-    .next-step { margin-top: 14px; padding: 14px; border-radius: 12px; background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent); }
-    .next-step small { display: block; color: var(--accent); font-weight: 900; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
-    .next-step strong { font-size: 13px; }
-
-    .checklist { margin: 13px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
-    .checklist li { display: flex; gap: 9px; align-items: flex-start; font-size: 11px; color: var(--muted); }
-    .check { width: 18px; height: 18px; border-radius: 6px; background: var(--success-soft); color: var(--success); display: grid; place-items: center; font-weight: 900; flex: 0 0 auto; }
-    .check.pending { background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
-
-    .procedure {
-      padding: 16px;
-      display: grid;
-      grid-template-columns: minmax(0,1fr) auto;
-      gap: 14px;
-      align-items: center;
-      cursor: pointer;
-      transition: .16s ease;
-    }
-
-    .procedure-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-    .mini-tag { font-size: 9px; font-weight: 850; border: 1px solid var(--line); padding: 4px 7px; border-radius: 999px; color: var(--muted); background: var(--surface-2); }
-    .arrow { color: var(--accent); font-weight: 900; }
-
-    .news-item { padding: 17px; transition: .16s ease; }
-    .news-date { color: var(--accent); font-size: 10px; font-weight: 900; margin-bottom: 7px; }
-
-    .empty-state { display: none; padding: 24px; text-align: center; color: var(--muted); font-size: 12px; border: 1px dashed var(--line); border-radius: 14px; background: var(--surface-2); }
-
-    .prototype-note { margin-top: 18px; border: 1px dashed var(--line); background: var(--surface-2); color: var(--muted); border-radius: 12px; padding: 12px 14px; font-size: 11px; line-height: 1.5; }
-
-    .view { display: none; }
-    .view.active { display: block; }
-
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(3, 9, 18, .62);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      z-index: 100;
-    }
-
-    .modal-backdrop.open { display: flex; }
-    .modal {
-      width: min(760px, 100%);
-      max-height: 88vh;
-      overflow-y: auto;
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      box-shadow: 0 24px 70px rgba(0,0,0,.3);
-    }
-
-    .modal-head { display: flex; justify-content: space-between; gap: 16px; padding: 20px 20px 15px; border-bottom: 1px solid var(--line); }
-    .modal-head h2 { margin: 4px 0 5px; font-size: 20px; }
-    .close-btn { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font-weight: 900; }
-    .modal-body { padding: 20px; }
-    .modal-body p { color: var(--muted); line-height: 1.6; font-size: 13px; }
-
-    .steps { display: grid; gap: 9px; margin-top: 16px; }
-    .step { display: flex; gap: 11px; align-items: flex-start; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
-    .step-number { min-width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 900; }
-    .step strong { display: block; font-size: 12px; margin: 2px 0 3px; }
-    .step span { color: var(--muted); font-size: 11px; line-height: 1.45; }
-
-    .lesson-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }
-    .btn { border: 1px solid var(--line); padding: 10px 13px; border-radius: 10px; background: var(--surface); color: var(--text); font-weight: 800; font-size: 12px; }
-    .btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
-    .btn.primary:hover { background: var(--accent-strong); }
-
-    .quiz { margin-top: 18px; padding: 15px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
-    .quiz h3 { margin: 0 0 8px; font-size: 13px; }
-    .quiz label { display: block; margin-top: 7px; color: var(--muted); font-size: 11px; }
-    .quiz-result { margin-top: 9px; font-size: 11px; font-weight: 800; }
-
-    .toast { position: fixed; right: 18px; bottom: 18px; padding: 12px 14px; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 11px; box-shadow: var(--shadow); font-size: 11px; font-weight: 800; opacity: 0; pointer-events: none; transform: translateY(8px); transition: .2s; z-index: 150; }
-    .toast.show { opacity: 1; transform: translateY(0); }
-
-    @media (max-width: 980px) {
-      .shell { grid-template-columns: 1fr; }
-      .sidebar { display: none; }
-      main { padding: 22px; }
-      .grid { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 620px) {
-      main { padding: 15px; }
-      .topbar { flex-direction: column; }
-      .hero-row { flex-direction: column; }
-      .course { grid-template-columns: 38px minmax(0, 1fr); }
-      .course .status { grid-column: 2; justify-self: start; }
-      .stat-grid { grid-template-columns: 1fr 1fr; }
-      .procedure { grid-template-columns: 1fr; }
-      .arrow { display: none; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Central de Treinamento | Help Soluções</title>
+<meta name="color-scheme" content="light dark">
+<style>
+:root{--bg:#f4f7fb;--surface:#fff;--surface2:#f8fafc;--surface3:#eef4fb;--text:#172033;--muted:#667085;--line:#e3e8ef;--accent:#0f6fff;--accent2:#0957cc;--accentSoft:#eaf2ff;--ok:#087443;--okSoft:#e8f7ef;--warn:#9a6700;--warnSoft:#fff5d6;--danger:#b42318;--dangerSoft:#feeceb;--purple:#6941c6;--purpleSoft:#f2edff;--shadow:0 12px 32px rgba(16,24,40,.08)}
+@media(prefers-color-scheme:dark){:root{--bg:#07111f;--surface:#0d1a2b;--surface2:#101f31;--surface3:#14263b;--text:#f5f7fb;--muted:#9ba9ba;--line:#203047;--accent:#6ea8ff;--accent2:#91bdff;--accentSoft:#132a4d;--ok:#65d7a0;--okSoft:#102c22;--warn:#f1c65a;--warnSoft:#33280f;--danger:#ff9a92;--dangerSoft:#3a1818;--purple:#b9a2ff;--purpleSoft:#241d3d;--shadow:0 12px 32px rgba(0,0,0,.22)}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}.hidden{display:none!important}
+.shell{min-height:100vh;display:grid;grid-template-columns:255px minmax(0,1fr)}.sidebar{height:100vh;position:sticky;top:0;background:#07182b;color:#dbe7f6;padding:20px 14px;overflow:auto;border-right:1px solid rgba(255,255,255,.06)}.brand{display:flex;align-items:center;gap:11px;padding:4px 8px 19px;font-weight:850}.brand img{width:37px;height:37px;object-fit:contain;padding:3px}.nav-title{color:#71849d;text-transform:uppercase;font-size:10px;letter-spacing:.11em;font-weight:900;margin:17px 10px 7px}.nav-item{width:100%;border:0;background:transparent;color:#b9c7d8;border-radius:10px;padding:11px 12px;margin:3px 0;display:flex;align-items:center;gap:10px;text-align:left;font-size:13px}.nav-item:hover{background:rgba(255,255,255,.04);color:#fff}.nav-item.active{color:#fff;background:rgba(71,142,255,.15);box-shadow:inset 3px 0 0 #4d93ff}.dot{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.7}.side-note{margin-top:22px;padding:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);border-radius:12px;color:#94a7bd;font-size:10px;line-height:1.55}
+main{padding:30px;min-width:0}.topbar{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.eyebrow{color:var(--accent);font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}h1{font-size:clamp(25px,3vw,38px);letter-spacing:-.035em;margin:5px 0 7px}.subtitle{margin:0;color:var(--muted);line-height:1.55;max-width:850px;font-size:13px}.back{white-space:nowrap;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;font-weight:800;font-size:12px;box-shadow:0 4px 12px rgba(16,24,40,.04)}
+.audit-banner{margin:20px 0 14px;border:1px solid color-mix(in srgb,var(--ok) 25%,var(--line));background:var(--okSoft);border-radius:14px;padding:13px 15px;display:flex;gap:11px;align-items:flex-start}.audit-banner b{display:block;font-size:12px;color:var(--ok)}.audit-banner span{display:block;color:var(--muted);font-size:10px;line-height:1.45;margin-top:3px}.audit-mark{width:28px;height:28px;flex:0 0 auto;border-radius:8px;display:grid;place-items:center;background:var(--surface);color:var(--ok);font-weight:900}
+.search-row{display:grid;grid-template-columns:minmax(250px,1fr) 190px;gap:10px;margin:14px 0}.search{position:relative}.search input{width:100%;height:50px;border:1px solid var(--line);border-radius:13px;padding:0 15px 0 42px;background:var(--surface);color:var(--text);outline:none;box-shadow:var(--shadow)}.search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accentSoft)}.search span{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--muted)}.role-select{border:1px solid var(--line);border-radius:13px;background:var(--surface);color:var(--text);padding:0 12px;outline:none}
+.tabs{display:flex;gap:7px;overflow:auto;width:fit-content;max-width:100%;padding:5px;border:1px solid var(--line);background:var(--surface);border-radius:12px;margin-bottom:18px}.tab{white-space:nowrap;border:0;border-radius:9px;background:transparent;color:var(--muted);padding:9px 13px;font-weight:850;font-size:12px}.tab.active{background:var(--accentSoft);color:var(--accent)}
+.view{display:none}.view.active{display:block}.card{background:var(--surface);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow)}.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}.summary-card{padding:16px}.summary-card span{display:block;color:var(--muted);font-size:10px;font-weight:750}.summary-card b{display:block;font-size:24px;margin-top:5px;letter-spacing:-.03em}.summary-card small{display:block;color:var(--muted);font-size:9px;margin-top:3px}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin:10px 0}.section-head h2{font-size:17px;margin:0}.section-head span{color:var(--muted);font-size:10px}.modules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.module{padding:17px;cursor:pointer;transition:.16s ease}.module:hover{transform:translateY(-1px);border-color:color-mix(in srgb,var(--accent) 32%,var(--line))}.module-top{display:flex;gap:12px;align-items:flex-start}.module-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--accentSoft);font-size:20px;flex:0 0 auto}.module-copy{min-width:0;flex:1}.module-copy h3{font-size:14px;margin:1px 0 5px}.module-copy p{font-size:10px;color:var(--muted);line-height:1.45;margin:0}.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}.tag{font-size:8px;font-weight:850;border:1px solid var(--line);background:var(--surface2);color:var(--muted);padding:4px 6px;border-radius:999px}.tag.active{color:var(--ok);background:var(--okSoft);border-color:transparent}.tag.plan{color:var(--purple);background:var(--purpleSoft);border-color:transparent}.module-progress{margin-top:12px}.bar{height:6px;background:var(--surface2);border:1px solid var(--line);overflow:hidden;border-radius:999px}.bar i{display:block;height:100%;background:var(--accent);border-radius:inherit}.bar-meta{display:flex;justify-content:space-between;color:var(--muted);font-size:8px;font-weight:800;margin-top:5px}
+.library{display:grid;gap:9px}.procedure{padding:14px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;cursor:pointer;transition:.15s}.procedure:hover{border-color:color-mix(in srgb,var(--accent) 32%,var(--line));transform:translateY(-1px)}.procedure h3{margin:0 0 4px;font-size:12px}.procedure p{margin:0;color:var(--muted);font-size:9px}.arrow{color:var(--accent);font-weight:900}.procedure .tags{margin-top:7px}
+.map-grid{display:grid;gap:11px}.map-module{padding:17px}.map-module-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.map-module h3{font-size:14px;margin:0}.feature-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:12px}.feature{border:1px solid var(--line);background:var(--surface2);border-radius:10px;padding:9px 10px;font-size:9px;line-height:1.35;color:var(--muted)}.feature b{color:var(--text);display:block;margin-bottom:2px;font-size:10px}
+.plan-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.plan-card{padding:17px;border-color:color-mix(in srgb,var(--purple) 22%,var(--line))}.plan-card h3{margin:0 0 6px;font-size:14px}.plan-card p{color:var(--muted);font-size:10px;line-height:1.5;margin:0}.plan-card ul{margin:11px 0 0;padding-left:17px;color:var(--muted);font-size:9px;line-height:1.55}
+.empty{display:none;padding:25px;text-align:center;border:1px dashed var(--line);background:var(--surface2);border-radius:13px;color:var(--muted);font-size:11px;margin-top:10px}.prototype{margin-top:18px;border:1px dashed var(--line);background:var(--surface2);border-radius:12px;padding:12px 14px;color:var(--muted);font-size:9px;line-height:1.5}
+.modal-bg{position:fixed;inset:0;background:rgba(3,9,18,.65);display:none;align-items:center;justify-content:center;padding:18px;z-index:100}.modal-bg.open{display:flex}.modal{width:min(820px,100%);max-height:90vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 28px 80px rgba(0,0,0,.35)}.modal-head{position:sticky;top:0;z-index:2;background:var(--surface);border-bottom:1px solid var(--line);padding:18px 20px;display:flex;justify-content:space-between;gap:12px}.modal-head h2{font-size:20px;margin:4px 0}.modal-head p{margin:0;color:var(--muted);font-size:10px}.close{width:35px;height:35px;border:1px solid var(--line);border-radius:9px;background:var(--surface2);color:var(--text);font-weight:900}.modal-body{padding:20px}.lesson-list{display:grid;gap:8px}.lesson{border:1px solid var(--line);background:var(--surface2);border-radius:12px;padding:13px;cursor:pointer}.lesson:hover{border-color:var(--accent)}.lesson-top{display:flex;justify-content:space-between;gap:12px}.lesson h4{margin:0 0 4px;font-size:12px}.lesson p{margin:0;color:var(--muted);font-size:9px;line-height:1.45}.lesson-state{font-size:8px;font-weight:900;border-radius:999px;padding:4px 7px;height:fit-content;background:var(--accentSoft);color:var(--accent)}.lesson-state.done{background:var(--okSoft);color:var(--ok)}.steps{display:grid;gap:8px;margin-top:13px}.step{display:flex;gap:10px;border:1px solid var(--line);background:var(--surface2);padding:11px;border-radius:10px}.step-num{width:25px;height:25px;display:grid;place-items:center;border-radius:7px;background:var(--accentSoft);color:var(--accent);font-size:9px;font-weight:900;flex:0 0 auto}.step b{font-size:10px;display:block;margin:1px 0 2px}.step span{font-size:9px;color:var(--muted);line-height:1.45}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}.btn{border:1px solid var(--line);background:var(--surface);color:var(--text);padding:9px 12px;border-radius:9px;font-weight:850;font-size:10px}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{background:var(--accent2)}
+.toast{position:fixed;right:17px;bottom:17px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 13px;box-shadow:var(--shadow);font-size:10px;font-weight:800;opacity:0;transform:translateY(7px);pointer-events:none;transition:.2s;z-index:150}.toast.show{opacity:1;transform:none}
+@media(max-width:1000px){.shell{grid-template-columns:1fr}.sidebar{display:none}main{padding:22px}.summary-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:690px){main{padding:15px}.topbar{flex-direction:column}.search-row{grid-template-columns:1fr}.modules,.plan-grid{grid-template-columns:1fr}.feature-list{grid-template-columns:1fr}.summary-grid{grid-template-columns:1fr 1fr}}
+</style>
 </head>
 <body>
-  <div class="shell">
-    <aside class="sidebar">
-      <div class="brand"><img src="help-logo-transparent.svg?v=20260827-3" alt="Help Soluções"><span>Help Soluções</span></div>
-      <div class="nav-title">Sistema</div>
-      <a class="nav-item" href="./"><span class="nav-dot"></span>Dashboard</a>
-      <div class="nav-item"><span class="nav-dot"></span>Sistema Comercial</div>
-      <div class="nav-item"><span class="nav-dot"></span>Chamados</div>
-      <div class="nav-item"><span class="nav-dot"></span>Ordens de Serviço</div>
-      <div class="nav-item"><span class="nav-dot"></span>Financeiro</div>
-      <div class="nav-title">Central de Treinamento</div>
-      <button class="nav-item active" data-nav="learn" onclick="showView('learn')"><span class="nav-dot"></span>Aprender</button>
-      <button class="nav-item" data-nav="consult" onclick="showView('consult')"><span class="nav-dot"></span>Consultar</button>
-      <button class="nav-item" data-nav="news" onclick="showView('news')"><span class="nav-dot"></span>Novidades</button>
-      <div class="sidebar-note">Protótipo isolado. O progresso deste preview fica apenas neste navegador. Nenhum dado é enviado ao CRM ou ao Supabase.</div>
-    </aside>
-
-    <main>
-      <header class="topbar">
-        <div>
-          <div class="eyebrow">Central de Treinamento</div>
-          <h1>Aprenda, consulte e continue trabalhando</h1>
-          <p class="subtitle">Treinamentos por função, procedimentos rápidos e novidades do sistema reunidos em uma única central.</p>
-        </div>
-        <a class="back-link" href="./">Voltar ao sistema</a>
-      </header>
-
-      <div class="search-wrap">
-        <span class="search-icon">⌕</span>
-        <input id="globalSearch" type="search" placeholder="Como posso ajudar? Ex.: baixa, OS, follow-up, proposta..." oninput="applySearch(this.value)">
-        <div class="search-hint">A busca filtra aulas, procedimentos e novidades deste protótipo.</div>
-      </div>
-
-      <div class="tabs" role="tablist">
-        <button class="tab active" data-tab="learn" onclick="showView('learn')">Aprender</button>
-        <button class="tab" data-tab="consult" onclick="showView('consult')">Consultar</button>
-        <button class="tab" data-tab="news" onclick="showView('news')">Novidades</button>
-      </div>
-
-      <section id="view-learn" class="view active">
-        <div class="grid">
-          <section>
-            <div class="card hero-card">
-              <div class="hero-row">
-                <div>
-                  <h2>Seu treinamento: SDR / Pré-vendas</h2>
-                  <div class="muted" id="progressText">3 de 9 aulas concluídas</div>
-                </div>
-                <span class="badge" id="progressBadge">32% concluído</span>
-              </div>
-              <div class="progress" aria-label="Progresso do treinamento"><span id="progressBar"></span></div>
-              <div class="progress-meta"><span>Progresso geral</span><span id="remainingText">6 aulas restantes</span></div>
-            </div>
-
-            <div class="section-title"><h2>Trilha recomendada</h2><span>Treinamento por cargo</span></div>
-            <div class="course-list searchable-group">
-              <article class="card course clickable searchable" data-search="introdução sistema dashboard navegação perfil notificações" onclick="openLesson('intro')">
-                <div class="course-index">01</div><div><h3>Introdução ao sistema</h3><p>Dashboard, navegação, perfil, notificações e organização geral.</p></div><span class="status done">Concluído</span>
-              </article>
-              <article class="card course clickable searchable" data-search="crm comercial clientes oportunidades histórico pipeline" onclick="openLesson('crm')">
-                <div class="course-index">02</div><div><h3>CRM Comercial</h3><p>Clientes, oportunidades, histórico e visão do processo comercial.</p></div><span class="status done">Concluído</span>
-              </article>
-              <article class="card course clickable searchable" data-search="prospecção cadastro leads sdr novo lead" onclick="openLesson('prospect')">
-                <div class="course-index">03</div><div><h3>Prospecção e cadastro de leads</h3><p>Como registrar um novo lead com as informações necessárias para iniciar o trabalho.</p></div><span class="status done">Concluído</span>
-              </article>
-              <article class="card course clickable searchable" id="course-followup" data-search="follow up follow-up próxima ação contato retornar lead" onclick="openLesson('followup')">
-                <div class="course-index">04</div><div><h3>Follow-up e próxima ação</h3><p>Como nunca deixar um lead ativo sem um próximo passo definido.</p></div><span class="status next">Próxima aula</span>
-              </article>
-              <article class="card course clickable searchable" data-search="spin qualificação situação problema implicação necessidade" onclick="openLesson('spin')">
-                <div class="course-index">05</div><div><h3>Qualificação SPIN</h3><p>Situação, problema, implicação e necessidade aplicados à pré-venda.</p></div><span class="status locked">Pendente</span>
-              </article>
-              <article class="card course clickable searchable" data-search="agendamento vendedor passagem briefing reunião visita" onclick="openLesson('handoff')">
-                <div class="course-index">06</div><div><h3>Passagem para o vendedor</h3><p>Como preparar um briefing claro e entregar uma oportunidade bem qualificada.</p></div><span class="status locked">Pendente</span>
-              </article>
-            </div>
-            <div class="empty-state" id="emptyLearn">Nenhuma aula encontrada para esta busca.</div>
-          </section>
-
-          <aside>
-            <div class="card panel">
-              <h2>Resumo</h2>
-              <div class="muted" style="font-size:11px">Progresso individual do usuário</div>
-              <div class="stat-grid">
-                <div class="stat"><strong>9</strong><span>Aulas atribuídas</span></div>
-                <div class="stat"><strong id="doneCount">3</strong><span>Concluídas</span></div>
-                <div class="stat"><strong>1</strong><span>Em andamento</span></div>
-                <div class="stat"><strong id="pendingCount">6</strong><span>Pendentes</span></div>
-              </div>
-            </div>
-
-            <div class="card panel">
-              <h2>Continue de onde parou</h2>
-              <div class="next-step"><small>Próxima aula</small><strong>Follow-up e próxima ação</strong></div>
-              <button class="btn primary" style="width:100%; margin-top:11px" onclick="openLesson('followup')">Continuar treinamento</button>
-            </div>
-
-            <div class="card panel">
-              <h2>Primeiros passos</h2>
-              <div class="muted" style="font-size:11px">Checklist sugerido para um novo SDR</div>
-              <ul class="checklist">
-                <li><span class="check">✓</span><span>Conhecer o Dashboard e a navegação.</span></li>
-                <li><span class="check">✓</span><span>Cadastrar um lead de treinamento.</span></li>
-                <li><span class="check pending">3</span><span>Registrar um follow-up com próxima ação.</span></li>
-                <li><span class="check pending">4</span><span>Fazer uma qualificação SPIN.</span></li>
-              </ul>
-            </div>
-          </aside>
-        </div>
-      </section>
-
-      <section id="view-consult" class="view">
-        <div class="grid">
-          <section>
-            <div class="section-title"><h2>Biblioteca de Procedimentos</h2><span>Consulta rápida durante o trabalho</span></div>
-            <div class="procedure-list searchable-group">
-              <article class="card procedure searchable" data-search="ordem serviço os criar gerar cliente serviço" onclick="openProcedure('os')">
-                <div><h3>Como criar uma Ordem de Serviço?</h3><p>Passo a passo rápido para abrir uma OS e vincular o cliente.</p><div class="procedure-meta"><span class="mini-tag">OS</span><span class="mini-tag">2 min</span></div></div><div class="arrow">→</div>
-              </article>
-              <article class="card procedure searchable" data-search="financeiro baixa conta receber pagamento" onclick="openProcedure('baixa')">
-                <div><h3>Como dar baixa em uma conta?</h3><p>Confira o processo antes de confirmar um recebimento.</p><div class="procedure-meta"><span class="mini-tag">Financeiro</span><span class="mini-tag">1 min</span></div></div><div class="arrow">→</div>
-              </article>
-              <article class="card procedure searchable" data-search="responsável chamado trocar atribuir usuário" onclick="openProcedure('responsavel')">
-                <div><h3>Como alterar o responsável de um chamado?</h3><p>Veja onde atribuir ou transferir um atendimento.</p><div class="procedure-meta"><span class="mini-tag">Chamados</span><span class="mini-tag">1 min</span></div></div><div class="arrow">→</div>
-              </article>
-              <article class="card procedure searchable" data-search="oportunidade perdida motivo crm comercial" onclick="openProcedure('perdida')">
-                <div><h3>Como marcar uma oportunidade como perdida?</h3><p>Registre corretamente o motivo para alimentar os indicadores comerciais.</p><div class="procedure-meta"><span class="mini-tag">Comercial</span><span class="mini-tag">1 min</span></div></div><div class="arrow">→</div>
-              </article>
-              <article class="card procedure searchable" data-search="contrato gerar pdf cliente assinatura" onclick="openProcedure('contrato')">
-                <div><h3>Como gerar um contrato?</h3><p>Resumo do fluxo entre cadastro, contrato e PDF.</p><div class="procedure-meta"><span class="mini-tag">Contratos</span><span class="mini-tag">2 min</span></div></div><div class="arrow">→</div>
-              </article>
-            </div>
-            <div class="empty-state" id="emptyConsult">Nenhum procedimento encontrado para esta busca.</div>
-          </section>
-
-          <aside>
-            <div class="card panel">
-              <h2>Consulta rápida</h2>
-              <p class="muted" style="font-size:11px;line-height:1.55">Esta área é pensada para quem já sabe usar o sistema, mas precisa lembrar um procedimento específico sem refazer um curso inteiro.</p>
-            </div>
-            <div class="card panel">
-              <h2>Mais buscados</h2>
-              <ul class="checklist">
-                <li><span class="check pending">1</span><span>Dar baixa no Financeiro</span></li>
-                <li><span class="check pending">2</span><span>Criar Ordem de Serviço</span></li>
-                <li><span class="check pending">3</span><span>Alterar responsável</span></li>
-              </ul>
-            </div>
-          </aside>
-        </div>
-      </section>
-
-      <section id="view-news" class="view">
-        <div class="grid">
-          <section>
-            <div class="section-title"><h2>Novidades do Sistema</h2><span>Atualizações que o usuário precisa conhecer</span></div>
-            <div class="news-list searchable-group">
-              <article class="card news-item searchable" data-search="sdr pré vendas spin novo módulo"><div class="news-date">Em planejamento</div><h3>Novo módulo de SDR / Pré-vendas</h3><p>Fluxo de prospecção, follow-up, qualificação SPIN e passagem de oportunidades ao comercial.</p></article>
-              <article class="card news-item searchable" data-search="dashboard personalização widgets pins"><div class="news-date">Recurso existente</div><h3>Dashboard personalizável</h3><p>O usuário pode priorizar os indicadores mais importantes para sua rotina.</p></article>
-              <article class="card news-item searchable" data-search="contratos gestão pdf financeiro"><div class="news-date">Recurso existente</div><h3>Gestão de Contratos</h3><p>Contratos integrados aos clientes e ao fluxo operacional do sistema.</p></article>
-            </div>
-            <div class="empty-state" id="emptyNews">Nenhuma novidade encontrada para esta busca.</div>
-          </section>
-
-          <aside>
-            <div class="card panel">
-              <h2>Por que esta área?</h2>
-              <p class="muted" style="font-size:11px;line-height:1.55">Cada atualização importante pode vir acompanhada de uma explicação curta e, quando necessário, de um link direto para o treinamento correspondente.</p>
-            </div>
-          </aside>
-        </div>
-      </section>
-
-      <div class="prototype-note"><strong>Protótipo seguro:</strong> esta página continua totalmente separada do sistema principal. A conclusão de aulas é simulada com armazenamento local do navegador e não altera banco, usuários, permissões ou dados da empresa.</div>
-    </main>
-  </div>
-
-  <div class="modal-backdrop" id="modalBackdrop" onclick="if(event.target===this) closeModal()">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <div class="modal-head">
-        <div><div class="eyebrow" id="modalEyebrow">Treinamento</div><h2 id="modalTitle">Título</h2><div class="muted" id="modalSubtitle" style="font-size:11px"></div></div>
-        <button class="close-btn" onclick="closeModal()" aria-label="Fechar">×</button>
-      </div>
-      <div class="modal-body" id="modalBody"></div>
-    </div>
-  </div>
-
-  <div class="toast" id="toast">Ação concluída.</div>
-
+<div class="shell">
+<aside class="sidebar">
+  <div class="brand"><img src="help-logo-transparent.svg?v=20260827-3" alt="Help Soluções"><span>Help Soluções</span></div>
+  <div class="nav-title">Sistema</div>
+  <a class="nav-item" href="./"><span class="dot"></span>Voltar ao Dashboard</a>
+  <div class="nav-title">Treinamento</div>
+  <button class="nav-item active" data-nav="learn" onclick="showView('learn')"><span class="dot"></span>Trilhas</button>
+  <button class="nav-item" data-nav="consult" onclick="showView('consult')"><span class="dot"></span>Consultar</button>
+  <button class="nav-item" data-nav="map" onclick="showView('map')"><span class="dot"></span>Mapa do Sistema</button>
+  <button class="nav-item" data-nav="planned" onclick="showView('planned')"><span class="dot"></span>Planejados</button>
+  <div class="side-note"><b>Base auditada</b><br>Conteúdo montado a partir dos módulos carregados pelo CRM atual. Recursos futuros ficam separados em “Planejados”. Este preview não grava nada no Supabase.</div>
+</aside>
+<main>
+<header class="topbar"><div><div class="eyebrow">Central de Treinamento · Catálogo funcional</div><h1>Aprenda o Sistema Help por completo</h1><p class="subtitle">A base foi reorganizada conforme as funcionalidades realmente presentes no CRM: atendimento, comercial, clientes, estoque, equipamentos, processos, contratos, OS, financeiro, relatórios e administração.</p></div><a class="back" href="./">Voltar ao sistema</a></header>
+<div class="audit-banner"><div class="audit-mark">✓</div><div><b>Conteúdo atual separado de ideias futuras</b><span>SDR/SPIN, o site externo de Funil de Vendas e Oportunidades da Base continuam no planejamento e não são apresentados como recursos já disponíveis no CRM.</span></div></div>
+<div class="search-row"><div class="search"><span>⌕</span><input id="globalSearch" type="search" placeholder="Pesquisar: baixa parcial, OFX, proposta, empréstimo, dossiê..." oninput="renderCurrent()"></div><select id="roleFilter" class="role-select" onchange="renderCurrent()"><option value="all">Todos os setores</option><option value="geral">Uso geral</option><option value="suporte">Suporte / Técnico</option><option value="comercial">Comercial</option><option value="financeiro">Financeiro</option><option value="gestao">Gestão</option><option value="admin">Administração</option></select></div>
+<div class="tabs"><button class="tab active" data-tab="learn" onclick="showView('learn')">Trilhas</button><button class="tab" data-tab="consult" onclick="showView('consult')">Procedimentos rápidos</button><button class="tab" data-tab="map" onclick="showView('map')">Mapa do Sistema</button><button class="tab" data-tab="planned" onclick="showView('planned')">Planejados</button></div>
+<section id="view-learn" class="view active"><div class="summary-grid" id="summaryGrid"></div><div class="section-head"><h2>Módulos de treinamento</h2><span>Clique em um módulo para ver as aulas</span></div><div id="moduleGrid" class="modules"></div><div id="emptyLearn" class="empty">Nenhum módulo corresponde à busca ou ao setor selecionado.</div></section>
+<section id="view-consult" class="view"><div class="section-head"><h2>Biblioteca de Procedimentos</h2><span>Consulta curta para quem já conhece o sistema</span></div><div id="procedureList" class="library"></div><div id="emptyConsult" class="empty">Nenhum procedimento encontrado.</div></section>
+<section id="view-map" class="view"><div class="section-head"><h2>Mapa funcional do CRM</h2><span>O que existe em cada área atualmente</span></div><div id="systemMap" class="map-grid"></div><div id="emptyMap" class="empty">Nenhuma função encontrada.</div></section>
+<section id="view-planned" class="view"><div class="section-head"><h2>Em planejamento</h2><span>Não faz parte do CRM atual</span></div><div id="plannedGrid" class="plan-grid"></div></section>
+<div class="prototype"><strong>Importante:</strong> esta Central de Treinamento continua em uma branch de preview. Marcar aulas como concluídas grava somente no armazenamento local deste navegador. Nenhuma tabela, permissão, usuário, chamado, OS, contrato ou lançamento financeiro é alterado.</div>
+</main>
+</div>
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()"><div class="modal"><div class="modal-head"><div><div class="eyebrow" id="modalEyebrow">Treinamento</div><h2 id="modalTitle"></h2><p id="modalSubtitle"></p></div><button class="close" onclick="closeModal()">×</button></div><div class="modal-body" id="modalBody"></div></div></div>
+<div class="toast" id="toast"></div>
 <script>
-  const lessons = {
-    intro: {
-      eyebrow: 'Aula 01 • Fundamentos',
-      title: 'Introdução ao sistema',
-      subtitle: 'Visão geral • 4 minutos',
-      intro: 'Conheça a estrutura geral do sistema antes de começar a trabalhar nos módulos específicos.',
-      steps: [
-        ['Conheça o Dashboard', 'Entenda quais indicadores aparecem de acordo com sua função e permissões.'],
-        ['Use o menu lateral', 'Cada módulo concentra uma etapa diferente da operação da empresa.'],
-        ['Confira notificações', 'Avisos importantes e tarefas podem aparecer no painel principal.']
-      ]
-    },
-    crm: {
-      eyebrow: 'Aula 02 • Comercial',
-      title: 'CRM Comercial',
-      subtitle: 'Visão do processo • 5 minutos',
-      intro: 'O CRM organiza clientes, oportunidades e atividades comerciais. O objetivo é manter contexto e histórico para que a equipe saiba o próximo passo.',
-      steps: [
-        ['Abra a oportunidade', 'Confira cliente, responsável, etapa atual e histórico antes de agir.'],
-        ['Registre interações', 'Anote ligações, reuniões, mensagens e observações importantes.'],
-        ['Defina o próximo passo', 'Uma oportunidade ativa não deve ficar sem ação futura.']
-      ]
-    },
-    prospect: {
-      eyebrow: 'Aula 03 • SDR',
-      title: 'Prospecção e cadastro de leads',
-      subtitle: 'Pré-vendas • 5 minutos',
-      intro: 'O cadastro deve ter informação suficiente para permitir o primeiro contato sem transformar a prospecção em burocracia.',
-      steps: [
-        ['Cadastre o básico', 'Empresa, contato, telefone, cidade, segmento e origem do lead.'],
-        ['Defina o SDR responsável', 'O responsável deve saber quais leads fazem parte da sua carteira.'],
-        ['Crie a primeira ação', 'Se o lead está ativo, defina quando e como será feita a primeira abordagem.']
-      ]
-    },
-    followup: {
-      eyebrow: 'Aula 04 • SDR',
-      title: 'Follow-up e próxima ação',
-      subtitle: 'Operação comercial • 6 minutos',
-      intro: 'O objetivo do follow-up é garantir que todo lead ativo tenha uma próxima ação clara, evitando oportunidades esquecidas ou contatos sem contexto.',
-      steps: [
-        ['Registre o contato realizado', 'Informe o canal utilizado e um resumo objetivo da conversa.'],
-        ['Defina o próximo passo', 'Escolha ligação, WhatsApp, reunião, visita ou outra ação apropriada.'],
-        ['Defina data e horário', 'Use a data combinada com o cliente sempre que existir.'],
-        ['Deixe contexto', 'Registre o que deve ser retomado para que o próximo contato não comece do zero.']
-      ],
-      quiz: true
-    },
-    spin: {
-      eyebrow: 'Aula 05 • SDR',
-      title: 'Qualificação SPIN',
-      subtitle: 'Método de investigação • 8 minutos',
-      intro: 'Use Situação, Problema, Implicação e Necessidade para entender melhor a oportunidade antes de apresentar a solução.',
-      steps: [
-        ['Situação', 'Entenda o cenário atual sem repetir perguntas que o CRM já consegue responder.'],
-        ['Problema', 'Descubra dificuldades reais e insatisfações relevantes.'],
-        ['Implicação', 'Entenda o impacto do problema na operação do cliente.'],
-        ['Necessidade', 'Registre o resultado que o cliente deseja alcançar.']
-      ]
-    },
-    handoff: {
-      eyebrow: 'Aula 06 • SDR',
-      title: 'Passagem para o vendedor',
-      subtitle: 'Handoff comercial • 5 minutos',
-      intro: 'O vendedor deve receber uma oportunidade com contexto suficiente para avançar a conversa, e não simplesmente um nome e telefone.',
-      steps: [
-        ['Revise a qualificação', 'Confira problema, impacto, necessidade, decisor e interesse.'],
-        ['Prepare o briefing', 'Resuma o que o vendedor precisa saber antes da reunião ou visita.'],
-        ['Defina o próximo passo', 'Informe reunião, visita ou ação combinada com o cliente.']
-      ]
-    }
-  };
+const moduleData=[
+{id:'fundamentos',icon:'🧭',title:'Fundamentos e Dashboard',roles:['geral','suporte','comercial','financeiro','gestao','admin'],summary:'Navegação, painel personalizado, notificações, tema e Assistente Help.',features:['Navegação pelo menu lateral','Tema claro/escuro','Busca global de chamados e clientes','Notificações e alertas do navegador','Dashboard personalizável','Widgets por usuário e período','Assistente Help contextual e tours'],lessons:[
+{id:'fund-nav',title:'Conhecendo o Sistema',desc:'Menu, módulos, perfil e organização geral.',steps:[['Use o menu lateral','Cada área concentra uma parte da operação: atendimento, comercial, cadastros, processos, contratos, OS, financeiro e relatórios.'],['Confira seu perfil','O sistema aplica acesso e ações conforme o perfil e as permissões do usuário.'],['Use o Assistente Help','O botão “Precisa de ajuda?” mostra orientações ligadas à tela atual.']]},
+{id:'fund-dashboard',title:'Lendo o Dashboard',desc:'Indicadores, prioridades e período operacional.',steps:[['Confira os cards principais','Total, chamados do dia, resolvidos, pendentes e alta prioridade ficam no topo.'],['Escolha o período','O painel operacional pode considerar hoje, últimos 7 dias, mês ou todo o período.'],['Abra os itens importantes','Os widgets permitem ir direto para chamados, processos, agenda, contratos e financeiro.']]},
+{id:'fund-personalizar',title:'Personalizando o Dashboard',desc:'Escolha, redimensione e reordene os widgets.',steps:[['Clique em Personalizar painel','Abra o editor de widgets.'],['Ative o que faz sentido','Há widgets de SLA, fila, agenda, comercial, contratos e financeiro conforme suas permissões.'],['Ordene e escolha o tamanho','Use arrastar/soltar ou os botões de ordem e selecione Pequeno, Médio ou Grande.'],['Salve','A preferência fica associada ao usuário.']]},
+{id:'fund-notif',title:'Notificações e lembretes',desc:'Avisos internos, próximos contatos e alertas nativos.',steps:[['Abra o sino','Veja notificações pendentes e marque-as como lidas.'],['Ative alertas do navegador','Quando permitido, o sistema pode avisar sobre novas notificações e prazos.'],['Observe próximos contatos','O painel usa datas agendadas para lembrar a equipe.']]}
+]},
+{id:'meutrabalho',icon:'📋',title:'Meu Trabalho e Kanban',roles:['geral','suporte','gestao'],summary:'Fila individual, prioridades e quadro visual de chamados.',features:['Minha fila de atendimentos','Filtro abertos/todos/resolvidos','Resumo de trabalho atribuído','Kanban de chamados','Filtro por técnico','Busca por chamado ou cliente','Atualização de andamento pelo quadro'],lessons:[
+{id:'work-fila',title:'Usando Meu Trabalho',desc:'Veja primeiro o que está atribuído a você.',steps:[['Abra Meu trabalho','A tela reúne seus chamados, processos e atividades atribuídas.'],['Use o filtro da fila','Alterne entre Em aberto, Todos e Resolvidos.'],['Abra o item','Entre no atendimento para registrar evolução ou concluir.']]},
+{id:'work-kanban',title:'Kanban de chamados',desc:'Acompanhe o fluxo de atendimento visualmente.',steps:[['Filtre por técnico','Isole a carteira de um responsável quando necessário.'],['Pesquise','Use cliente ou chamado para localizar rapidamente um cartão.'],['Atualize o andamento','O quadro é usado para acompanhar os status dos chamados.']]}
+]},
+{id:'chamados',icon:'🎧',title:'Chamados e Atendimento',roles:['suporte','gestao','admin'],summary:'Abertura, histórico, tempo, anexos, follow-up, encerramento e geração de OS.',features:['Novo chamado e edição','Filtros por data/status/busca','Prioridade e status','Cronômetro de atendimento','Checklist obrigatório para resolver','Histórico de interações','WhatsApp, ligação, e-mail, visita e orçamento','Observação somente equipe','Respostas prontas','Menções @usuário','Próximo contato com data e hora','Anexos em interações','Gerar OS a partir do chamado','Envio por WhatsApp','Exclusão sujeita a permissão'],lessons:[
+{id:'call-open',title:'Abrindo e organizando um chamado',desc:'Dados essenciais, prioridade, responsável e status.',steps:[['Clique em Novo chamado','Preencha cliente, origem, módulo, tipo, prioridade e técnico.'],['Descreva o problema','Registre o relato de forma objetiva para preservar o contexto.'],['Salve','O chamado passa a integrar Dashboard, fila, Kanban e relatórios.']]},
+{id:'call-interactions',title:'Histórico de interações',desc:'Registre todo contato com o cliente e com a equipe.',steps:[['Abra um chamado salvo','A área de Histórico de interações será exibida.'],['Escolha o tipo','WhatsApp, ligação, e-mail, visita, orçamento, observação interna ou outro.'],['Descreva o contato','Você pode usar resposta pronta e marcar usuários com @nome.'],['Defina próximo contato','Data e hora são opcionais, mas alimentam os lembretes.']]},
+{id:'call-files',title:'Anexos em chamados',desc:'Guarde evidências e documentos no histórico.',steps:[['Na interação, clique em Anexar arquivos','São aceitos imagens, PDF e texto dentro do limite do sistema.'],['Registre a interação','O arquivo fica vinculado àquele registro do chamado.'],['Baixe pelo histórico quando precisar','Os anexos permanecem disponíveis à equipe autorizada.']]},
+{id:'call-timer',title:'Cronômetro e encerramento',desc:'Controle de tempo e checklist antes de resolver.',steps:[['Inicie o atendimento','Use o controle de tempo quando começar a trabalhar no chamado.'],['Preencha a resolução','Descreva o que foi feito.'],['Confirme com o cliente','Para marcar como Resolvido, o checklist exige confirmação, resolução e tempo registrado.']]},
+{id:'call-os',title:'Transformando chamado em OS',desc:'Evite recadastrar informações técnicas.',steps:[['Abra um chamado já salvo','O botão de gerar Ordem de Serviço fica disponível.'],['Clique em Gerar ordem de serviço','Cliente, unidade, serial, solicitante, técnico e problema são pré-preenchidos.'],['Conclua a OS','Se já existir uma OS vinculada, o sistema abre a existente.']]}
+]},
+{id:'comercial',icon:'🤝',title:'Sistema Comercial',roles:['comercial','gestao','admin'],summary:'Leads, funil, follow-up, probabilidade, perdas e conversão em cliente.',features:['Novo lead','Kanban comercial','Etapas Novo/Contato/Demonstração/Proposta/Negociação/Fechado','Responsável comercial','Probabilidade de fechamento','Fechamento previsto','Valor estimado','Histórico de interações','Próxima ação e follow-up','Agenda comercial no Dashboard','Motivo de perda','Converter lead em cliente'],lessons:[
+{id:'crm-lead',title:'Cadastrando um lead',desc:'Informações mínimas para iniciar uma oportunidade.',steps:[['Clique em Novo lead','Informe empresa, contato, WhatsApp, cidade e interesse.'],['Escolha etapa e responsável','Defina quem cuidará da oportunidade.'],['Informe valor, probabilidade e previsão','Esses dados ajudam o forecast comercial.'],['Defina próxima ação','Uma oportunidade ativa não deve ficar sem próximo passo.']]},
+{id:'crm-flow',title:'Trabalhando o funil comercial',desc:'Avance o negócio conforme a conversa evolui.',steps:[['Abra o cartão do lead','Consulte dados e histórico antes de agir.'],['Registre uma interação','Guarde ligação, visita, WhatsApp ou outro avanço.'],['Avance a etapa','Mova de Novo até Fechado conforme o processo real.']]},
+{id:'crm-follow',title:'Follow-up e agenda comercial',desc:'Mantenha as próximas ações visíveis.',steps:[['Defina a data da próxima ação','O sistema usa o agendamento para formar a lista de follow-ups.'],['Acompanhe Próximas ações','Use a lateral do CRM e o widget de Agenda comercial.'],['Atualize depois do contato','Registre o resultado e programe o próximo passo quando necessário.']]},
+{id:'crm-lost',title:'Oportunidades perdidas',desc:'Registre o motivo para melhorar os indicadores.',steps:[['Abra a oportunidade','Confirme que o negócio foi realmente perdido.'],['Informe o motivo','O sistema registra perda, data e usuário.'],['Use o relatório de vendas','Os motivos passam a aparecer na análise comercial.']]},
+{id:'crm-convert',title:'Convertendo lead em cliente',desc:'Leve a oportunidade ganha para a base do sistema.',steps:[['Abra o lead','Revise os dados antes da conversão.'],['Clique em Converter em cliente','O cadastro passa a fazer parte da base de clientes.'],['Continue o fluxo','A partir daí podem existir proposta, contrato, OS e financeiro vinculados.']]}
+]},
+{id:'gestaocomercial',icon:'📈',title:'Cliente 360°, Propostas e Vendas',roles:['comercial','gestao','admin'],summary:'Visão completa do cliente, propostas comerciais, metas, forecast e pendências.',features:['Perfil Cliente 360°','Timeline de relacionamento','Chamados, OS, contratos, equipamentos e financeiro por cliente','Propostas comerciais com itens','Valores iniciais e recorrentes','PDF de proposta','Status Rascunho/Enviada/Aprovada/Recusada/Vencida/Convertida','Converter proposta aprovada em contrato','Meta por vendedor','Forecast ponderado','Conversão e funil','Oportunidades paradas','Motivos de perda','Pendências do cliente'],lessons:[
+{id:'gc-360',title:'Abrindo o Cliente 360°',desc:'Veja o relacionamento inteiro sem trocar de módulo.',steps:[['Localize o cliente no Cadastro','Abra o perfil 360° pela ação correspondente.'],['Leia os KPIs','Chamados, OS, contratos, equipamentos, recebido, em aberto, propostas e oportunidades.'],['Use a linha do tempo','O histórico mistura eventos do mesmo cliente em ordem cronológica.']]},
+{id:'gc-proposal',title:'Criando uma proposta comercial',desc:'Monte proposta com itens e condições.',steps:[['Abra Perfil do cliente → Propostas','Clique em Nova proposta.'],['Vincule cliente e oportunidade','Informe título, objeto, validade, pagamento, prazo e duração.'],['Adicione itens','Os itens podem compor investimento inicial ou mensalidade recorrente.'],['Salve','A proposta entra no controle de status.']]},
+{id:'gc-proposal-flow',title:'Enviando, aprovando e convertendo proposta',desc:'Do rascunho ao contrato.',steps:[['Gere o PDF','Revise valores, objeto e condições comerciais.'],['Marque como Enviada ou Aprovada','Mantenha o status coerente com a negociação.'],['Converta em contrato','Uma proposta Aprovada preenche o contrato com os dados comerciais para revisão.']]},
+{id:'gc-sales',title:'Painel de Vendas',desc:'Meta, forecast, conversão e gargalos.',steps:[['Escolha vendedor e competência','Administradores podem comparar usuários e definir metas.'],['Leia Vendido, Meta e Previsão ponderada','O forecast usa valor × probabilidade das oportunidades ativas.'],['Analise o funil','Veja quantidade e valor por etapa.'],['Revise paradas e perdas','Oportunidades sem atualização e motivos de perda ajudam a corrigir o processo.']]}
+]},
+{id:'clientes',icon:'👥',title:'Cadastro de Clientes',roles:['geral','comercial','suporte','admin'],summary:'Clientes, CNPJ, dados fiscais, fornecedor, CSV e acesso ao perfil 360°.',features:['Pessoa física ou jurídica','Consulta de CNPJ','Unidade/filial','CNPJ/CPF e regime tributário','Telefone/WhatsApp e e-mail','Endereço, cidade, UF e CEP','Representante legal','Observações técnicas','Cliente também como fornecedor','Editar, clonar e excluir','Busca de clientes','Importação CSV com modelo','Detecção de duplicados','Acesso ao Cliente 360°'],lessons:[
+{id:'client-new',title:'Cadastrando cliente',desc:'Pessoa física ou jurídica com dados operacionais.',steps:[['Clique em Novo cliente','Escolha PF ou PJ.'],['Para PJ, consulte o CNPJ','O sistema pode preencher dados públicos para revisão.'],['Complete contato e endereço','Inclua representante quando aplicável.'],['Use observações técnicas com cuidado','Não registre senhas, códigos de autenticação ou credenciais.']]},
+{id:'client-supplier',title:'Cliente que também é fornecedor',desc:'Evite duplicar a mesma pessoa ou empresa.',steps:[['Edite o cliente','Ative “Este cliente também é fornecedor”.'],['Informe categoria e observações','O registro será associado ao financeiro de fornecedores.'],['Salve','O mesmo cadastro continua sendo cliente e fornecedor.']]},
+{id:'client-csv',title:'Importando clientes por CSV',desc:'Carga em lote com prevenção de duplicados.',steps:[['Baixe o modelo de importação','Use o botão ao lado de Importar CSV.'],['Preencha Nome/Razão Social e demais colunas','Documento, unidade, telefone, e-mail e observações podem ser incluídos.'],['Importe o arquivo','Duplicados detectados são ignorados e o sistema informa quantos registros serão criados.']]}
+]},
+{id:'catalogo',icon:'📦',title:'Produtos, Serviços e Estoque',roles:['suporte','financeiro','gestao','admin'],summary:'Catálogo único, preços, estoque mínimo e histórico de movimentações.',features:['Cadastro de produto ou serviço','Código e categoria','Custo e preço de venda','Ativar/inativar item','Controle opcional de estoque','Estoque inicial e mínimo','Alertas abaixo do mínimo','Movimentar entrada/saída','Histórico das movimentações','Preservação de histórico ao inativar produto'],lessons:[
+{id:'cat-item',title:'Cadastrando produto ou serviço',desc:'Um cadastro para uso comercial e operacional.',steps:[['Abra Cadastro → Produtos, serviços e estoque','Clique em Novo cadastro.'],['Escolha Produto ou Serviço','Informe código, descrição, categoria, custo e preço de venda.'],['Para produto físico, ative o controle de estoque','Defina estoque inicial e mínimo.'],['Salve','O item fica disponível conforme suas permissões.']]},
+{id:'cat-stock',title:'Movimentando estoque',desc:'Atualize saldo sem editar a quantidade manualmente.',steps:[['Clique em Movimentar estoque','Selecione o item.'],['Escolha Entrada ou Saída','Informe quantidade, custo quando necessário, OS e motivo.'],['Confirme','A movimentação atualiza o saldo e fica no histórico.']]},
+{id:'cat-history',title:'Inativação e histórico',desc:'Evite apagar rastreabilidade de itens já utilizados.',steps:[['Abra um item existente','Verifique se possui estoque/histórico.'],['Ao excluir produto com estoque, ele é inativado','O histórico operacional é preservado.'],['Use o filtro de status','Você pode consultar ativos, todos ou inativos.']]}
+]},
+{id:'equipamentos',icon:'🖥️',title:'Equipamentos, Almoxarifado e Garantias',roles:['suporte','gestao','admin'],summary:'Patrimônio Help/cliente, filiais, movimentações, empréstimos e devoluções.',features:['Equipamentos da Help e do cliente','Serial e patrimônio','Data de aquisição e garantia','Status, condição e localização','Responsável e acessórios','Filiais/unidades do cliente','Movimentação entre locais','Vínculo com OS','Almoxarifado da Help','Máquinas reserva','Empréstimos ao cliente','Previsão de devolução','Devoluções atrasadas','Registro de condição na saída e retorno','Histórico de movimentações'],lessons:[
+{id:'eq-new',title:'Cadastrando equipamento',desc:'Identifique corretamente uma máquina individual.',steps:[['Abra Equipamentos e garantias','Clique em Novo equipamento.'],['Defina o proprietário','Help ou Cliente. Para cliente, selecione também a unidade.'],['Informe identificação','Tipo, marca, modelo, série ou patrimônio.'],['Complete situação','Aquisição, garantia, status, localização, responsável, condição e acessórios.']]},
+{id:'eq-branches',title:'Filiais e unidades',desc:'Organize matriz e filiais do mesmo cliente.',steps:[['Clique em Filiais','Escolha o cliente.'],['Cadastre a unidade','Nome, cidade, UF, endereço e indicador de unidade principal.'],['Use a unidade nos equipamentos','Movimentações, empréstimos e contratos podem usar a filial correta.']]},
+{id:'eq-move',title:'Movimentando equipamento',desc:'Registre por onde a máquina passou.',steps:[['Clique em Movimentar','Escolha o equipamento.'],['Informe o tipo','Recebimento para manutenção, transferência, envio/retorno ao cliente, retorno ao almoxarifado ou ajuste.'],['Defina destino e contexto','Cliente/unidade, OS, responsável, condição, acessórios e observação.'],['Salve','O status/localização são atualizados com histórico.']]},
+{id:'eq-loan',title:'Emprestando máquina reserva',desc:'Controle comodato temporário sem mudar o proprietário.',steps:[['Clique em Emprestar reserva','Escolha uma máquina da Help disponível no almoxarifado.'],['Escolha cliente e unidade','Registre quem recebeu e a OS vinculada quando existir.'],['Informe previsão e condição de saída','Inclua acessórios entregues.'],['Na devolução, use Receber devolução','Registre condição, acessórios devolvidos e local de retorno.']]}
+]},
+{id:'processos',icon:'✅',title:'Processos Internos',roles:['geral','suporte','financeiro','comercial','gestao','admin'],summary:'Rotinas recorrentes, múltiplos responsáveis, checklists e histórico.',features:['Novo processo','Prioridade e status','Múltiplos responsáveis','Próxima execução','Frequência única/recorrente','Dias da semana e intervalo personalizado','Checklist colaborativo','Pausar e retomar','Concluir execução','Indicadores pendente/atrasado/hoje/mês','Filtro por responsável e status','Histórico de execução e checklist'],lessons:[
+{id:'proc-new',title:'Criando processo interno',desc:'Rotina pontual ou recorrente com responsáveis.',steps:[['Clique em Novo processo','Informe título, descrição e prioridade.'],['Escolha um ou mais responsáveis','O processo aparece para as pessoas atribuídas.'],['Defina próxima execução e frequência','Em recorrências semanais, selecione os dias; na personalizada, use intervalo.'],['Adicione checklist','Cada linha vira uma etapa do processo.']]},
+{id:'proc-work',title:'Executando e acompanhando processo',desc:'Checklist, pausa, conclusão e histórico.',steps:[['Localize por busca/filtros','Use status e responsável.'],['Marque as etapas realizadas','O checklist registra a evolução colaborativa.'],['Pause ou retome quando necessário','O status fica visível no card.'],['Conclua a execução','O histórico guarda eventos recentes e a próxima execução é tratada conforme a recorrência.']]}
+]},
+{id:'os',icon:'🛠️',title:'Ordens de Serviço',roles:['suporte','financeiro','gestao','admin'],summary:'Da entrada do equipamento à entrega, PDF, WhatsApp e cobrança.',features:['OS avulsa ou a partir de chamado','Kanban de OS','Etapas Entrada/Diagnóstico/Aprovação/Execução/Peça/Pronta/Entregue','Filtro por técnico e busca','Cliente, solicitante e técnico','Equipamento e serial','Problema, diagnóstico e serviço','Serviços e peças separados','Quantidade, valor e desconto','Prioridade e previsão','Garantia em dias','Aceite/assinatura','Observações internas','PDF/impressão','Compartilhar WhatsApp','Gerar conta a receber','Registro/atualização do equipamento','Permissões de visualizar/criar/editar/excluir'],lessons:[
+{id:'os-new',title:'Criando uma OS',desc:'Atendimento técnico completo e rastreável.',steps:[['Clique em Nova OS ou gere a partir de um chamado','Quando vem do chamado, vários campos já chegam preenchidos.'],['Selecione cliente e equipamento','Informe técnico, status, prioridade, previsão e garantia.'],['Registre problema, diagnóstico e serviço','Separe claramente o relato do que foi executado.'],['Salve','A OS entra no Kanban e passa a poder gerar documentos e cobrança.']]},
+{id:'os-items',title:'Serviços, peças e totais',desc:'Discrimine mão de obra e materiais.',steps:[['Adicione serviço ou peça','Os dois grupos ficam separados visualmente e no documento.'],['Informe quantidade e valor unitário','O sistema calcula subtotais.'],['Aplique desconto quando necessário','O total final é recalculado.']]},
+{id:'os-flow',title:'Atualizando o Kanban da OS',desc:'Acompanhe a etapa real do atendimento.',steps:[['Abra o quadro de OS','Use busca e filtro de técnico.'],['Mova entre etapas','Entrada, Diagnóstico, Aguardando aprovação, Aprovada, Em execução, Aguardando peça, Pronta e Entregue.'],['Use Cancelada somente quando aplicável','A rastreabilidade deve refletir o processo real.']]},
+{id:'os-docs',title:'PDF, WhatsApp e cobrança da OS',desc:'Ações disponíveis depois que a OS existe.',steps:[['Abra a OS salva','Os botões de documento e integração ficam visíveis.'],['Gere PDF/impressão','O documento separa serviços e peças e mostra o total.'],['Compartilhe no WhatsApp','Envie resumo de OS, status, total e garantia.'],['Gere cobrança','Quando houver valor, o sistema cria uma conta a receber e evita duplicar cobrança ativa.']]}
+]},
+{id:'financeiro',icon:'💰',title:'Financeiro',roles:['financeiro','gestao','admin'],summary:'Lançamentos, baixa parcial, recorrências, contas, caixa, fluxo, anexos e OFX.',features:['Contas a receber e pagar','Busca e filtros','Cliente, fornecedor, OS e contrato vinculados','Parcelamento','Recorrência mensal','Prevenção de recorrência duplicada','Baixa total ou parcial','Histórico de pagamentos','Forma e referência da transação','Contas Banco/Caixa/Carteira','Sugestão de conta por forma de pagamento','Transferência entre contas','Abrir/fechar caixa','Entrada, saída, retirada e suprimento','Divergência de caixa','Fluxo de caixa dia/semana/mês','Saldo realizado e previsto','Alertas de vencimento','Cobrança por WhatsApp com PIX','Anexos financeiros','Recibo/comprovante','Relatório e CSV/PDF','Conciliação OFX/QFX','Ignorar/desfazer conciliação','Gerenciar contas ativas/inativas preservando histórico'],lessons:[
+{id:'fin-launch',title:'Criando lançamento financeiro',desc:'Receita ou despesa com vínculo correto.',steps:[['Clique em Novo lançamento','Escolha Receber ou Pagar.'],['Vincule a parte correta','Cliente, fornecedor, OS ou contrato quando aplicável.'],['Informe descrição, categoria, valor e vencimento','Adicione forma de pagamento e observações.'],['Use parcelamento ou recorrência quando necessário','O sistema evita recorrência igual duplicada para o mesmo cliente.']]},
+{id:'fin-pay',title:'Baixa total e parcial',desc:'Registre exatamente o valor movimentado.',steps:[['Localize o lançamento','Use busca e filtros.'],['Clique em Registrar pagamento','Informe valor, data, forma, referência e observações.'],['Escolha a conta','Dinheiro tende ao CAIXA; PIX/transferência/cartão/boleto sugerem conta bancária.'],['Confirme','Se o valor for menor que o saldo, a baixa fica parcial e o restante continua pendente.']]},
+{id:'fin-rec',title:'Contas recorrentes',desc:'Cobranças ou despesas repetidas com controle de série.',steps:[['Marque Repetir este lançamento todos os meses','Defina dia do vencimento e data final opcional.'],['Acompanhe na aba Recorrências','Veja a próxima conta pendente.'],['Pause ou reative','Interrompa temporariamente sem apagar histórico.'],['Cancele quando terminar','Pendências futuras são canceladas e pagamentos históricos permanecem.']]},
+{id:'fin-accounts',title:'Contas e transferências',desc:'Saiba onde o dinheiro está.',steps:[['Cadastre Banco, Caixa ou Carteira','Defina nome e saldo inicial.'],['Use Transferir','Escolha origem, destino, valor, data e observação.'],['Gerencie contas antigas','Contas com histórico são desativadas em vez de apagadas; podem ser reativadas.']]},
+{id:'fin-cash',title:'Controle de caixa',desc:'Abertura, movimentos, fechamento e divergência.',steps:[['Abra o caixa','Informe o saldo inicial.'],['Registre movimentos','Entrada, Saída, Retirada ou Suprimento com descrição.'],['Feche o caixa','Informe o saldo contado.'],['Confira divergência','O sistema compara saldo informado com o calculado.']]},
+{id:'fin-flow',title:'Fluxo de caixa e previsão',desc:'Entradas, saídas e saldo futuro.',steps:[['Abra Fluxo de caixa','Escolha visualização por dia, semana ou mês.'],['Compare entradas e saídas','O gráfico mostra valores previstos por período.'],['Leia saldo realizado e futuro','O futuro considera o saldo realizado mais os lançamentos pendentes.']]},
+{id:'fin-files',title:'Cobrança, anexos e recibos',desc:'Documentos e comunicação financeira.',steps:[['Use Cobrar pelo WhatsApp','A mensagem usa valor, vencimento e a chave PIX configurada.'],['Anexe documentos','Boleto, nota, comprovante, orçamento ou planilha podem ficar no lançamento.'],['Após a baixa, gere recibo','O documento identifica o recebimento ou pagamento realizado.']]},
+{id:'fin-ofx',title:'Conciliação bancária OFX',desc:'Compare extrato do banco com pagamentos registrados.',steps:[['Abra Conciliação OFX','Escolha a conta bancária.'],['Importe OFX ou QFX','O sistema bloqueia arquivo repetido e ignora movimentos duplicados pelo identificador.'],['Revise os candidatos','Movimentos pendentes mostram baixas compatíveis por conta, tipo e valor.'],['Concilie, ignore ou reabra','Também é possível desfazer uma conciliação.']]},
+{id:'fin-report',title:'Relatórios financeiros',desc:'Período, tipo, status e exportação.',steps:[['Abra Relatórios no Financeiro','Escolha datas, tipo e status.'],['Confira entradas, saídas e pendências','O resumo considera baixas e saldos.'],['Exporte','Gere CSV ou PDF/impressão conforme a necessidade.']]}
+]},
+{id:'contratos',icon:'📄',title:'Gestão de Contratos',roles:['comercial','financeiro','gestao','admin'],summary:'Contrato, unidades cobertas, documentos, financeiro, renovação e onboarding.',features:['Modelos de contrato','Cliente ou fornecedor como parte','Dados da contratada','Dados atuais da contratante','Unidades/filiais atendidas','Objeto, sistemas e serviços','Implantação, equipamentos e outros valores','Cobrança inicial opcional','Periodicidade mensal/bimestral/trimestral/semestral/anual','Parcelas e vencimentos','Regras de atraso, rescisão, bloqueio e reajuste','Renovação automática','Assinatura e testemunhas','Status Rascunho/Ativo/Vencendo/Vencido/Cancelado/Encerrado/Renovado','Gerar/visualizar/enviar PDF','Anexos','Histórico','Ativar e gerar cobranças','Financeiro do contrato','Renovar, cancelar e encerrar','Onboarding de implantação criado para contrato de cliente'],lessons:[
+{id:'ct-new',title:'Criando contrato',desc:'Dados jurídicos, comerciais e financeiros em um fluxo.',steps:[['Clique em Novo contrato','Escolha modelo e se a parte é Cliente ou Fornecedor.'],['Revise os dados cadastrais','Eles serão usados no documento.'],['Para cliente, escolha unidades atendidas','O valor é único e cobre as unidades selecionadas, sem duplicar cobrança por filial.'],['Preencha objeto, sistemas, serviços e valores','Defina também cobrança e vigência.']]},
+{id:'ct-billing',title:'Cobrança e vigência',desc:'Periodicidade, parcelas e regras.',steps:[['Informe valor periódico','O rótulo acompanha a periodicidade escolhida.'],['Defina primeiro vencimento e dia','Escolha número de parcelas e duração.'],['Configure regras','Aviso prévio, multas, juros, bloqueio, rescisão, reajuste e renovação.'],['Salve','Em Rascunho você poderá revisar antes de ativar.']]},
+{id:'ct-activate',title:'Ativando contrato e Financeiro',desc:'Geração controlada das cobranças.',steps:[['Abra um contrato em Rascunho','Revise dados e documento.'],['Clique em Ativar','O sistema solicita confirmação e gera as cobranças financeiras.'],['Acompanhe as parcelas no detalhe','Veja total contratado, recebido, aberto, atrasadas e próximo vencimento.']]},
+{id:'ct-docs',title:'PDF, envio, anexos e histórico',desc:'Documentação contratual centralizada.',steps:[['Gere o contrato PDF','Uma nova versão do documento fica registrada.'],['Visualize ou envie','O envio gera acesso temporário ao documento para compartilhamento.'],['Anexe documentos complementares','PDF, imagem, texto ou DOCX ficam associados ao contrato.'],['Consulte o histórico','Ações e usuário responsável ficam registradas.']]},
+{id:'ct-cycle',title:'Renovar, cancelar, encerrar ou excluir',desc:'Escolha a ação correta para preservar histórico.',steps:[['Renovar','Cria um novo contrato com dados da vigência anterior para revisão.'],['Cancelar','Exige motivo e cancela cobranças futuras pendentes, mantendo pagamentos passados.'],['Encerrar','Fecha o contrato preservando o histórico financeiro.'],['Excluir somente cadastro sem histórico','Contratos com parcelas/lançamentos devem ser cancelados, não apagados.']]},
+{id:'ct-onboarding',title:'Onboarding de implantação',desc:'Contrato de cliente pode gerar processo operacional.',steps:[['Salve o contrato de cliente','O sistema verifica se já existe onboarding vinculado.'],['Um processo único pode ser criado','Checklist inclui dados cadastrais, agendamento, configuração, treinamento inicial e validação.'],['O responsável do contrato recebe o processo','A implantação passa a ser acompanhada em Processos internos.']]}
+]},
+{id:'relatorios',icon:'📊',title:'Relatórios e Dossiê',roles:['gestao','suporte','admin'],summary:'Indicadores de atendimento, produtividade, recorrência, custo e dossiê do chamado.',features:['Filtro mês atual/todo período','Tempo médio de atendimento','Chamados por cliente','Alta prioridade e pendências','Ranking de produtividade','Reincidência cliente + módulo','Estimativa horas × valor técnico','Configuração do valor da hora','Gerar relatório PDF','Dossiê do chamado','Incluir ou ocultar anotações internas','Visualizar dossiê','Enviar dossiê por e-mail','Gerar dossiê PDF'],lessons:[
+{id:'rep-oper',title:'Lendo os relatórios de atendimento',desc:'Use indicadores para localizar gargalos.',steps:[['Escolha o período','Mês atual ou todo o período.'],['Confira tempo médio e produtividade','Compare atendimentos resolvidos e em aberto.'],['Veja reincidências','Cliente + módulo repetidos podem indicar problema recorrente.'],['Analise custo estimado','O cálculo usa horas registradas × valor da hora técnica.']]},
+{id:'rep-dossier',title:'Gerando dossiê de chamado',desc:'Resumo completo do atendimento em um documento.',steps:[['Selecione o protocolo','O sistema reúne dados e histórico.'],['Decida sobre anotações internas','Marque a opção somente quando elas puderem fazer parte do documento.'],['Visualize antes de enviar','Depois gere PDF ou envie por e-mail.']]}
+]},
+{id:'administracao',icon:'⚙️',title:'Administração, Permissões e Conhecimento',roles:['gestao','admin'],summary:'Usuários, permissões, configurações, backup, respostas prontas e base de conhecimento.',features:['Cadastro de usuários','Perfis e permissões por recurso','Log de atividades','Valor da hora técnica','SLA crítico e normal','Antecedência de lembrete','Nome da operação','Chave PIX','Salvar configurações','Exportar backup','Respostas prontas com busca','Base de conhecimento por título/categoria/palavras-chave/problema/solução','Assistente Help contextual'],lessons:[
+{id:'adm-users',title:'Usuários e permissões',desc:'Dê somente os acessos necessários a cada função.',steps:[['Abra Cadastro → Usuários','Crie ou edite o usuário.'],['Configure perfil e recursos','As telas e botões respeitam permissões específicas, como OS, Financeiro e Contratos.'],['Salve e valide com o usuário','Teste o acesso real com a conta correspondente.'],['Use o Log de Atividades','Consulte ações importantes registradas.']]},
+{id:'adm-config',title:'Configurações operacionais',desc:'Parâmetros usados em alertas e documentos.',steps:[['Abra Configurações','Revise valor da hora, SLA crítico, SLA normal e antecedência de lembretes.'],['Configure a operação','Nome da empresa e chave PIX são usados em diferentes áreas.'],['Salve','Os parâmetros passam a alimentar relatórios, SLA e cobrança.']]},
+{id:'adm-backup',title:'Exportando backup',desc:'Cópia de dados de negócio para manutenção.',steps:[['Abra Configurações → Dados e manutenção','Use Exportar Backup quando tiver permissão.'],['Guarde a cópia em local seguro','A restauração completa é tratada de forma assistida no Supabase.'],['Não confunda exportação com restauração automática','O botão atual realiza a exportação, não substitui o banco sozinho.']]},
+{id:'adm-answers',title:'Respostas prontas',desc:'Padronize contatos recorrentes.',steps:[['Cadastre título, categoria e texto','Use mensagens objetivas e reutilizáveis.'],['Pesquise quando necessário','A lista pode ser filtrada por título, categoria ou conteúdo.'],['Use dentro das interações de chamado','O modelo preenche o contato e pode ser ajustado antes de registrar.']]},
+{id:'adm-kb',title:'Base de conhecimento',desc:'Documente soluções técnicas para consulta da equipe.',steps:[['Cadastre o problema','Título, categoria, palavras-chave e sintomas facilitam a busca.'],['Registre a solução','Escreva procedimento reproduzível e seguro.'],['Pesquise antes de repetir diagnóstico','A base serve para reduzir retrabalho em problemas conhecidos.']]}
+]}
+];
 
-  const procedures = {
-    os: { title:'Como criar uma Ordem de Serviço?', area:'Procedimento • Ordens de Serviço', intro:'Fluxo rápido para abertura de uma OS.', steps:[['Abra Ordens de Serviço','Acesse o módulo correspondente no menu lateral.'],['Crie uma nova OS','Selecione o cliente já cadastrado e informe o serviço.'],['Revise antes de salvar','Confira responsável, descrição e demais informações necessárias.']] },
-    baixa: { title:'Como dar baixa em uma conta?', area:'Procedimento • Financeiro', intro:'Use a baixa para registrar que um recebimento ou pagamento realmente ocorreu.', steps:[['Localize o lançamento','Abra a conta correta e confira valor e vencimento.'],['Selecione a baixa','Informe data, valor e forma de pagamento conforme o caso.'],['Confirme os dados','Evite baixar o lançamento errado ou duplicar recebimentos.']] },
-    responsavel: { title:'Como alterar o responsável de um chamado?', area:'Procedimento • Chamados', intro:'A transferência deve manter o histórico do atendimento.', steps:[['Abra o chamado','Entre no registro que precisa ser transferido.'],['Altere o responsável','Selecione o usuário correto conforme permissões.'],['Registre o contexto','Deixe uma observação quando a transferência exigir explicação.']] },
-    perdida: { title:'Como marcar uma oportunidade como perdida?', area:'Procedimento • Comercial', intro:'Registrar a perda corretamente melhora os relatórios e ajuda a entender gargalos de venda.', steps:[['Abra a oportunidade','Confira se realmente não existe próximo passo viável.'],['Marque como perdida','Selecione a etapa ou ação correspondente.'],['Informe o motivo','Preço, concorrência, adiamento, falta de orçamento ou outro motivo real.']] },
-    contrato: { title:'Como gerar um contrato?', area:'Procedimento • Contratos', intro:'Resumo do fluxo para gerar o documento a partir das informações do cliente.', steps:[['Selecione o cliente','Confirme dados cadastrais antes de gerar o documento.'],['Preencha o acordo','Valores, condições e informações específicas do contrato.'],['Gere e revise o PDF','Confira o documento antes de utilizar para assinatura.']] }
-  };
+const procedures=[
+['Abrir um novo chamado','Chamados','suporte','Novo chamado → preencha cliente, módulo, prioridade, técnico e problema → Salvar.','call-open'],
+['Finalizar um chamado como Resolvido','Chamados','suporte','Registre tempo, preencha Resolução, confirme a solução com o cliente e complete o checklist de encerramento.','call-timer'],
+['Registrar interação e próximo contato','Chamados','suporte','Abra o chamado → Histórico de interações → escolha tipo → descreva → defina data/hora opcional → Registrar.','call-interactions'],
+['Anexar arquivo a uma interação','Chamados','suporte','Na nova interação, selecione Anexar arquivos → escolha arquivo permitido → registre a interação.','call-files'],
+['Gerar OS a partir de chamado','Chamados / OS','suporte','Abra chamado salvo → Gerar ordem de serviço → revise campos pré-preenchidos → Salvar OS.','call-os'],
+['Cadastrar um lead','Comercial','comercial','Sistema Comercial → Novo lead → empresa, contato, interesse, responsável, etapa, valor e próxima ação → Salvar.','crm-lead'],
+['Registrar um follow-up comercial','Comercial','comercial','Abra o lead → registre interação → atualize próxima ação/data → acompanhe em Próximas ações/Agenda comercial.','crm-follow'],
+['Marcar oportunidade como perdida','Comercial','comercial','Abra a oportunidade → registre o motivo da perda → confirme; o motivo passa a alimentar o painel de Vendas.','crm-lost'],
+['Converter lead em cliente','Comercial / Clientes','comercial','Abra o lead ganho → Converter em cliente → revise o cadastro criado.','crm-convert'],
+['Abrir o perfil Cliente 360°','Clientes','comercial','Cadastro → Clientes → localize o cliente → abra Perfil/360° para ver relacionamento completo.','gc-360'],
+['Criar proposta comercial','Propostas','comercial','Perfil do cliente → Propostas → Nova proposta → condições + itens → Salvar.','gc-proposal'],
+['Converter proposta aprovada em contrato','Propostas / Contratos','comercial','Abra proposta Aprovada → Converter em contrato → revise o contrato pré-preenchido → Salvar.','gc-proposal-flow'],
+['Cadastrar cliente pelo CNPJ','Clientes','geral','Novo cliente → Pessoa jurídica → informe CNPJ → Buscar CNPJ → revise dados → Salvar.','client-new'],
+['Importar clientes por CSV','Clientes','admin','Baixe o modelo → preencha planilha → Importar CSV → confirme novos registros; duplicados são ignorados.','client-csv'],
+['Cadastrar produto ou serviço','Catálogo','suporte','Cadastro → Produtos, serviços e estoque → Novo cadastro → tipo, código, descrição, custo/preço e estoque → Salvar.','cat-item'],
+['Movimentar estoque','Estoque','suporte','Produtos, serviços e estoque → Movimentar estoque → item, direção, quantidade, motivo/OS → Registrar.','cat-stock'],
+['Cadastrar equipamento','Equipamentos','suporte','Equipamentos e garantias → Novo equipamento → proprietário, identificação, garantia, status e localização → Salvar.','eq-new'],
+['Cadastrar filial do cliente','Equipamentos / Filiais','admin','Equipamentos e garantias → Filiais → cliente → nome/cidade/UF/endereço → Salvar filial.','eq-branches'],
+['Movimentar equipamento','Equipamentos','suporte','Equipamentos e garantias → Movimentar → tipo de movimento, destino, cliente/unidade, OS e condição → Registrar.','eq-move'],
+['Emprestar máquina reserva','Almoxarifado','suporte','Equipamentos → Emprestar reserva → máquina Help disponível → cliente/unidade, responsável, previsão e acessórios → Registrar.','eq-loan'],
+['Receber devolução de reserva','Almoxarifado','suporte','Abra o empréstimo ativo → Receber devolução → condição, acessórios e local de retorno → Confirmar.','eq-loan'],
+['Criar processo interno','Processos','geral','Processos → Novo processo → título, responsáveis, frequência, próxima execução e checklist → Salvar.','proc-new'],
+['Concluir checklist de processo','Processos','geral','Abra o processo atribuído → marque etapas realizadas → Concluir execução quando o trabalho terminar.','proc-work'],
+['Criar uma OS avulsa','OS','suporte','Ordens de serviço → Nova OS → cliente/equipamento + atendimento + itens + aceite → Salvar OS.','os-new'],
+['Adicionar serviço e peça na OS','OS','suporte','Abra a OS → use Adicionar serviço/Adicionar peça → quantidade e valor → confira totais.','os-items'],
+['Gerar cobrança a partir da OS','OS / Financeiro','financeiro','Abra OS salva com valor → Gerar cobrança; o sistema evita segunda cobrança ativa para a mesma OS.','os-docs'],
+['Criar lançamento financeiro','Financeiro','financeiro','Financeiro → Novo lançamento → Receber/Pagar → parte vinculada → valor, vencimento, forma → Salvar.','fin-launch'],
+['Registrar baixa parcial','Financeiro','financeiro','Lançamento pendente → Registrar pagamento → informe apenas o valor pago → conta e dados da transação → Confirmar.','fin-pay'],
+['Criar recorrência mensal','Financeiro','financeiro','Novo lançamento → marque Repetir este lançamento todos os meses → dia/fim opcional → Salvar.','fin-rec'],
+['Cancelar recorrência','Financeiro','financeiro','Aba Recorrências → Cancelar → confirme; contas pendentes são canceladas e pagamentos históricos preservados.','fin-rec'],
+['Transferir dinheiro entre contas','Financeiro','financeiro','Controle de caixa → Transferir → conta origem/destino → valor/data → Registrar.','fin-accounts'],
+['Abrir e fechar caixa','Financeiro','financeiro','Controle de caixa → Abrir caixa com saldo inicial; ao final, Fechar caixa e informar saldo contado.','fin-cash'],
+['Cobrar pelo WhatsApp','Financeiro','financeiro','No lançamento pendente → ícone WhatsApp; a mensagem usa dados da conta e a chave PIX configurada.','fin-files'],
+['Anexar boleto ou comprovante','Financeiro','financeiro','Na linha do lançamento → Anexos → selecionar arquivo → Enviar arquivo.','fin-files'],
+['Gerar recibo','Financeiro','financeiro','Após o lançamento possuir pagamento/baixa → Gerar recibo/comprovante na coluna de ações.','fin-files'],
+['Importar OFX','Conciliação','financeiro','Financeiro → Conciliação OFX → escolha conta bancária → Importar OFX/QFX → revisar movimentos.','fin-ofx'],
+['Conciliar movimento OFX','Conciliação','financeiro','No movimento Pendente → selecione uma baixa compatível → Conciliar. Use Desfazer para reabrir se necessário.','fin-ofx'],
+['Criar contrato','Contratos','comercial','Contratos → Novo contrato → parte/modelo → unidades → objeto/valores → cobrança/vigência → regras → Salvar.','ct-new'],
+['Ativar contrato e gerar cobranças','Contratos','financeiro','Abra contrato Rascunho → Ativar → confirme; as cobranças aparecem no Financeiro.','ct-activate'],
+['Renovar contrato','Contratos','comercial','Abra contrato → Renovar → revise nova vigência, valores e unidades → Salvar novo contrato.','ct-cycle'],
+['Cancelar contrato preservando histórico','Contratos','gestao','Abra contrato → Cancelar → informe motivo; cobranças futuras pendentes são canceladas, pagamentos passados permanecem.','ct-cycle'],
+['Gerar e enviar contrato PDF','Contratos','comercial','Detalhe do contrato → Gerar contrato PDF → Visualizar → Enviar contrato quando estiver revisado.','ct-docs'],
+['Gerar dossiê de chamado','Relatórios','gestao','Relatórios → Dossiê do chamado → selecione protocolo → escolha se inclui internas → Visualizar/PDF/E-mail.','rep-dossier'],
+['Personalizar o Dashboard','Dashboard','geral','Dashboard → Personalizar painel → mostrar/ocultar, tamanho e ordem dos widgets → Salvar.','fund-personalizar'],
+['Configurar permissões de usuário','Administração','admin','Cadastro → Usuários → criar/editar → liberar apenas os recursos necessários → Salvar e validar login.','adm-users'],
+['Exportar backup','Configurações','admin','Configurações → Dados e manutenção → Exportar Backup. A restauração completa não é automática nessa tela.','adm-backup'],
+['Criar resposta pronta','Configurações','admin','Configurações → Respostas prontas → título/categoria/texto → Salvar; depois use em interações.','adm-answers'],
+['Cadastrar solução na Base de conhecimento','Configurações','admin','Configurações → Base de conhecimento → problema, palavras-chave e solução → Salvar.','adm-kb']
+];
 
-  function showView(name) {
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.querySelector('#view-' + name).classList.add('active');
-    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
-    document.querySelectorAll('[data-nav]').forEach(n => n.classList.toggle('active', n.dataset.nav === name));
-    applySearch(document.querySelector('#globalSearch').value);
-  }
+const planned=[
+{title:'SDR / Pré-vendas + SPIN',desc:'Módulo planejado para separar prospecção e fechamento.',items:['Pipeline do SDR','Follow-up estruturado','Qualificação Situação → Problema → Implicação → Necessidade','Briefing para vendedor','Origem SDR preservada na oportunidade','Dashboard de pré-vendas']},
+{title:'Site externo de Funil de Vendas',desc:'Aplicação simples e separada do CRM, compartilhando apenas indicadores comerciais necessários.',items:['Funil visual','Negócios e próximas ações','Conversões, metas e ranking','Dados do site resumidos no Dashboard do CRM','Separação de interface e permissões do CRM operacional']},
+{title:'Oportunidades da Base / Campanhas',desc:'Usar a carteira existente para gerar novas vendas.',items:['Campanhas de manutenção preventiva','Upgrade SSD/RAM, backup, rede e nobreak','Segmentação por cliente/equipamento/histórico','Transformar interesse em oportunidade','Métricas de campanha e receita gerada']},
+{title:'Treinamento integrado ao usuário',desc:'Evolução deste protótipo quando for seguro integrar ao banco.',items:['Progresso por usuário e cargo','Treinamentos obrigatórios','Painel do gestor','Certificação interna','Ajuda contextual apontando para cada aula','Conteúdo versionado por atualização do sistema']}
+];
 
-  function openLesson(key) {
-    const data = lessons[key];
-    const completed = getCompleted().includes(key);
-    setModal(data.eyebrow, data.title, data.subtitle, data.intro, data.steps,
-      `<div class="lesson-actions"><button class="btn primary" onclick="completeLesson('${key}')">${completed ? 'Aula concluída ✓' : 'Marcar como concluída'}</button><button class="btn" onclick="closeModal()">Fechar</button></div>` +
-      (data.quiz ? `<div class="quiz"><h3>Teste rápido</h3><div class="muted" style="font-size:11px">Depois de falar com um lead, qual é a prática mais segura?</div><label><input type="radio" name="quiz" value="a"> Esperar o cliente procurar novamente.</label><label><input type="radio" name="quiz" value="b"> Registrar o contato e definir próxima ação.</label><label><input type="radio" name="quiz" value="c"> Criar uma nova oportunidade duplicada.</label><button class="btn" style="margin-top:10px" onclick="checkQuiz()">Responder</button><div class="quiz-result" id="quizResult"></div></div>` : '')
-    );
-  }
-
-  function openProcedure(key) {
-    const d = procedures[key];
-    setModal('Consulta rápida', d.title, d.area, d.intro, d.steps, `<div class="lesson-actions"><button class="btn" onclick="closeModal()">Voltar à biblioteca</button></div>`);
-  }
-
-  function setModal(eyebrow, title, subtitle, intro, steps, extra='') {
-    document.querySelector('#modalEyebrow').textContent = eyebrow;
-    document.querySelector('#modalTitle').textContent = title;
-    document.querySelector('#modalSubtitle').textContent = subtitle;
-    document.querySelector('#modalBody').innerHTML = `<p>${intro}</p><div class="steps">${steps.map((s,i)=>`<div class="step"><div class="step-number">${i+1}</div><div><strong>${s[0]}</strong><span>${s[1]}</span></div></div>`).join('')}</div>${extra}`;
-    document.querySelector('#modalBackdrop').classList.add('open');
-  }
-
-  function closeModal() { document.querySelector('#modalBackdrop').classList.remove('open'); }
-  document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
-
-  function getCompleted() {
-    try { return JSON.parse(localStorage.getItem('helpTrainingPrototypeCompleted') || '["intro","crm","prospect"]'); }
-    catch { return ['intro','crm','prospect']; }
-  }
-
-  function completeLesson(key) {
-    const completed = getCompleted();
-    if(!completed.includes(key)) completed.push(key);
-    localStorage.setItem('helpTrainingPrototypeCompleted', JSON.stringify(completed));
-    refreshProgress();
-    closeModal();
-    showToast('Aula marcada como concluída neste navegador.');
-  }
-
-  function refreshProgress() {
-    const completed = getCompleted();
-    const total = 9;
-    const done = Math.min(completed.length, total);
-    const pct = Math.round(done / total * 100);
-    document.querySelector('#progressText').textContent = `${done} de ${total} aulas concluídas`;
-    document.querySelector('#progressBadge').textContent = `${pct}% concluído`;
-    document.querySelector('#progressBar').style.width = pct + '%';
-    document.querySelector('#remainingText').textContent = `${Math.max(total-done,0)} aulas restantes`;
-    document.querySelector('#doneCount').textContent = done;
-    document.querySelector('#pendingCount').textContent = Math.max(total-done,0);
-    const follow = document.querySelector('#course-followup .status');
-    if(completed.includes('followup')) { follow.textContent = 'Concluído'; follow.className = 'status done'; }
-  }
-
-  function checkQuiz() {
-    const selected = document.querySelector('input[name="quiz"]:checked');
-    const result = document.querySelector('#quizResult');
-    if(!selected) { result.textContent = 'Selecione uma resposta.'; return; }
-    if(selected.value === 'b') { result.textContent = 'Correto. O contato precisa gerar histórico e um próximo passo.'; result.style.color = 'var(--success)'; }
-    else { result.textContent = 'Ainda não. O ideal é registrar a interação e definir a próxima ação.'; result.style.color = 'var(--danger)'; }
-  }
-
-  function normalizeText(value) { return (value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
-
-  function applySearch(value) {
-    const query = normalizeText(value.trim());
-    const currentView = document.querySelector('.view.active');
-    let visible = 0;
-    currentView.querySelectorAll('.searchable').forEach(item => {
-      const haystack = normalizeText(item.dataset.search + ' ' + item.innerText);
-      const show = !query || haystack.includes(query);
-      item.style.display = show ? '' : 'none';
-      if(show) visible++;
-    });
-    const empty = currentView.querySelector('.empty-state');
-    if(empty) empty.style.display = visible === 0 ? 'block' : 'none';
-  }
-
-  function showToast(text) {
-    const el = document.querySelector('#toast');
-    el.textContent = text;
-    el.classList.add('show');
-    clearTimeout(window.__toastTimer);
-    window.__toastTimer = setTimeout(()=>el.classList.remove('show'), 2200);
-  }
-
-  refreshProgress();
+let currentView='learn';
+function norm(v){return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+function completed(){try{return JSON.parse(localStorage.getItem('helpTrainingCatalogCompleted')||'[]')}catch{return[]}}
+function setCompleted(list){localStorage.setItem('helpTrainingCatalogCompleted',JSON.stringify(list))}
+function allLessons(){return moduleData.flatMap(m=>m.lessons.map(l=>({...l,moduleId:m.id,moduleTitle:m.title,roles:m.roles})))}
+function moduleMatches(m,q,role){if(role!=='all'&&!m.roles.includes(role))return false;if(!q)return true;return norm([m.title,m.summary,...m.features,...m.lessons.flatMap(l=>[l.title,l.desc,...l.steps.flat()])].join(' ')).includes(q)}
+function renderSummary(){const lessons=allLessons(),done=completed().filter(id=>lessons.some(l=>l.id===id)).length,pct=Math.round(done/lessons.length*100);document.getElementById('summaryGrid').innerHTML=`<article class="card summary-card"><span>Módulos ativos catalogados</span><b>${moduleData.length}</b><small>Com base no CRM carregado hoje</small></article><article class="card summary-card"><span>Aulas atuais</span><b>${lessons.length}</b><small>Conteúdo operacional e administrativo</small></article><article class="card summary-card"><span>Procedimentos rápidos</span><b>${procedures.length}</b><small>Busca direta durante o trabalho</small></article><article class="card summary-card"><span>Seu progresso neste preview</span><b>${pct}%</b><small>${done} aula(s) marcada(s) neste navegador</small></article>`}
+function renderModules(){const q=norm(document.getElementById('globalSearch').value.trim()),role=document.getElementById('roleFilter').value,done=completed();const list=moduleData.filter(m=>moduleMatches(m,q,role));document.getElementById('moduleGrid').innerHTML=list.map(m=>{const d=m.lessons.filter(l=>done.includes(l.id)).length,p=Math.round(d/m.lessons.length*100);return`<article class="card module" onclick="openModule('${m.id}')"><div class="module-top"><div class="module-icon">${m.icon}</div><div class="module-copy"><h3>${m.title}</h3><p>${m.summary}</p><div class="tags"><span class="tag active">Ativo hoje</span>${m.roles.slice(0,3).map(r=>`<span class="tag">${roleName(r)}</span>`).join('')}</div></div></div><div class="module-progress"><div class="bar"><i style="width:${p}%"></i></div><div class="bar-meta"><span>${d}/${m.lessons.length} concluídas</span><span>${p}%</span></div></div></article>`}).join('');document.getElementById('emptyLearn').style.display=list.length?'none':'block';renderSummary()}
+function renderProcedures(){const q=norm(document.getElementById('globalSearch').value.trim()),role=document.getElementById('roleFilter').value;const list=procedures.filter(p=>(role==='all'||p[2]===role||p[2]==='geral')&&(!q||norm(p.join(' ')).includes(q)));document.getElementById('procedureList').innerHTML=list.map((p,i)=>`<article class="card procedure" onclick="openProcedure(${procedures.indexOf(p)})"><div><h3>${p[0]}</h3><p>${p[3]}</p><div class="tags"><span class="tag">${p[1]}</span><span class="tag">${roleName(p[2])}</span></div></div><div class="arrow">→</div></article>`).join('');document.getElementById('emptyConsult').style.display=list.length?'none':'block'}
+function renderMap(){const q=norm(document.getElementById('globalSearch').value.trim()),role=document.getElementById('roleFilter').value;const list=moduleData.filter(m=>moduleMatches(m,q,role));document.getElementById('systemMap').innerHTML=list.map(m=>`<article class="card map-module"><div class="map-module-head"><h3>${m.icon} ${m.title}</h3><span class="tag active">Ativo hoje</span></div><div class="feature-list">${m.features.filter(f=>!q||norm(f+' '+m.title).includes(q)||moduleMatches(m,q,role)).map(f=>`<div class="feature"><b>${f}</b>${m.summary}</div>`).join('')}</div></article>`).join('');document.getElementById('emptyMap').style.display=list.length?'none':'block'}
+function renderPlanned(){document.getElementById('plannedGrid').innerHTML=planned.map(p=>`<article class="card plan-card"><div class="tags" style="margin:0 0 8px"><span class="tag plan">Planejado</span></div><h3>${p.title}</h3><p>${p.desc}</p><ul>${p.items.map(x=>`<li>${x}</li>`).join('')}</ul></article>`).join('')}
+function renderCurrent(){if(currentView==='learn')renderModules();if(currentView==='consult')renderProcedures();if(currentView==='map')renderMap();if(currentView==='planned')renderPlanned()}
+function showView(name){currentView=name;document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+name).classList.add('active');document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));document.querySelectorAll('[data-nav]').forEach(t=>t.classList.toggle('active',t.dataset.nav===name));renderCurrent()}
+function roleName(r){return({geral:'Geral',suporte:'Suporte',comercial:'Comercial',financeiro:'Financeiro',gestao:'Gestão',admin:'Admin'})[r]||r}
+function openModule(id){const m=moduleData.find(x=>x.id===id),done=completed();document.getElementById('modalEyebrow').textContent='Trilha · '+m.roles.map(roleName).join(' / ');document.getElementById('modalTitle').textContent=m.title;document.getElementById('modalSubtitle').textContent=m.summary;document.getElementById('modalBody').innerHTML=`<div class="tags" style="margin:0 0 13px"><span class="tag active">Ativo hoje</span><span class="tag">${m.features.length} funcionalidades catalogadas</span></div><div class="lesson-list">${m.lessons.map(l=>`<article class="lesson" onclick="openLesson('${l.id}')"><div class="lesson-top"><div><h4>${l.title}</h4><p>${l.desc}</p></div><span class="lesson-state ${done.includes(l.id)?'done':''}">${done.includes(l.id)?'Concluída ✓':'Abrir aula'}</span></div></article>`).join('')}</div>`;openModal()}
+function openLesson(id){const l=allLessons().find(x=>x.id===id),m=moduleData.find(x=>x.id===l.moduleId),done=completed().includes(id);document.getElementById('modalEyebrow').textContent='Aula · '+m.title;document.getElementById('modalTitle').textContent=l.title;document.getElementById('modalSubtitle').textContent=l.desc;document.getElementById('modalBody').innerHTML=`<div class="steps">${l.steps.map((s,i)=>`<div class="step"><div class="step-num">${i+1}</div><div><b>${s[0]}</b><span>${s[1]}</span></div></div>`).join('')}</div><div class="actions"><button class="btn primary" onclick="toggleLesson('${id}')">${done?'Aula concluída ✓':'Marcar como concluída'}</button><button class="btn" onclick="openModule('${m.id}')">Voltar à trilha</button></div>`;openModal()}
+function toggleLesson(id){let d=completed();if(d.includes(id))d=d.filter(x=>x!==id);else d.push(id);setCompleted(d);showToast(d.includes(id)?'Aula marcada como concluída neste navegador.':'Conclusão removida.');renderSummary();openLesson(id)}
+function openProcedure(index){const p=procedures[index];document.getElementById('modalEyebrow').textContent='Procedimento rápido · '+p[1];document.getElementById('modalTitle').textContent=p[0];document.getElementById('modalSubtitle').textContent='Consulta operacional';const parts=p[3].split(' → ');document.getElementById('modalBody').innerHTML=`<div class="steps">${parts.map((x,i)=>`<div class="step"><div class="step-num">${i+1}</div><div><b>${x}</b><span>${i===parts.length-1?'Confira o resultado antes de sair da tela.':'Siga para a próxima etapa do procedimento.'}</span></div></div>`).join('')}</div><div class="actions">${p[4]?`<button class="btn primary" onclick="openLesson('${p[4]}')">Ver treinamento completo</button>`:''}<button class="btn" onclick="closeModal()">Fechar</button></div>`;openModal()}
+function openModal(){document.getElementById('modalBg').classList.add('open')}function closeModal(){document.getElementById('modalBg').classList.remove('open')}document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+function showToast(t){const e=document.getElementById('toast');e.textContent=t;e.classList.add('show');clearTimeout(window.__to);window.__to=setTimeout(()=>e.classList.remove('show'),2200)}
+renderModules();renderPlanned();
 </script>
 </body>
 </html>
