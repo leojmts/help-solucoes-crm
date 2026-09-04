@@ -751,3 +751,25 @@ body.site-ready{opacity:1;transition:opacity .35s ease}
   .map-card{margin-top:14px;border-radius:18px}.map-copy{padding:20px}.map-frame,.map-frame iframe{min-height:260px}
   .footer-links{order:3;flex-wrap:wrap}
 }
+
+.owner-role{
+  display:flex;align-items:center;gap:8px;margin-top:18px;
+  color:#4f6f9b;font-size:12px;font-weight:850;letter-spacing:.015em
+}
+.owner-role i{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--orange)}
+.owner-photo-shine{
+  position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(125deg,transparent 45%,rgba(255,255,255,.12) 55%,transparent 66%);
+  transform:translateX(-120%);
+  transition:transform .9s var(--motion-ease)
+}
+.owner-photo:hover .owner-photo-shine{transform:translateX(120%)}
+.owner-quote{
+  margin:22px 0 8px;padding:18px 20px;border-left:3px solid var(--blue);
+  border-radius:0 14px 14px 0;background:#edf4ff;color:#28415f;
+  font-size:15px;font-weight:750;line-height:1.55
+}
+@media(max-width:760px){
+  .owner-role{margin-top:16px;font-size:11px}
+  .owner-quote{font-size:13px;padding:15px 16px;margin-top:18px}
+}
