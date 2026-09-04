@@ -1161,3 +1161,14 @@ body.site-ready{opacity:1;transition:opacity .35s ease}
 @media(prefers-reduced-motion:reduce){
   .ring-b,.network-pulse,.network-data,.route-dot{animation:none!important}
 }
+
+
+/* integração do novo hero com o sistema de entrada existente */
+.hero-network.hero-enter{transform:translateY(18px) scale(.985);filter:blur(5px)}
+.site-ready .hero-network.hero-enter{
+  transform:perspective(1000px) rotateX(var(--network-tilt-y,0deg)) rotateY(var(--network-tilt-x,0deg)) translateY(0) scale(1);
+  filter:blur(0)
+}
+@media(max-width:760px){
+  .site-ready .hero-network.hero-enter{transform:translateY(0) scale(1)}
+}
