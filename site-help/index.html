@@ -5,17 +5,22 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#08172a">
   <meta name="robots" content="noindex,nofollow">
-  <title>Help Soluções Tecnológicas | Tecnologia para empresas</title>
-  <meta name="description" content="Soluções tecnológicas para empresas de varejo, distribuição e prestadores de serviço. Sede em Jardim-MS e atendimento em todo o Brasil.">
+  <title>Help Soluções Tecnológicas | Suporte e TI para Empresas em Jardim-MS</title>
+  <meta name="description" content="Empresa de tecnologia em Jardim-MS com suporte técnico, infraestrutura, manutenção e soluções de TI para varejo, distribuidores e prestadores de serviço. Atendimento em todo o Brasil.">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="pt_BR">
-  <meta property="og:title" content="Help Soluções Tecnológicas">
-  <meta property="og:description" content="Tecnologia, suporte e acompanhamento para empresas. Sede em Jardim-MS e atendimento em todo o Brasil.">
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Help Soluções Tecnológicas">
-  <meta name="twitter:description" content="Tecnologia, suporte e acompanhamento para empresas em todo o Brasil.">
+  <meta property="og:title" content="Help Soluções Tecnológicas | Tecnologia para empresas">
+  <meta property="og:description" content="Tecnologia que conecta operação, gestão e crescimento. Sede em Jardim-MS e atendimento em todo o Brasil.">
+  <meta property="og:image" content="https://help-solucoes-cr-git-66d3ca-jos3jos3leonardo2018-2712s-projects.vercel.app/site-help/og-help.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Help Soluções Tecnológicas — tecnologia para empresas">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Help Soluções Tecnológicas | Tecnologia para empresas">
+  <meta name="twitter:description" content="Tecnologia que conecta operação, gestão e crescimento. Sede em Jardim-MS e atendimento nacional.">
+  <meta name="twitter:image" content="https://help-solucoes-cr-git-66d3ca-jos3jos3leonardo2018-2712s-projects.vercel.app/site-help/og-help.png">
   <link rel="icon" href="/help-logo-transparent.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./style.css?v=20260904-whatsapp-float">
+  <link rel="stylesheet" href="./style.css?v=20260904-interactive">
   <script type="application/ld+json">
   {
     "@context":"https://schema.org",
@@ -32,11 +37,24 @@
       "addressCountry":"BR"
     },
     "areaServed":{"@type":"Country","name":"Brasil"},
-    "employee":{"@type":"Person","name":"Jonailton Matos","jobTitle":"CEO"}
+    "employee":{"@type":"Person","name":"Jonailton Matos","jobTitle":"CEO"},
+    "hasOfferCatalog":{
+      "@type":"OfferCatalog",
+      "name":"Soluções de tecnologia para empresas",
+      "itemListElement":[
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"Suporte técnico empresarial"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"Redes e infraestrutura de TI"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"Manutenção de equipamentos"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"Segurança e continuidade operacional"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"Equipamentos e ambiente de TI"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"Soluções tecnológicas sob medida"}}
+      ]
+    }
   }
   </script>
 </head>
 <body>
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
   <header class="site-header" id="topo">
     <div class="container nav-wrap">
       <a class="brand" href="#topo" aria-label="Help Soluções Tecnológicas">
@@ -44,11 +62,11 @@
         <span><b>Help</b><small>Soluções Tecnológicas</small></span>
       </a>
 
-      <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false">
+      <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="siteNav">
         <i data-lucide="menu"></i>
       </button>
 
-      <nav class="nav-links" aria-label="Navegação principal">
+      <nav class="nav-links" id="siteNav" aria-label="Navegação principal">
         <a href="#solucoes">Soluções</a>
         <a href="#como-trabalhamos">Como funciona</a>
         <a href="#diferenciais">Diferenciais</a>
@@ -59,7 +77,7 @@
     </div>
   </header>
 
-  <main>
+  <main id="conteudo">
     <section class="hero help-hero section-dark">
       <div class="hero-circuit-bg" aria-hidden="true"></div>
       <div class="container help-hero-layout">
@@ -110,7 +128,7 @@
           <h2>Uma empresa de tecnologia com atendimento próximo e visão de negócio.</h2>
         </div>
         <div class="intro-text">
-          <p>A Help Soluções Tecnológicas está sediada em Jardim-MS e atende empresas de diferentes regiões do Brasil, com foco em soluções que apoiem a operação, o atendimento e a gestão.</p>
+          <p>A Help Soluções Tecnológicas é uma empresa de tecnologia em Jardim-MS, com atendimento a empresas de diferentes regiões do Brasil e foco em soluções que apoiem a operação, o atendimento e a gestão.</p>
           <p>Nosso objetivo é unir tecnologia e acompanhamento para tornar processos mais simples, seguros e eficientes.</p>
         </div>
       </div>
@@ -132,42 +150,42 @@
             <span class="icon-box"><i data-lucide="headset"></i></span>
             <h3>Suporte técnico</h3>
             <p>Atendimento para apoiar usuários e manter a operação tecnológica funcionando no dia a dia.</p>
-            <a href="#contato">Quero conversar <i data-lucide="arrow-up-right"></i></a>
+            <button class="service-more" type="button" data-service="suporte">Ver detalhes <i data-lucide="arrow-up-right"></i></button>
           </article>
           <article class="solution-card">
             <span class="solution-number">02</span>
             <span class="icon-box"><i data-lucide="network"></i></span>
             <h3>Redes e infraestrutura</h3>
             <p>Organização e evolução da estrutura tecnológica de acordo com a realidade da empresa.</p>
-            <a href="#contato">Quero conversar <i data-lucide="arrow-up-right"></i></a>
+            <button class="service-more" type="button" data-service="infraestrutura">Ver detalhes <i data-lucide="arrow-up-right"></i></button>
           </article>
           <article class="solution-card">
             <span class="solution-number">03</span>
             <span class="icon-box"><i data-lucide="wrench"></i></span>
             <h3>Manutenção</h3>
             <p>Acompanhamento preventivo e corretivo para reduzir paradas e manter equipamentos em melhores condições.</p>
-            <a href="#contato">Quero conversar <i data-lucide="arrow-up-right"></i></a>
+            <button class="service-more" type="button" data-service="manutencao">Ver detalhes <i data-lucide="arrow-up-right"></i></button>
           </article>
           <article class="solution-card">
             <span class="solution-number">04</span>
             <span class="icon-box"><i data-lucide="shield-check"></i></span>
             <h3>Segurança e continuidade</h3>
             <p>Boas práticas para proteger a operação, os dados e a continuidade dos serviços essenciais.</p>
-            <a href="#contato">Quero conversar <i data-lucide="arrow-up-right"></i></a>
+            <button class="service-more" type="button" data-service="seguranca">Ver detalhes <i data-lucide="arrow-up-right"></i></button>
           </article>
           <article class="solution-card">
             <span class="solution-number">05</span>
             <span class="icon-box"><i data-lucide="monitor-cog"></i></span>
             <h3>Equipamentos e ambiente</h3>
             <p>Apoio na organização, manutenção e acompanhamento dos equipamentos usados pela empresa.</p>
-            <a href="#contato">Quero conversar <i data-lucide="arrow-up-right"></i></a>
+            <button class="service-more" type="button" data-service="equipamentos">Ver detalhes <i data-lucide="arrow-up-right"></i></button>
           </article>
           <article class="solution-card">
             <span class="solution-number">06</span>
             <span class="icon-box"><i data-lucide="briefcase-business"></i></span>
             <h3>Soluções sob medida</h3>
             <p>Projetos e melhorias definidos a partir da necessidade real e da rotina de cada negócio.</p>
-            <a href="#contato">Quero conversar <i data-lucide="arrow-up-right"></i></a>
+            <button class="service-more" type="button" data-service="sob-medida">Ver detalhes <i data-lucide="arrow-up-right"></i></button>
           </article>
         </div>
       </div>
@@ -349,6 +367,69 @@
       </div>
     </section>
 
+
+    <section class="diagnosis-section section-dark" id="diagnostico">
+      <div class="container diagnosis-layout">
+        <div class="diagnosis-copy">
+          <span class="eyebrow">DIAGNÓSTICO RÁPIDO</span>
+          <h2>Onde a tecnologia está pesando na sua operação?</h2>
+          <p>Responda três perguntas rápidas. No final, preparamos um resumo para você conversar com a Help pelo WhatsApp.</p>
+          <div class="diagnosis-trust">
+            <span><i data-lucide="timer"></i> Menos de 1 minuto</span>
+            <span><i data-lucide="shield-check"></i> Nada é salvo no site</span>
+          </div>
+        </div>
+
+        <div class="diagnosis-tool" id="diagnosisTool">
+          <div class="diagnosis-progress" aria-label="Progresso do diagnóstico">
+            <span class="diagnosis-progress-bar" id="diagnosisProgress"></span>
+          </div>
+          <div class="diagnosis-step-meta"><span id="diagnosisStepLabel">ETAPA 1 DE 3</span><button type="button" class="diagnosis-back" id="diagnosisBack" hidden><i data-lucide="arrow-left"></i> Voltar</button></div>
+
+          <div class="diagnosis-step is-active" data-diagnosis-step="1">
+            <h3>Qual é o principal desafio hoje?</h3>
+            <div class="diagnosis-options">
+              <button type="button" data-diagnosis-area="Suporte técnico"><i data-lucide="headset"></i><span>Suporte</span></button>
+              <button type="button" data-diagnosis-area="Rede e infraestrutura"><i data-lucide="network"></i><span>Rede</span></button>
+              <button type="button" data-diagnosis-area="Computadores e equipamentos"><i data-lucide="monitor-cog"></i><span>Computadores</span></button>
+              <button type="button" data-diagnosis-area="Segurança e continuidade"><i data-lucide="shield-check"></i><span>Segurança</span></button>
+              <button type="button" data-diagnosis-area="Preciso de orientação"><i data-lucide="circle-help"></i><span>Não sei ainda</span></button>
+            </div>
+          </div>
+
+          <div class="diagnosis-step" data-diagnosis-step="2" hidden>
+            <h3>Como isso está afetando a empresa?</h3>
+            <div class="diagnosis-options diagnosis-options-wide">
+              <button type="button" data-diagnosis-impact="Está parando ou comprometendo a operação"><i data-lucide="triangle-alert"></i><span>Está comprometendo a operação</span></button>
+              <button type="button" data-diagnosis-impact="Está atrapalhando a rotina, mas a operação continua"><i data-lucide="gauge"></i><span>Está atrapalhando a rotina</span></button>
+              <button type="button" data-diagnosis-impact="Quero prevenir problemas e melhorar a estrutura"><i data-lucide="trending-up"></i><span>Quero prevenir e melhorar</span></button>
+            </div>
+          </div>
+
+          <div class="diagnosis-step" data-diagnosis-step="3" hidden>
+            <h3>Qual é o tamanho aproximado do ambiente?</h3>
+            <div class="diagnosis-options diagnosis-options-wide">
+              <button type="button" data-diagnosis-size="Até 5 usuários/equipamentos"><span>Até 5</span><small>usuários/equipamentos</small></button>
+              <button type="button" data-diagnosis-size="De 6 a 20 usuários/equipamentos"><span>6 a 20</span><small>usuários/equipamentos</small></button>
+              <button type="button" data-diagnosis-size="Mais de 20 usuários/equipamentos"><span>Mais de 20</span><small>usuários/equipamentos</small></button>
+              <button type="button" data-diagnosis-size="Ainda não sei informar"><span>Não sei</span><small>quero orientação</small></button>
+            </div>
+          </div>
+
+          <div class="diagnosis-result" id="diagnosisResult" hidden>
+            <span class="diagnosis-result-icon"><i data-lucide="check"></i></span>
+            <small>RESUMO PRONTO</small>
+            <h3>Já temos um bom ponto de partida.</h3>
+            <p id="diagnosisSummary"></p>
+            <a class="btn btn-primary diagnosis-whatsapp" id="diagnosisWhatsapp" data-track="diagnosis-whatsapp" target="_blank" rel="noopener" href="#">
+              <i data-lucide="message-circle"></i>Enviar diagnóstico para a Help
+            </a>
+            <button type="button" class="diagnosis-restart" id="diagnosisRestart">Refazer diagnóstico</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="section-soft lead-section" id="orcamento">
       <div class="container lead-grid">
         <div class="lead-copy">
@@ -423,6 +504,29 @@
     </section>
 
     </main>
+
+  <div class="service-drawer-shell" id="serviceDrawerShell" hidden>
+    <button class="service-drawer-backdrop" type="button" aria-label="Fechar detalhes do serviço" data-service-close></button>
+    <aside class="service-drawer" id="serviceDrawer" role="dialog" aria-modal="true" aria-labelledby="serviceDrawerTitle" aria-hidden="true">
+      <div class="service-drawer-head">
+        <div>
+          <span class="service-drawer-kicker">SOLUÇÃO HELP</span>
+          <h2 id="serviceDrawerTitle"></h2>
+        </div>
+        <button class="service-drawer-close" type="button" aria-label="Fechar detalhes" data-service-close><i data-lucide="x"></i></button>
+      </div>
+      <p class="service-drawer-intro" id="serviceDrawerIntro"></p>
+      <div class="service-drawer-body">
+        <h3>Como podemos apoiar</h3>
+        <ul id="serviceDrawerList"></ul>
+      </div>
+      <div class="service-drawer-note"><i data-lucide="info"></i><span>O escopo é definido após entendermos a necessidade real da empresa.</span></div>
+      <a class="btn btn-primary service-drawer-cta" id="serviceDrawerCta" data-track="service-detail-whatsapp" target="_blank" rel="noopener" href="#">
+        <i data-lucide="message-circle"></i>Conversar sobre esta solução
+      </a>
+    </aside>
+  </div>
+
   <div class="whatsapp-float" id="whatsappFloat">
     <div class="whatsapp-teaser" id="whatsappTeaser" role="status" aria-live="polite">
       <button class="whatsapp-teaser-close" type="button" aria-label="Fechar mensagem do WhatsApp">
@@ -472,7 +576,7 @@
       toggle.innerHTML = '<i data-lucide="menu"></i>'; lucide.createIcons();
     }));
   </script>
-  <script src="./site.js?v=20260904-whatsapp-float"></script>
-  <script src="./animations.js?v=20260904-identity2"></script>
+  <script src="./site.js?v=20260904-interactive"></script>
+  <script src="./animations.js?v=20260904-interactive"></script>
 </body>
 </html>
