@@ -15,7 +15,7 @@
   <meta name="twitter:title" content="Help Soluções Tecnológicas">
   <meta name="twitter:description" content="Tecnologia, suporte e acompanhamento para empresas em todo o Brasil.">
   <link rel="icon" href="/help-logo-transparent.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./style.css?v=20260904-identity2">
+  <link rel="stylesheet" href="./style.css?v=20260904-whatsapp-float">
   <script type="application/ld+json">
   {
     "@context":"https://schema.org",
@@ -55,10 +55,6 @@
         <a href="#presenca">Presença</a>
         <a href="#faq">FAQ</a>
         <a href="#contato">Contato</a>
-        <a class="nav-cta" data-track="whatsapp-header" target="_blank" rel="noopener"
-           href="https://wa.me/5567996717896?text=Ol%C3%A1%21%20Vim%20pelo%20site%20da%20Help%20Solu%C3%A7%C3%B5es%20Tecnol%C3%B3gicas%20e%20gostaria%20de%20falar%20com%20a%20equipe.">
-          <i data-lucide="message-circle"></i>Falar no WhatsApp
-        </a>
       </nav>
     </div>
   </header>
@@ -427,14 +423,26 @@
     </section>
 
     </main>
-
-  <a class="mobile-wa-cta" data-track="whatsapp-mobile-fixed" target="_blank" rel="noopener"
-     href="https://wa.me/5567996717896?text=Ol%C3%A1%21%20Vim%20pelo%20site%20da%20Help%20Solu%C3%A7%C3%B5es%20Tecnol%C3%B3gicas%20e%20gostaria%20de%20falar%20com%20a%20equipe."
-     aria-label="Falar com a Help pelo WhatsApp">
-    <span class="mobile-wa-icon"><i data-lucide="message-circle"></i></span>
-    <span><small>Atendimento rápido</small><b>Falar no WhatsApp</b></span>
-    <i class="mobile-wa-arrow" data-lucide="arrow-up-right"></i>
-  </a>
+  <div class="whatsapp-float" id="whatsappFloat">
+    <div class="whatsapp-teaser" id="whatsappTeaser" role="status" aria-live="polite">
+      <button class="whatsapp-teaser-close" type="button" aria-label="Fechar mensagem do WhatsApp">
+        <i data-lucide="x"></i>
+      </button>
+      <span class="whatsapp-teaser-dot"></span>
+      <div>
+        <small>HELP ONLINE</small>
+        <strong>Olá! Como podemos ajudar?</strong>
+        <span>Fale com nossa equipe pelo WhatsApp.</span>
+      </div>
+    </div>
+    <a class="whatsapp-bubble" data-track="whatsapp-floating" target="_blank" rel="noopener"
+       href="https://wa.me/5567996717896?text=Ol%C3%A1%21%20Vim%20pelo%20site%20da%20Help%20Solu%C3%A7%C3%B5es%20Tecnol%C3%B3gicas%20e%20gostaria%20de%20falar%20com%20a%20equipe."
+       aria-label="Falar com a Help pelo WhatsApp">
+      <span class="whatsapp-bubble-ring"></span>
+      <i data-lucide="message-circle"></i>
+      <span class="whatsapp-bubble-status"></span>
+    </a>
+  </div>
 
   <footer>
     <div class="container footer-wrap">
@@ -464,7 +472,7 @@
       toggle.innerHTML = '<i data-lucide="menu"></i>'; lucide.createIcons();
     }));
   </script>
-  <script src="./site.js?v=20260904-identity2"></script>
+  <script src="./site.js?v=20260904-whatsapp-float"></script>
   <script src="./animations.js?v=20260904-identity2"></script>
 </body>
 </html>
