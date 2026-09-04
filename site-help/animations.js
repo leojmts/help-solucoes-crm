@@ -8,6 +8,17 @@
     ['.intro-grid > *', 'reveal-up'],
     ['.section-heading > *', 'reveal-up'],
     ['.segment-card', 'reveal-up'],
+    ['.segment-row', 'reveal-up'],
+    ['.reach-heading > *', 'reveal-up'],
+    ['.reach-place', 'reveal-up'],
+    ['.reach-footer > *', 'reveal-up'],
+    ['.contact-final-inner > .eyebrow', 'reveal-up'],
+    ['.contact-final-inner > h2', 'reveal-up'],
+    ['.contact-final-inner > p', 'reveal-up'],
+    ['.contact-final-actions > *', 'reveal-up'],
+    ['.contact-strip > *', 'reveal-up'],
+    ['.location-head > *', 'reveal-up'],
+    ['.location-map', 'reveal-up'],
     ['.solution-card', 'reveal-up'],
     ['.process-step', 'reveal-up'],
     ['.why-grid > article', 'reveal-up'],
@@ -38,7 +49,7 @@
     '.hero-copy > p',
     '.hero-actions',
     '.hero-trust',
-    '.hero-panel'
+    '.hero-network'
   ];
   heroItems.forEach((selector, index) => {
     const el = document.querySelector(selector);
@@ -71,20 +82,20 @@
 
   // Parallax/tilt bem leve no desktop. Nenhum efeito em telas touch.
   if (finePointer && !reduceMotion) {
-    const panel = document.querySelector('.hero-panel');
+    const panel = document.querySelector('.hero-network');
     if (panel) {
       panel.addEventListener('pointermove', (event) => {
         const rect = panel.getBoundingClientRect();
         const x = (event.clientX - rect.left) / rect.width - .5;
         const y = (event.clientY - rect.top) / rect.height - .5;
-        panel.style.setProperty('--tilt-x', (x * 3.5).toFixed(2) + 'deg');
-        panel.style.setProperty('--tilt-y', (y * -3.5).toFixed(2) + 'deg');
+        panel.style.setProperty('--network-tilt-x', (x * 2.6).toFixed(2) + 'deg');
+        panel.style.setProperty('--network-tilt-y', (y * -2.6).toFixed(2) + 'deg');
         panel.style.setProperty('--glow-x', ((x + .5) * 100).toFixed(1) + '%');
         panel.style.setProperty('--glow-y', ((y + .5) * 100).toFixed(1) + '%');
       });
       panel.addEventListener('pointerleave', () => {
-        panel.style.setProperty('--tilt-x', '0deg');
-        panel.style.setProperty('--tilt-y', '0deg');
+        panel.style.setProperty('--network-tilt-x', '0deg');
+        panel.style.setProperty('--network-tilt-y', '0deg');
         panel.style.setProperty('--glow-x', '72%');
         panel.style.setProperty('--glow-y', '12%');
       });
