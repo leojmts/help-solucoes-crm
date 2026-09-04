@@ -70,7 +70,7 @@ button,input{font:inherit}
 .section-soft{padding:92px 0}
 .section-heading{max-width:760px;margin-bottom:34px}
 .section-heading p{color:var(--muted);font-size:16px;line-height:1.7;margin:16px 0 0}
-.segment-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.segment-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .segment-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:26px;min-height:235px;box-shadow:0 10px 30px rgba(15,23,42,.045)}
 .icon-box{width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#eaf2ff,#f7fbff);color:var(--blue);display:grid;place-items:center;margin-bottom:32px}
 .icon-box svg{width:24px;height:24px}
