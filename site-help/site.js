@@ -57,6 +57,41 @@
     });
   }
 
+  // Balão flutuante do WhatsApp.
+  const whatsappFloat = document.getElementById('whatsappFloat');
+  const whatsappTeaser = document.getElementById('whatsappTeaser');
+  const whatsappClose = document.querySelector('.whatsapp-teaser-close');
+  const whatsappBubble = document.querySelector('.whatsapp-bubble');
+
+  if (whatsappFloat && whatsappTeaser) {
+    let teaserTimer = null;
+    let dismissed = false;
+
+    try {
+      dismissed = sessionStorage.getItem('help-wa-teaser-dismissed') === '1';
+    } catch (_) {}
+
+    if (!dismissed) {
+      teaserTimer = window.setTimeout(() => {
+        whatsappFloat.classList.add('is-visible');
+      }, 1800);
+    }
+
+    whatsappClose?.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (teaserTimer) window.clearTimeout(teaserTimer);
+      whatsappFloat.classList.remove('is-visible');
+      try {
+        sessionStorage.setItem('help-wa-teaser-dismissed', '1');
+      } catch (_) {}
+    });
+
+    whatsappBubble?.addEventListener('click', () => {
+      whatsappFloat.classList.remove('is-visible');
+    });
+  }
+
   // Deixa pontos de conversão preparados para GA4/Meta Pixel no projeto final.
   document.querySelectorAll('[data-track]').forEach(element => {
     element.addEventListener('click', () => {
