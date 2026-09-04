@@ -1536,3 +1536,5 @@ button{font:inherit}
 @media(prefers-reduced-motion:reduce){
   .service-drawer,.diagnosis-progress-bar{transition:none!important}
 }
+
+html.modal-open{overflow:hidden}
