@@ -19,6 +19,8 @@
     ['.contact-strip > *', 'reveal-up'],
     ['.location-head > *', 'reveal-up'],
     ['.location-map', 'reveal-up'],
+    ['.diagnosis-copy > *', 'reveal-up'],
+    ['.diagnosis-tool', 'reveal-up'],
     ['.solution-card', 'reveal-up'],
     ['.process-step', 'reveal-up'],
     ['.why-grid > article', 'reveal-up'],
