@@ -1364,3 +1364,175 @@ body.site-ready{opacity:1;transition:opacity .35s ease}
 @media(prefers-reduced-motion:reduce){
   .whatsapp-bubble-ring{animation:none!important}
 }
+
+
+/* ===== Interatividade, diagnóstico e acessibilidade final ===== */
+.skip-link{
+  position:fixed;left:14px;top:10px;z-index:300;
+  padding:10px 14px;border-radius:10px;background:#fff;color:#0a1e38;
+  font-size:12px;font-weight:900;box-shadow:0 10px 26px rgba(0,0,0,.18);
+  transform:translateY(-150%);transition:transform .2s ease
+}
+.skip-link:focus{transform:translateY(0)}
+
+:where(a,button,input,select,textarea):focus-visible{
+  outline:3px solid rgba(83,145,255,.42);
+  outline-offset:3px
+}
+button{font:inherit}
+
+.service-more{
+  margin-top:auto;display:inline-flex;align-items:center;gap:7px;
+  width:max-content;padding:0;border:0;background:transparent;color:#2b6fdc;
+  font-size:12px;font-weight:900;cursor:pointer
+}
+.service-more svg{width:15px;height:15px;transition:transform .2s ease}
+.service-more:hover svg{transform:translate(2px,-2px)}
+
+.service-drawer-shell{
+  position:fixed;inset:0;z-index:180;
+  display:grid;grid-template-columns:1fr minmax(420px,520px)
+}
+.service-drawer-shell[hidden]{display:none}
+.service-drawer-backdrop{
+  border:0;background:rgba(2,10,20,.56);backdrop-filter:blur(4px);cursor:default
+}
+.service-drawer{
+  height:100%;overflow:auto;padding:34px;
+  color:#122033;background:#fff;border-left:1px solid #d8e2ee;
+  box-shadow:-26px 0 70px rgba(5,18,35,.22);
+  transform:translateX(100%);transition:transform .34s var(--motion-ease)
+}
+.service-drawer-shell.is-open .service-drawer{transform:translateX(0)}
+.service-drawer-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.service-drawer-kicker{display:block;color:#4b84dc;font-size:9px;font-weight:950;letter-spacing:.16em;margin-bottom:8px}
+.service-drawer h2{font-size:36px;line-height:1.06;letter-spacing:-.045em;margin:0}
+.service-drawer-close{
+  width:42px;height:42px;flex:0 0 auto;border-radius:13px;
+  display:grid;place-items:center;border:1px solid #d9e3ef;background:#f7faff;color:#59697d;cursor:pointer
+}
+.service-drawer-close:hover{background:#eef5ff;color:#1f5fbe}
+.service-drawer-close svg{width:18px;height:18px}
+.service-drawer-intro{margin:28px 0;color:#5f6f82;font-size:15px;line-height:1.7}
+.service-drawer-body{padding:22px;border-radius:18px;background:#f5f8fc;border:1px solid #e0e8f2}
+.service-drawer-body h3{font-size:14px;margin:0 0 14px}
+.service-drawer-body ul{display:grid;gap:11px;margin:0;padding:0;list-style:none}
+.service-drawer-body li{display:grid;grid-template-columns:18px 1fr;gap:9px;color:#56667a;font-size:13px;line-height:1.55}
+.service-drawer-body li::before{
+  content:"";width:8px;height:8px;margin-top:6px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--orange));
+  box-shadow:0 0 0 4px rgba(47,124,255,.06)
+}
+.service-drawer-note{
+  display:flex;gap:9px;align-items:flex-start;margin:16px 0 22px;
+  padding:13px;border-radius:14px;background:#fff7ef;color:#765335;font-size:11px;line-height:1.5
+}
+.service-drawer-note svg{width:16px;height:16px;color:#f08a28;flex:0 0 auto}
+.service-drawer-cta{width:100%;min-height:52px}
+
+.diagnosis-section{
+  position:relative;padding:102px 0;overflow:hidden;
+  background:
+    radial-gradient(circle at 10% 22%,rgba(47,124,255,.13),transparent 25%),
+    radial-gradient(circle at 88% 78%,rgba(255,138,31,.07),transparent 24%),
+    #061426
+}
+.diagnosis-layout{display:grid;grid-template-columns:.78fr 1.22fr;gap:64px;align-items:start}
+.diagnosis-copy{position:sticky;top:108px}
+.diagnosis-copy h2{
+  font-size:clamp(38px,4.5vw,58px);line-height:1.02;letter-spacing:-.055em;margin:14px 0 18px
+}
+.diagnosis-copy>p{max-width:520px;color:#b3c4d8;font-size:15px;line-height:1.7}
+.diagnosis-trust{display:flex;gap:9px;flex-wrap:wrap;margin-top:22px}
+.diagnosis-trust span{
+  display:inline-flex;align-items:center;gap:7px;padding:9px 11px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035);
+  color:#a9bdd2;font-size:9px;font-weight:850
+}
+.diagnosis-trust svg{width:14px;height:14px;color:#7caaff}
+.diagnosis-tool{
+  min-height:440px;padding:26px;border-radius:24px;
+  border:1px solid rgba(255,255,255,.11);
+  background:linear-gradient(155deg,rgba(255,255,255,.07),rgba(255,255,255,.03));
+  box-shadow:0 24px 64px rgba(0,0,0,.18)
+}
+.diagnosis-progress{height:4px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+.diagnosis-progress-bar{
+  display:block;width:33.333%;height:100%;border-radius:inherit;
+  background:linear-gradient(90deg,#4f8fff,#ff9a43);
+  transition:width .32s var(--motion-ease)
+}
+.diagnosis-step-meta{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:17px 0 26px}
+.diagnosis-step-meta>span{color:#8096ad;font-size:9px;font-weight:950;letter-spacing:.16em}
+.diagnosis-back{
+  display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;color:#9eb4ca;
+  cursor:pointer;font-size:10px;font-weight:850
+}
+.diagnosis-back svg{width:14px;height:14px}
+.diagnosis-step[hidden],.diagnosis-result[hidden]{display:none}
+.diagnosis-step h3,.diagnosis-result h3{
+  font-size:28px;line-height:1.12;letter-spacing:-.035em;margin:0 0 22px;color:#fff
+}
+.diagnosis-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.diagnosis-options button{
+  min-height:88px;padding:15px;border-radius:16px;text-align:left;cursor:pointer;
+  display:flex;align-items:center;gap:11px;
+  color:#dce8f6;background:rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.095);
+  transition:transform .2s ease,border-color .2s ease,background .2s ease
+}
+.diagnosis-options button:hover{
+  transform:translateY(-2px);border-color:rgba(110,163,244,.34);background:rgba(66,129,220,.10)
+}
+.diagnosis-options button svg{width:21px;height:21px;color:#7faeff;flex:0 0 auto}
+.diagnosis-options button:nth-child(even) svg{color:#ff9e4a}
+.diagnosis-options button span{display:block;font-size:12px;font-weight:850;line-height:1.35}
+.diagnosis-options button small{display:block;color:#849ab1;font-size:9px;margin-top:3px}
+.diagnosis-options-wide{grid-template-columns:1fr}
+.diagnosis-options-wide button{min-height:70px}
+.diagnosis-result{text-align:center;padding:22px 6px 8px}
+.diagnosis-result-icon{
+  width:58px;height:58px;border-radius:18px;margin:0 auto 17px;display:grid;place-items:center;
+  color:#fff;background:linear-gradient(145deg,#2879f4,#1c62ce);
+  box-shadow:0 14px 34px rgba(40,121,244,.22)
+}
+.diagnosis-result-icon svg{width:25px;height:25px}
+.diagnosis-result>small{display:block;color:#7fa6d7;font-size:9px;font-weight:950;letter-spacing:.16em;margin-bottom:9px}
+.diagnosis-result>p{max-width:540px;margin:0 auto 22px;color:#b5c6d8;font-size:13px;line-height:1.65}
+.diagnosis-whatsapp{width:min(100%,420px);min-height:52px}
+.diagnosis-restart{
+  display:block;margin:12px auto 0;border:0;background:transparent;color:#8196ad;font-size:10px;font-weight:850;cursor:pointer
+}
+.diagnosis-restart:hover{color:#fff}
+
+@media(max-width:960px){
+  .diagnosis-layout{grid-template-columns:1fr;gap:28px}
+  .diagnosis-copy{position:static}
+}
+@media(max-width:760px){
+  .service-drawer-shell{grid-template-columns:1fr;align-items:end}
+  .service-drawer-backdrop{position:absolute;inset:0}
+  .service-drawer{
+    position:relative;z-index:1;height:auto;max-height:88vh;
+    padding:22px 18px calc(22px + env(safe-area-inset-bottom,0px));
+    border-left:0;border-top:1px solid #d8e2ee;border-radius:22px 22px 0 0;
+    transform:translateY(100%)
+  }
+  .service-drawer-shell.is-open .service-drawer{transform:translateY(0)}
+  .service-drawer h2{font-size:29px}
+  .service-drawer-intro{font-size:13px;margin:20px 0}
+  .service-drawer-body{padding:17px}.service-drawer-body li{font-size:12px}
+
+  .diagnosis-section{padding:62px 0}
+  .diagnosis-copy h2{font-size:34px}
+  .diagnosis-copy>p{font-size:13px}
+  .diagnosis-tool{min-height:0;padding:18px;border-radius:19px}
+  .diagnosis-step h3,.diagnosis-result h3{font-size:22px;margin-bottom:17px}
+  .diagnosis-options{grid-template-columns:1fr}
+  .diagnosis-options button{min-height:66px;padding:13px;border-radius:14px}
+  .diagnosis-options button span{font-size:11px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .service-drawer,.diagnosis-progress-bar{transition:none!important}
+}
