@@ -64,36 +64,46 @@
   </header>
 
   <main>
-    <section class="hero section-dark">
-      <div class="container hero-grid">
-        <div class="hero-copy">
-          <span class="eyebrow">TECNOLOGIA PARA O SEU NEGÓCIO</span>
-          <h1>Soluções que ajudam sua empresa a operar melhor.</h1>
-          <p>Tecnologia, suporte e organização para empresas que precisam de mais segurança, eficiência e acompanhamento no dia a dia.</p>
+    <section class="hero help-hero section-dark">
+      <div class="hero-circuit-bg" aria-hidden="true"></div>
+      <div class="container help-hero-layout">
+        <div class="hero-copy help-hero-copy">
+          <span class="eyebrow">HELP SOLUÇÕES TECNOLÓGICAS</span>
+          <h1>Tecnologia que conecta <em>operação</em>, <em>gestão</em> e crescimento.</h1>
+          <p>Suporte, infraestrutura e acompanhamento para empresas que precisam de tecnologia funcionando como parte do negócio — e não como mais um problema.</p>
 
           <div class="hero-actions">
             <a class="btn btn-primary" data-track="whatsapp-hero" target="_blank" rel="noopener"
                href="https://wa.me/5567996717896?text=Ol%C3%A1%21%20Vim%20pelo%20site%20da%20Help%20Solu%C3%A7%C3%B5es%20Tecnol%C3%B3gicas%20e%20gostaria%20de%20falar%20com%20a%20equipe.">
               <i data-lucide="message-circle"></i>Falar com a Help
             </a>
-            <a class="btn btn-outline" href="#solucoes"><i data-lucide="arrow-down"></i>Conhecer soluções</a>
+            <a class="btn btn-outline" href="#como-trabalhamos"><i data-lucide="workflow"></i>Como trabalhamos</a>
           </div>
 
-          <div class="hero-trust">
-            <div><i data-lucide="map-pin"></i><span>Jardim · Mato Grosso do Sul</span></div>
-            <div><i data-lucide="globe-2"></i><span>Atendimento em todo o Brasil</span></div>
+          <div class="hero-proof">
+            <span><i data-lucide="map-pin"></i> Base em Jardim · MS</span>
+            <span><i data-lucide="radio-tower"></i> Atendimento nacional</span>
           </div>
         </div>
 
-        <div class="hero-panel">
-          <div class="panel-glow"></div>
-          <div class="hero-logo"><img src="/help-logo-transparent.svg" alt=""></div>
-          <div>
-            <span class="panel-kicker">HELP SOLUÇÕES TECNOLÓGICAS</span>
-            <h2>Mais proximidade. Mais controle. Mais tecnologia.</h2>
-            <p>Atendimento pensado para acompanhar a rotina da sua empresa, esteja ela onde estiver.</p>
+        <div class="hero-network" aria-label="Áreas conectadas pela Help">
+          <div class="network-ring ring-a"></div>
+          <div class="network-ring ring-b"></div>
+          <div class="network-core">
+            <span class="network-pulse"></span>
+            <img src="/help-logo-transparent.svg" alt="Help Soluções Tecnológicas">
           </div>
+          <div class="network-node node-support"><i data-lucide="headset"></i><span>Suporte</span></div>
+          <div class="network-node node-infra"><i data-lucide="network"></i><span>Infraestrutura</span></div>
+          <div class="network-node node-manage"><i data-lucide="chart-no-axes-combined"></i><span>Gestão</span></div>
+          <div class="network-node node-security"><i data-lucide="shield-check"></i><span>Segurança</span></div>
+          <div class="network-data data-a"></div>
+          <div class="network-data data-b"></div>
+          <div class="network-data data-c"></div>
         </div>
+      </div>
+      <div class="container hero-manifesto">
+        <span>SUPORTE</span><b></b><span>INFRAESTRUTURA</span><b></b><span>CONTINUIDADE</span><b></b><span>PROXIMIDADE</span>
       </div>
     </section>
 
@@ -229,42 +239,85 @@
       </div>
     </section>
 
-    <section class="section-soft" id="segmentos">
+    <section class="segments-showcase" id="segmentos">
       <div class="container">
-        <div class="section-heading">
-          <span class="eyebrow">SEGMENTOS</span>
-          <h2>Soluções para diferentes modelos de operação.</h2>
-          <p>Atendemos negócios com necessidades distintas, sempre adaptando o acompanhamento à realidade de cada empresa.</p>
+        <div class="segments-head">
+          <div>
+            <span class="eyebrow">ONDE A HELP ATUA</span>
+            <h2>Tecnologia adaptada ao jeito que cada negócio funciona.</h2>
+          </div>
+          <p>Não tratamos empresas diferentes como se tivessem a mesma rotina. O acompanhamento muda conforme a operação, a equipe e as prioridades de cada cliente.</p>
         </div>
 
-        <div class="segment-grid">
-          <article class="segment-card"><span class="icon-box"><i data-lucide="store"></i></span><h3>Varejo</h3><p>Estrutura tecnológica para apoiar atendimento, operação e crescimento.</p></article>
-          <article class="segment-card"><span class="icon-box"><i data-lucide="truck"></i></span><h3>Distribuidor</h3><p>Mais organização e suporte para operações com maior fluxo e complexidade.</p></article>
-          <article class="segment-card"><span class="icon-box"><i data-lucide="briefcase-business"></i></span><h3>Prestadores de Serviço</h3><p>Tecnologia e suporte para empresas que precisam manter atendimento, equipe e operação funcionando com eficiência.</p></article>
+        <div class="segment-list">
+          <article class="segment-row">
+            <span class="segment-index">01</span>
+            <span class="segment-symbol"><i data-lucide="store"></i></span>
+            <div class="segment-main">
+              <h3>Varejo</h3>
+              <p>Estrutura tecnológica para apoiar atendimento, operação e crescimento sem perder agilidade no dia a dia.</p>
+            </div>
+            <span class="segment-arrow"><i data-lucide="arrow-up-right"></i></span>
+          </article>
+
+          <article class="segment-row">
+            <span class="segment-index">02</span>
+            <span class="segment-symbol"><i data-lucide="truck"></i></span>
+            <div class="segment-main">
+              <h3>Distribuidores</h3>
+              <p>Mais organização e suporte para operações com fluxo, equipe e processos que precisam permanecer conectados.</p>
+            </div>
+            <span class="segment-arrow"><i data-lucide="arrow-up-right"></i></span>
+          </article>
+
+          <article class="segment-row">
+            <span class="segment-index">03</span>
+            <span class="segment-symbol"><i data-lucide="briefcase-business"></i></span>
+            <div class="segment-main">
+              <h3>Prestadores de Serviço</h3>
+              <p>Tecnologia e suporte para manter atendimento, equipe e operação funcionando com segurança e eficiência.</p>
+            </div>
+            <span class="segment-arrow"><i data-lucide="arrow-up-right"></i></span>
+          </article>
         </div>
       </div>
     </section>
 
-    <section class="section-dark presence" id="presenca">
-      <div class="container presence-grid">
-        <div class="presence-copy">
-          <span class="eyebrow">PRESENÇA</span>
-          <h2>De Mato Grosso do Sul para todo o Brasil.</h2>
-          <p>Nossa sede fica em Jardim-MS, mas nossa atuação não se limita ao estado. Atendemos empresas em qualquer região do país, de acordo com a necessidade de cada projeto.</p>
-          <div class="presence-badges">
-            <span><b>MS</b> Mato Grosso do Sul</span>
-            <span><i data-lucide="globe-2"></i> Atendimento nacional</span>
+    <section class="reach-section section-dark" id="presenca">
+      <div class="container">
+        <div class="reach-heading">
+          <span class="eyebrow">NOSSO ALCANCE</span>
+          <h2>Jardim-MS é nossa base.<br><em>O Brasil é nosso alcance.</em></h2>
+          <p>Estamos próximos da operação mesmo quando o cliente está longe. A sede é em Mato Grosso do Sul e o atendimento pode acompanhar empresas em qualquer estado do país.</p>
+        </div>
+
+        <div class="reach-route" aria-label="Da sede em Jardim-MS para atendimento em todo o Brasil">
+          <div class="reach-place reach-origin">
+            <span class="reach-label">BASE</span>
+            <strong>Jardim</strong>
+            <small>Mato Grosso do Sul</small>
+          </div>
+
+          <div class="reach-connection" aria-hidden="true">
+            <span class="route-dot dot-1"></span>
+            <span class="route-dot dot-2"></span>
+            <span class="route-dot dot-3"></span>
+            <span class="route-signal"><i data-lucide="wifi"></i></span>
+          </div>
+
+          <div class="reach-place reach-destination">
+            <span class="reach-label">ALCANCE</span>
+            <strong>Brasil</strong>
+            <small>Atendimento nacional</small>
           </div>
         </div>
-        <aside class="presence-card">
-          <div class="big-stat"><span>Brasil</span><b>inteiro</b></div>
-          <p>Atendimento a empresas em todo o território nacional.</p>
-          <div class="info-list">
-            <div><span>Sede</span><strong>Jardim · MS</strong></div>
-            <div><span>Abrangência</span><strong>Todo o Brasil</strong></div>
-            <div><span>Segmentos</span><strong>Varejo, Distribuidor e Prestadores de Serviço</strong></div>
-          </div>
-        </aside>
+
+        <div class="reach-footer">
+          <div><i data-lucide="store"></i><span>Varejo</span></div>
+          <div><i data-lucide="truck"></i><span>Distribuidores</span></div>
+          <div><i data-lucide="briefcase-business"></i><span>Prestadores de Serviço</span></div>
+          <p>Uma base local com capacidade de acompanhar diferentes modelos de operação.</p>
+        </div>
       </div>
     </section>
 
@@ -327,48 +380,53 @@
       </div>
     </section>
 
-    <section class="section-light contact-section" id="contato">
-      <div class="container">
-        <div class="contact-box">
-          <div class="contact-copy">
-            <span class="eyebrow light-eyebrow">FALE COM A HELP</span>
-            <h2>Vamos entender o que sua empresa precisa?</h2>
-            <p>Entre em contato com nossa equipe e conte um pouco sobre sua operação. Vamos conversar sobre como a tecnologia pode ajudar seu negócio.</p>
-            <div class="contact-actions">
-              <a class="btn whatsapp" data-track="whatsapp-contact" target="_blank" rel="noopener"
-                 href="https://wa.me/5567996717896?text=Ol%C3%A1%21%20Vim%20pelo%20site%20da%20Help%20Solu%C3%A7%C3%B5es%20Tecnol%C3%B3gicas%20e%20gostaria%20de%20falar%20com%20a%20equipe.">
-                <i data-lucide="message-circle"></i>(67) 9 9671-7896
-              </a>
-              <a class="btn phone" href="tel:+5567996102253"><i data-lucide="phone"></i>Ligar (67) 9 9610-2253</a>
-            </div>
-          </div>
+    <section class="contact-final section-dark" id="contato">
+      <div class="contact-circuit" aria-hidden="true"></div>
+      <div class="container contact-final-inner">
+        <span class="eyebrow">PRÓXIMO PASSO</span>
+        <h2>Sua empresa pode<br><em>operar melhor.</em></h2>
+        <p>Conte o que precisa. A gente começa entendendo a realidade da sua operação e conversa sobre a solução mais adequada.</p>
 
-          <div class="contact-details">
-            <div class="contact-item"><i data-lucide="map-pin"></i><div><b>Endereço</b><span>Av. Duque de Caxias, nº 536 · Sala 4<br>Centro · Jardim-MS</span></div></div>
-            <div class="contact-item"><i data-lucide="phone"></i><div><b>Telefone</b><a href="tel:+5567996102253">(67) 9 9610-2253</a></div></div>
-            <div class="contact-item"><i data-lucide="message-circle"></i><div><b>WhatsApp</b><a target="_blank" rel="noopener" href="https://wa.me/5567996717896">(67) 9 9671-7896</a></div></div>
-            <div class="contact-item"><i data-lucide="mail"></i><div><b>E-mail</b><a href="mailto:helpsolucoestecnologicas@gmail.com">helpsolucoestecnologicas@gmail.com</a></div></div>
-          </div>
+        <div class="contact-final-actions">
+          <a class="contact-primary" data-track="whatsapp-contact" target="_blank" rel="noopener"
+             href="https://wa.me/5567996717896?text=Ol%C3%A1%21%20Vim%20pelo%20site%20da%20Help%20Solu%C3%A7%C3%B5es%20Tecnol%C3%B3gicas%20e%20gostaria%20de%20falar%20com%20a%20equipe.">
+            <span><small>CONVERSAR AGORA</small><b>Falar no WhatsApp</b></span>
+            <i data-lucide="arrow-up-right"></i>
+          </a>
+          <a class="contact-secondary" href="#orcamento">
+            <i data-lucide="clipboard-pen-line"></i>
+            <span>Prefiro explicar<br>minha necessidade</span>
+          </a>
         </div>
 
-        <div class="map-card">
-          <div class="map-copy">
-            <span class="eyebrow">NOSSA SEDE</span>
-            <h3>Jardim · Mato Grosso do Sul</h3>
-            <p>Av. Duque de Caxias, nº 536 — Sala 4, Centro.</p>
-            <a class="text-link" data-track="maps" target="_blank" rel="noopener"
-               href="https://www.google.com/maps/search/?api=1&query=Av.%20Duque%20de%20Caxias%20536%20Jardim%20MS">
-              Abrir no mapa <i data-lucide="arrow-up-right"></i>
-            </a>
-          </div>
-          <div class="map-frame">
-            <iframe title="Localização da Help Soluções Tecnológicas" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
-              src="https://www.google.com/maps?q=Av.%20Duque%20de%20Caxias%20536%20Jardim%20MS&output=embed"></iframe>
-          </div>
+        <div class="contact-strip">
+          <a href="tel:+5567996102253"><i data-lucide="phone"></i><span><small>TELEFONE</small>(67) 9 9610-2253</span></a>
+          <a href="mailto:helpsolucoestecnologicas@gmail.com"><i data-lucide="mail"></i><span><small>E-MAIL</small>helpsolucoestecnologicas@gmail.com</span></a>
+          <a data-track="maps" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=Av.%20Duque%20de%20Caxias%20536%20Jardim%20MS"><i data-lucide="map-pin"></i><span><small>SEDE</small>Av. Duque de Caxias, 536 · Sala 4</span></a>
         </div>
       </div>
     </section>
-  </main>
+
+    <section class="location-section section-light">
+      <div class="container">
+        <div class="location-head">
+          <div>
+            <span class="eyebrow">NOSSA SEDE</span>
+            <h2>Jardim · Mato Grosso do Sul</h2>
+          </div>
+          <a class="text-link" data-track="maps" target="_blank" rel="noopener"
+             href="https://www.google.com/maps/search/?api=1&query=Av.%20Duque%20de%20Caxias%20536%20Jardim%20MS">
+            Abrir no mapa <i data-lucide="arrow-up-right"></i>
+          </a>
+        </div>
+        <div class="location-map">
+          <iframe title="Localização da Help Soluções Tecnológicas" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+            src="https://www.google.com/maps?q=Av.%20Duque%20de%20Caxias%20536%20Jardim%20MS&output=embed"></iframe>
+        </div>
+      </div>
+    </section>
+
+    </main>
 
   <a class="mobile-wa-cta" data-track="whatsapp-mobile-fixed" target="_blank" rel="noopener"
      href="https://wa.me/5567996717896?text=Ol%C3%A1%21%20Vim%20pelo%20site%20da%20Help%20Solu%C3%A7%C3%B5es%20Tecnol%C3%B3gicas%20e%20gostaria%20de%20falar%20com%20a%20equipe."
