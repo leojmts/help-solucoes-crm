@@ -1,0 +1,9 @@
+# Preview do site institucional da Help Soluções Tecnológicas
+# Não indexar esta versão temporária.
+User-agent: *
+Disallow: /
+
+# Na publicação final:
+# - permitir rastreamento;
+# - definir Sitemap com o domínio definitivo;
+# - atualizar canonical, og:url e og:image para o domínio oficial.
